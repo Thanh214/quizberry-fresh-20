@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -8,7 +7,7 @@ import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { Option } from "@/types/models";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const EditQuestion: React.FC = () => {
   const navigate = useNavigate();
@@ -62,7 +61,7 @@ const EditQuestion: React.FC = () => {
     } else {
       newOptions[index] = {
         ...newOptions[index],
-        [field]: value,
+        [field]: value as string, // Cast value to string when field is "content"
       };
     }
     setOptions(newOptions);

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -8,7 +7,7 @@ import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { Question } from "@/types/models";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const AdminQuestions: React.FC = () => {
   const navigate = useNavigate();

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -6,7 +5,7 @@ import Card from "@/components/Card";
 import Logo from "@/components/Logo";
 import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
