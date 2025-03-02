@@ -52,8 +52,28 @@ export interface QuizSession {
   currentQuestionIndex: number;
   questions: ShuffledQuestion[];
   answers: QuestionAnswer[];
+  status?: "pending" | "approved" | "rejected"; // Status for teacher verification
 }
 
 export interface ShuffledQuestion extends Question {
   shuffledOptions: Option[];
+}
+
+// New models for class management
+export interface Class {
+  id: string;
+  name: string;
+  description?: string;
+  isQuizActive: boolean; // Controls if students can take the quiz
+  createdAt: string;
+  updatedAt: string;
+}
+
+// New model for pending quiz requests
+export interface QuizRequest {
+  id: string;
+  studentName: string;
+  className: string;
+  status: "pending" | "approved" | "rejected";
+  requestedAt: string;
 }

@@ -1,8 +1,9 @@
-
 import React, { createContext, useContext, useState } from "react";
-import { Question, Option, QuizSession, QuizResult, ShuffledQuestion } from "@/types/models";
+import { Question, Option, QuizSession, QuizResult, ShuffledQuestion, Class, QuizRequest } from "@/types/models";
 
+// Define the shape of our context
 type QuizContextType = {
+  // Quiz and question management
   questions: Question[];
   isLoading: boolean;
   error: string | null;
@@ -10,11 +11,30 @@ type QuizContextType = {
   addQuestion: (question: Omit<Question, "id" | "createdAt" | "updatedAt">) => Promise<void>;
   updateQuestion: (id: string, question: Partial<Question>) => Promise<void>;
   deleteQuestion: (id: string) => Promise<void>;
+  
+  // Quiz session management
   startQuiz: (studentName: string, className: string) => QuizSession;
   submitAnswer: (sessionId: string, questionId: string, optionId: string | null, timeSpent: number) => void;
   finishQuiz: (sessionId: string) => QuizResult;
   getResults: () => QuizResult[];
   currentSession: QuizSession | null;
+  
+  // Class management (new)
+  classes: Class[];
+  addClass: (className: string, description?: string) => Promise<void>;
+  updateClass: (id: string, data: Partial<Class>) => Promise<void>;
+  deleteClass: (id: string) => Promise<void>;
+  toggleQuizActive: (classId: string, isActive: boolean) => Promise<void>;
+  
+  // Quiz requests (new)
+  quizRequests: QuizRequest[];
+  requestQuizAccess: (studentName: string, className: string) => Promise<QuizRequest>;
+  approveQuizRequest: (requestId: string) => Promise<void>;
+  rejectQuizRequest: (requestId: string) => Promise<void>;
+  getPendingRequests: () => QuizRequest[];
+  
+  // Student verification status (new)
+  checkStudentApproval: (studentName: string, className: string) => Promise<"pending" | "approved" | "rejected" | null>;
 };
 
 const QuizContext = createContext<QuizContextType | undefined>(undefined);
@@ -59,6 +79,26 @@ const mockQuestions: Question[] = [
   },
 ];
 
+// Mock data for classes
+const mockClasses: Class[] = [
+  {
+    id: "1",
+    name: "10A1",
+    description: "Lớp 10 chuyên Toán",
+    isQuizActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    name: "10A2",
+    description: "Lớp 10 chuyên Lý",
+    isQuizActive: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 // Function to shuffle array (Fisher-Yates algorithm)
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -70,12 +110,16 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // State management
   const [questions, setQuestions] = useState<Question[]>(mockQuestions);
+  const [classes, setClasses] = useState<Class[]>(mockClasses);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentSession, setCurrentSession] = useState<QuizSession | null>(null);
   const [results, setResults] = useState<QuizResult[]>([]);
+  const [quizRequests, setQuizRequests] = useState<QuizRequest[]>([]);
 
+  // Questions management functions
   const fetchQuestions = async () => {
     try {
       setIsLoading(true);
@@ -139,6 +183,171 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Class management functions (new)
+  const addClass = async (className: string, description?: string) => {
+    try {
+      setIsLoading(true);
+      // Create a new class
+      const newClass: Class = {
+        id: Date.now().toString(),
+        name: className,
+        description,
+        isQuizActive: false, // Default to inactive
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setClasses((prev) => [...prev, newClass]);
+    } catch (error) {
+      setError("Không thể thêm lớp học");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateClass = async (id: string, data: Partial<Class>) => {
+    try {
+      setIsLoading(true);
+      setClasses((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? { ...c, ...data, updatedAt: new Date().toISOString() }
+            : c
+        )
+      );
+    } catch (error) {
+      setError("Không thể cập nhật lớp học");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteClass = async (id: string) => {
+    try {
+      setIsLoading(true);
+      setClasses((prev) => prev.filter((c) => c.id !== id));
+      // Also remove any related quiz requests
+      setQuizRequests((prev) => 
+        prev.filter((request) => 
+          !classes.find((c) => c.id === id && c.name === request.className)
+        )
+      );
+    } catch (error) {
+      setError("Không thể xóa lớp học");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleQuizActive = async (classId: string, isActive: boolean) => {
+    try {
+      setIsLoading(true);
+      setClasses((prev) =>
+        prev.map((c) =>
+          c.id === classId
+            ? { ...c, isQuizActive: isActive, updatedAt: new Date().toISOString() }
+            : c
+        )
+      );
+    } catch (error) {
+      setError("Không thể thay đổi trạng thái bài kiểm tra");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Quiz request functions (new)
+  const requestQuizAccess = async (studentName: string, className: string) => {
+    try {
+      setIsLoading(true);
+      // Check if class exists
+      const classExists = classes.find((c) => c.name === className);
+      if (!classExists) {
+        throw new Error("Lớp học không tồn tại");
+      }
+
+      // Check if class is accepting quiz requests
+      if (!classExists.isQuizActive) {
+        throw new Error("Bài kiểm tra chưa được mở cho lớp này");
+      }
+
+      // Create a new request
+      const newRequest: QuizRequest = {
+        id: Date.now().toString(),
+        studentName,
+        className,
+        status: "pending",
+        requestedAt: new Date().toISOString(),
+      };
+      
+      setQuizRequests((prev) => [...prev, newRequest]);
+      return newRequest;
+    } catch (error) {
+      setError((error as Error).message || "Không thể gửi yêu cầu tham gia kiểm tra");
+      console.error(error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const approveQuizRequest = async (requestId: string) => {
+    try {
+      setIsLoading(true);
+      setQuizRequests((prev) =>
+        prev.map((request) =>
+          request.id === requestId
+            ? { ...request, status: "approved" }
+            : request
+        )
+      );
+    } catch (error) {
+      setError("Không thể phê duyệt yêu cầu");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const rejectQuizRequest = async (requestId: string) => {
+    try {
+      setIsLoading(true);
+      setQuizRequests((prev) =>
+        prev.map((request) =>
+          request.id === requestId
+            ? { ...request, status: "rejected" }
+            : request
+        )
+      );
+    } catch (error) {
+      setError("Không thể từ chối yêu cầu");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getPendingRequests = () => {
+    return quizRequests.filter((request) => request.status === "pending");
+  };
+
+  const checkStudentApproval = async (studentName: string, className: string) => {
+    // Find the most recent request for this student and class
+    const studentRequests = quizRequests
+      .filter(req => req.studentName === studentName && req.className === className)
+      .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+    
+    if (studentRequests.length === 0) {
+      return null; // No request found
+    }
+    
+    return studentRequests[0].status; // Return the most recent status
+  };
+
+  // Quiz session functions
   const startQuiz = (studentName: string, className: string) => {
     // Shuffle questions and options
     const shuffledQuestions: ShuffledQuestion[] = shuffleArray(questions).map((q) => ({
@@ -154,6 +363,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       currentQuestionIndex: 0,
       questions: shuffledQuestions,
       answers: [],
+      status: "approved", // Since this is called after approval, set status to approved
     };
 
     setCurrentSession(session);
@@ -250,6 +460,19 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         finishQuiz,
         getResults,
         currentSession,
+        // New class management values
+        classes,
+        addClass,
+        updateClass,
+        deleteClass,
+        toggleQuizActive,
+        // New quiz request values
+        quizRequests,
+        requestQuizAccess,
+        approveQuizRequest,
+        rejectQuizRequest,
+        getPendingRequests,
+        checkStudentApproval,
       }}
     >
       {children}
