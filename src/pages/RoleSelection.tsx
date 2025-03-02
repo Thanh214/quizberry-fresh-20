@@ -6,15 +6,15 @@ import Card from "@/components/Card";
 import Logo from "@/components/Logo";
 import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
-import { GraduationCap, UserCog } from "lucide-react"; // Import icons
+import { GraduationCap, UserCog } from "lucide-react"; // Import biểu tượng
 
 const RoleSelection: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
 
-  // Effect to redirect authenticated users
+  // Hiệu ứng để chuyển hướng người dùng đã xác thực
   React.useEffect(() => {
-    // If user is already authenticated, redirect to appropriate dashboard
+    // Nếu người dùng đã xác thực, chuyển hướng đến bảng điều khiển thích hợp
     if (isAuthenticated) {
       if (user?.role === "admin") {
         navigate("/admin/questions");
@@ -26,14 +26,14 @@ const RoleSelection: React.FC = () => {
 
   return (
     <Layout>
-      {/* Main container with enhanced styling */}
+      {/* Container chính với trang trí nâng cao */}
       <div className="flex flex-col items-center justify-center min-h-[85vh] animate-fade-in">
-        {/* Enhanced logo with animation */}
+        {/* Logo nâng cao với hiệu ứng */}
         <TransitionWrapper>
           <Logo className="mb-12 transform hover:scale-105 transition-transform duration-300" />
         </TransitionWrapper>
 
-        {/* Page title with gradient */}
+        {/* Tiêu đề trang với gradient */}
         <TransitionWrapper delay={300}>
           <div className="mb-10 text-center">
             <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -45,9 +45,9 @@ const RoleSelection: React.FC = () => {
           </div>
         </TransitionWrapper>
 
-        {/* Role selection cards with enhanced styling */}
+        {/* Thẻ lựa chọn vai trò với trang trí nâng cao */}
         <div className="grid gap-8 md:grid-cols-2 w-full max-w-2xl">
-          {/* Teacher card with glassmorphism effect */}
+          {/* Thẻ giáo viên với hiệu ứng kính */}
           <TransitionWrapper delay={500}>
             <Card
               className="p-8 hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 border-primary/20 hover:border-primary/50"
@@ -73,7 +73,7 @@ const RoleSelection: React.FC = () => {
             </Card>
           </TransitionWrapper>
 
-          {/* Student card with glassmorphism effect */}
+          {/* Thẻ học sinh với hiệu ứng kính */}
           <TransitionWrapper delay={700}>
             <Card
               className="p-8 hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 border-accent/20 hover:border-accent/50"
@@ -100,7 +100,7 @@ const RoleSelection: React.FC = () => {
           </TransitionWrapper>
         </div>
 
-        {/* Footer with app info */}
+        {/* Chân trang với thông tin ứng dụng */}
         <TransitionWrapper delay={900}>
           <div className="mt-16 text-center text-sm text-muted-foreground">
             <p>© 2023 EPUTest - Hệ thống kiểm tra trực tuyến</p>
