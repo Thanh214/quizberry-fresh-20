@@ -144,12 +144,13 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+      
       setQuestions((prev) => [...prev, newQuestion]);
       return newQuestion; // Return the created question
     } catch (error) {
       setError("Không thể thêm câu hỏi");
       console.error(error);
-      throw error;
+      throw error; // Rethrow to handle in component
     } finally {
       setIsLoading(false);
     }

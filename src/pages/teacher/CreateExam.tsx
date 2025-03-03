@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -13,7 +14,7 @@ import {
   ChevronLeft, Plus, Trash2, Save, Clock, AlertTriangle, 
   Search, Filter, CheckCircle, XCircle, PlusCircle, Edit, Bookmark
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -105,6 +106,8 @@ const CreateExam: React.FC = () => {
     if (!selectedQuestions.includes(questionId)) {
       setSelectedQuestions([...selectedQuestions, questionId]);
       toast.success("Đã thêm câu hỏi vào đề thi");
+    } else {
+      toast.info("Câu hỏi này đã có trong đề thi");
     }
   };
 
@@ -172,6 +175,7 @@ const CreateExam: React.FC = () => {
       { id: "3", content: "", isCorrect: false },
       { id: "4", content: "", isCorrect: false },
     ]);
+    setActiveTab("existing");
   };
 
   const handleCreateNewQuestion = async () => {
@@ -205,10 +209,8 @@ const CreateExam: React.FC = () => {
         // Thêm câu hỏi mới vào đề thi
         setSelectedQuestions(prev => [...prev, newQuestion.id]);
         
-        // Reset form và đóng dialog
+        // Reset form 
         resetNewQuestionForm();
-        setShowAddQuestionDialog(false);
-        setActiveTab("existing");
         
         toast.success("Đã tạo câu hỏi mới và thêm vào đề thi");
       } else {
@@ -269,6 +271,20 @@ const CreateExam: React.FC = () => {
     }
   };
 
+  // Đóng dialog và reset form nếu cần
+  const handleCloseDialog = () => {
+    if (newQuestionContent || newQuestionOptions.some(o => o.content)) {
+      // Nếu có dữ liệu trong form, hiển thị xác nhận
+      if (confirm("Bạn có muốn đóng và hủy nội dung câu hỏi đang tạo?")) {
+        resetNewQuestionForm();
+        setShowAddQuestionDialog(false);
+      }
+    } else {
+      // Nếu không có dữ liệu, đóng luôn
+      setShowAddQuestionDialog(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="flex flex-col min-h-screen">
@@ -284,63 +300,62 @@ const CreateExam: React.FC = () => {
         </header>
 
         {/* Xác nhận khi thoát có thay đổi chưa lưu */}
-        {showExitConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
-              <h3 className="text-lg font-medium mb-3">Xác nhận thoát</h3>
-              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
-                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-amber-800">
-                  Bạn có thay đổi chưa được lưu. Nếu thoát, các thay đổi sẽ bị mất.
-                </p>
-              </div>
-              <div className="flex justify-end gap-3">
-                <button 
-                  className="px-4 py-2 border border-input rounded-md text-sm"
-                  onClick={cancelExit}
-                >
-                  Ở lại
-                </button>
-                <button 
-                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md text-sm"
-                  onClick={confirmExit}
-                >
-                  Thoát và hủy thay đổi
-                </button>
-              </div>
+        <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Xác nhận thoát</DialogTitle>
+              <DialogDescription>
+                Bạn có thay đổi chưa được lưu. Nếu thoát, các thay đổi sẽ bị mất.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
+              <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                Tất cả các thay đổi sẽ không được lưu lại.
+              </p>
             </div>
-          </div>
-        )}
+            <DialogFooter>
+              <Button variant="outline" onClick={cancelExit}>
+                Ở lại
+              </Button>
+              <Button variant="destructive" onClick={confirmExit}>
+                Thoát và hủy thay đổi
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Xác nhận xóa câu hỏi */}
-        {questionToRemove && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
-              <h3 className="text-lg font-medium mb-3">Xác nhận xóa câu hỏi</h3>
-              <p className="mb-5 text-muted-foreground">Bạn có chắc chắn muốn xóa câu hỏi này khỏi đề thi?</p>
-              <div className="flex justify-end gap-3">
-                <button 
-                  className="px-4 py-2 border border-input rounded-md text-sm"
-                  onClick={cancelRemoveQuestion}
-                >
-                  Hủy
-                </button>
-                <button 
-                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md text-sm"
-                  onClick={confirmRemoveQuestion}
-                >
-                  Xóa câu hỏi
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <Dialog open={!!questionToRemove} onOpenChange={(open) => !open && setQuestionToRemove(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Xác nhận xóa câu hỏi</DialogTitle>
+              <DialogDescription>
+                Bạn có chắc chắn muốn xóa câu hỏi này khỏi đề thi?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={cancelRemoveQuestion}>
+                Hủy
+              </Button>
+              <Button variant="destructive" onClick={confirmRemoveQuestion}>
+                Xóa câu hỏi
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-        {/* Dialog thêm câu hỏi mới */}
-        <Dialog open={showAddQuestionDialog} onOpenChange={setShowAddQuestionDialog}>
+        {/* Dialog quản lý câu hỏi */}
+        <Dialog open={showAddQuestionDialog} onOpenChange={(open) => {
+          if (!open) handleCloseDialog();
+          else setShowAddQuestionDialog(true);
+        }}>
           <DialogContent className="sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>Quản lý câu hỏi</DialogTitle>
+              <DialogDescription>
+                Thêm câu hỏi có sẵn hoặc tạo câu hỏi mới cho đề thi của bạn.
+              </DialogDescription>
             </DialogHeader>
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -470,8 +485,8 @@ const CreateExam: React.FC = () => {
             </Tabs>
             
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowAddQuestionDialog(false)}>
-                Hủy
+              <Button variant="outline" onClick={handleCloseDialog}>
+                Đóng
               </Button>
               {activeTab === "new" && (
                 <Button 
@@ -479,7 +494,7 @@ const CreateExam: React.FC = () => {
                   disabled={isLoading}
                   className="ml-2"
                 >
-                  {isLoading ? "Đang tạo..." : "Tạo câu hỏi mới"}
+                  {isLoading ? "Đang tạo..." : "Tạo và thêm câu hỏi"}
                 </Button>
               )}
             </DialogFooter>
@@ -557,17 +572,17 @@ const CreateExam: React.FC = () => {
                         className="h-8"
                       >
                         <PlusCircle className="h-4 w-4 mr-1" />
-                        Thêm câu hỏi
+                        Quản lý câu hỏi
                       </Button>
                     </div>
-                    <button
+                    <Button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none"
+                      className="w-full"
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      {isLoading ? "Đang lưu..." : isEditing ? "Cập nhật đề thi" : "Tạo đề thi"}
-                    </button>
+                      {isLoading ? "Đang lưu..." : isEditing ? "Cập nhật đề thi" : "Lưu đề thi"}
+                    </Button>
                   </div>
                 </form>
               </Card>
