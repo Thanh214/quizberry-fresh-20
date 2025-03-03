@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -8,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { Option } from "@/types/models";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 
 const EditQuestion: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +28,7 @@ const EditQuestion: React.FC = () => {
     { id: "4", content: "", isCorrect: false },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   useEffect(() => {
     // Check if user is admin
@@ -65,6 +68,22 @@ const EditQuestion: React.FC = () => {
       };
     }
     setOptions(newOptions);
+  };
+
+  const handleExit = () => {
+    if (questionContent || options.some(o => o.content)) {
+      setShowExitConfirm(true);
+    } else {
+      navigate("/admin/questions");
+    }
+  };
+
+  const confirmExit = () => {
+    navigate("/admin/questions");
+  };
+
+  const cancelExit = () => {
+    setShowExitConfirm(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,11 +138,40 @@ const EditQuestion: React.FC = () => {
           <Logo />
           <button
             className="text-sm text-muted-foreground hover:text-foreground"
-            onClick={() => navigate("/admin/questions")}
+            onClick={handleExit}
           >
             Quay lại danh sách
           </button>
         </header>
+
+        {/* Xác nhận thoát khi có thay đổi chưa lưu */}
+        {showExitConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h3 className="text-lg font-medium mb-3">Xác nhận thoát</h3>
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
+                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800">
+                  Bạn có thay đổi chưa được lưu. Nếu thoát, các thay đổi sẽ bị mất.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button 
+                  className="px-4 py-2 border border-input rounded-md text-sm"
+                  onClick={cancelExit}
+                >
+                  Ở lại
+                </button>
+                <button 
+                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md text-sm"
+                  onClick={confirmExit}
+                >
+                  Thoát và hủy thay đổi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <TransitionWrapper delay={300}>
           <div className="mb-6">
@@ -184,7 +232,7 @@ const EditQuestion: React.FC = () => {
                 <button
                   type="button"
                   className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
-                  onClick={() => navigate("/admin/questions")}
+                  onClick={handleExit}
                 >
                   Hủy
                 </button>

@@ -10,7 +10,7 @@ import { useExam } from "@/context/ExamContext";
 import { useQuiz } from "@/context/QuizContext";
 import { Question } from "@/types/models";
 import { toast } from "sonner";
-import { ChevronLeft, Plus, Trash2, Save, Clock } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Save, Clock, AlertTriangle } from "lucide-react";
 
 const CreateExam: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +25,8 @@ const CreateExam: React.FC = () => {
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [questionToRemove, setQuestionToRemove] = useState<string | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   
   const isEditing = !!id;
 
@@ -69,11 +71,41 @@ const CreateExam: React.FC = () => {
   const handleAddQuestion = (questionId: string) => {
     if (!selectedQuestions.includes(questionId)) {
       setSelectedQuestions([...selectedQuestions, questionId]);
+      toast.success("Đã thêm câu hỏi vào đề thi");
     }
   };
 
   const handleRemoveQuestion = (questionId: string) => {
-    setSelectedQuestions(selectedQuestions.filter(id => id !== questionId));
+    // Hiển thị xác nhận trước khi xóa
+    setQuestionToRemove(questionId);
+  };
+
+  const confirmRemoveQuestion = () => {
+    if (questionToRemove) {
+      setSelectedQuestions(selectedQuestions.filter(id => id !== questionToRemove));
+      setQuestionToRemove(null);
+      toast.success("Đã xóa câu hỏi khỏi đề thi");
+    }
+  };
+
+  const cancelRemoveQuestion = () => {
+    setQuestionToRemove(null);
+  };
+
+  const handleExit = () => {
+    if (title || description || selectedQuestions.length > 0) {
+      setShowExitConfirm(true);
+    } else {
+      navigate("/teacher/exams");
+    }
+  };
+
+  const confirmExit = () => {
+    navigate("/teacher/exams");
+  };
+
+  const cancelExit = () => {
+    setShowExitConfirm(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,12 +161,65 @@ const CreateExam: React.FC = () => {
           <Logo />
           <button
             className="text-sm text-muted-foreground hover:text-foreground flex items-center"
-            onClick={() => navigate("/teacher/exams")}
+            onClick={handleExit}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Quay lại danh sách đề thi
           </button>
         </header>
+
+        {/* Xác nhận khi thoát có thay đổi chưa lưu */}
+        {showExitConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h3 className="text-lg font-medium mb-3">Xác nhận thoát</h3>
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
+                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800">
+                  Bạn có thay đổi chưa được lưu. Nếu thoát, các thay đổi sẽ bị mất.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button 
+                  className="px-4 py-2 border border-input rounded-md text-sm"
+                  onClick={cancelExit}
+                >
+                  Ở lại
+                </button>
+                <button 
+                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md text-sm"
+                  onClick={confirmExit}
+                >
+                  Thoát và hủy thay đổi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Xác nhận xóa câu hỏi */}
+        {questionToRemove && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h3 className="text-lg font-medium mb-3">Xác nhận xóa câu hỏi</h3>
+              <p className="mb-5 text-muted-foreground">Bạn có chắc chắn muốn xóa câu hỏi này khỏi đề thi?</p>
+              <div className="flex justify-end gap-3">
+                <button 
+                  className="px-4 py-2 border border-input rounded-md text-sm"
+                  onClick={cancelRemoveQuestion}
+                >
+                  Hủy
+                </button>
+                <button 
+                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md text-sm"
+                  onClick={confirmRemoveQuestion}
+                >
+                  Xóa câu hỏi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <TransitionWrapper delay={300}>
           <div className="mb-6">

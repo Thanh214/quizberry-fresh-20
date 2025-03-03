@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from "react";
 import { Question, Option, QuizSession, QuizResult, ShuffledQuestion, Class, QuizRequest } from "@/types/models";
 
@@ -13,7 +14,7 @@ type QuizContextType = {
   deleteQuestion: (id: string) => Promise<void>;
   
   // Quiz session management
-  startQuiz: (studentName: string, className: string) => QuizSession;
+  startQuiz: (studentName: string, studentId: string, className: string, examId: string) => QuizSession;
   submitAnswer: (sessionId: string, questionId: string, optionId: string | null, timeSpent: number) => void;
   finishQuiz: (sessionId: string) => QuizResult;
   getResults: () => QuizResult[];
@@ -28,7 +29,7 @@ type QuizContextType = {
   
   // Quiz requests (new)
   quizRequests: QuizRequest[];
-  requestQuizAccess: (studentName: string, className: string) => Promise<QuizRequest>;
+  requestQuizAccess: (studentName: string, studentId: string, className: string) => Promise<QuizRequest>;
   approveQuizRequest: (requestId: string) => Promise<void>;
   rejectQuizRequest: (requestId: string) => Promise<void>;
   getPendingRequests: () => QuizRequest[];
@@ -260,7 +261,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Quiz request functions (new)
-  const requestQuizAccess = async (studentName: string, className: string) => {
+  const requestQuizAccess = async (studentName: string, studentId: string, className: string) => {
     try {
       setIsLoading(true);
       // Check if class exists
@@ -278,6 +279,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newRequest: QuizRequest = {
         id: Date.now().toString(),
         studentName,
+        studentId, // Thêm studentId vào đây
         className,
         status: "pending",
         requestedAt: new Date().toISOString(),
@@ -348,7 +350,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Quiz session functions
-  const startQuiz = (studentName: string, className: string) => {
+  const startQuiz = (studentName: string, studentId: string, className: string, examId: string) => {
     // Shuffle questions and options
     const shuffledQuestions: ShuffledQuestion[] = shuffleArray(questions).map((q) => ({
       ...q,
@@ -358,7 +360,9 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const session: QuizSession = {
       id: Date.now().toString(),
       studentName,
+      studentId, // Thêm studentId
       className,
+      examId, // Thêm examId
       startedAt: new Date().toISOString(),
       currentQuestionIndex: 0,
       questions: shuffledQuestions,
@@ -425,7 +429,9 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const result: QuizResult = {
       id: sessionId,
       studentName: currentSession.studentName,
+      studentId: currentSession.studentId, // Thêm studentId
       className: currentSession.className,
+      examId: currentSession.examId, // Thêm examId
       score,
       totalQuestions,
       averageTimePerQuestion,
