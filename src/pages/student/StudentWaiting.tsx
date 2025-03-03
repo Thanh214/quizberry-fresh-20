@@ -35,19 +35,20 @@ const StudentWaiting: React.FC = () => {
     const checkStatus = async () => {
       try {
         if (user.name && user.className) {
-          // Sửa lỗi: bổ sung 2 tham số thiếu cho hàm checkStudentApproval
-          // Giả sử 2 tham số còn thiếu là studentId và examId
-          const studentId = user.id || '';
-          const examId = user.examId || '';
+          // Lấy mã bài thi từ localStorage thay vì từ user
+          const examCode = localStorage.getItem("examCode") || '';
           
-          const status = await checkStudentApproval(user.name, user.className, studentId, examId);
+          // Chỉ truyền 2 tham số như yêu cầu của hàm
+          const status = await checkStudentApproval(user.name, user.className);
           setApprovalStatus(status);
           
           // Nếu được phê duyệt, bắt đầu bài kiểm tra và chuyển hướng
           if (status === "approved") {
             toast.success("Yêu cầu của bạn đã được phê duyệt!");
-            // Cũng cần bổ sung các tham số thiếu cho hàm startQuiz
-            startQuiz(user.name, user.className, studentId, examId);
+            // Lấy studentId từ user, nếu không có thì dùng giá trị rỗng
+            const studentId = user.studentId || '';
+            // Chỉ truyền các tham số cần thiết
+            startQuiz(user.name, studentId, user.className, examCode);
             navigate("/student/quiz");
           } 
           // Nếu bị từ chối, hiển thị thông báo và chuyển về trang khác

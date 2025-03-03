@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from "react";
 import { Question, Option, QuizSession, QuizResult, ShuffledQuestion, Class, QuizRequest } from "@/types/models";
 
@@ -9,7 +8,7 @@ type QuizContextType = {
   isLoading: boolean;
   error: string | null;
   fetchQuestions: () => Promise<void>;
-  addQuestion: (question: Omit<Question, "id" | "createdAt" | "updatedAt">) => Promise<void>;
+  addQuestion: (question: Omit<Question, "id" | "createdAt" | "updatedAt">) => Promise<Question>; // Fix return type
   updateQuestion: (id: string, question: Partial<Question>) => Promise<void>;
   deleteQuestion: (id: string) => Promise<void>;
   
@@ -136,7 +135,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const addQuestion = async (question: Omit<Question, "id" | "createdAt" | "updatedAt">) => {
+  const addQuestion = async (question: Omit<Question, "id" | "createdAt" | "updatedAt">): Promise<Question> => {
     try {
       setIsLoading(true);
       const newQuestion: Question = {
@@ -146,9 +145,11 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updatedAt: new Date().toISOString(),
       };
       setQuestions((prev) => [...prev, newQuestion]);
+      return newQuestion; // Return the created question
     } catch (error) {
       setError("Không thể thêm câu hỏi");
       console.error(error);
+      throw error;
     } finally {
       setIsLoading(false);
     }

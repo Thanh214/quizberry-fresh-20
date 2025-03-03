@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -195,21 +194,26 @@ const CreateExam: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Tạo câu hỏi mới
+      // Tạo câu hỏi mới và lấy kết quả trả về
       const newQuestion = await addQuestion({
         content: newQuestionContent,
         options: newQuestionOptions,
       });
       
-      // Thêm câu hỏi mới vào đề thi
-      setSelectedQuestions(prev => [...prev, newQuestion.id]);
-      
-      // Reset form và đóng dialog
-      resetNewQuestionForm();
-      setShowAddQuestionDialog(false);
-      setActiveTab("existing");
-      
-      toast.success("Đã tạo câu hỏi mới và thêm vào đề thi");
+      // Kiểm tra xem newQuestion có tồn tại và có id không trước khi sử dụng
+      if (newQuestion && typeof newQuestion === 'object' && 'id' in newQuestion) {
+        // Thêm câu hỏi mới vào đề thi
+        setSelectedQuestions(prev => [...prev, newQuestion.id]);
+        
+        // Reset form và đóng dialog
+        resetNewQuestionForm();
+        setShowAddQuestionDialog(false);
+        setActiveTab("existing");
+        
+        toast.success("Đã tạo câu hỏi mới và thêm vào đề thi");
+      } else {
+        toast.error("Không thể lấy thông tin câu hỏi mới");
+      }
     } catch (error) {
       console.error(error);
       toast.error("Không thể tạo câu hỏi mới");
