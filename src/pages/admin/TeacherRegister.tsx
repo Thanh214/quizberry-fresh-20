@@ -6,50 +6,33 @@ import Card from "@/components/Card";
 import Logo from "@/components/Logo";
 import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
-import { useExam } from "@/context/ExamContext";
 import { toast } from "sonner";
 
-const StudentRegister: React.FC = () => {
+const TeacherRegister: React.FC = () => {
   const navigate = useNavigate();
-  const { loginAsStudent } = useAuth();
-  const { getExamByCode, addParticipant } = useExam();
+  const { registerTeacher, isLoading } = useAuth();
   
   const [name, setName] = useState("");
-  const [className, setClassName] = useState("");
-  const [studentId, setStudentId] = useState("");
-  const [examCode, setExamCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [faculty, setFaculty] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Kiểm tra mật khẩu xác nhận
+    if (password !== confirmPassword) {
+      toast.error("Mật khẩu xác nhận không khớp");
+      return;
+    }
+    
     try {
-      setIsLoading(true);
-      
-      // Kiểm tra mã bài thi
-      const exam = getExamByCode(examCode.toUpperCase());
-      if (!exam) {
-        toast.error("Mã bài thi không hợp lệ hoặc không tồn tại");
-        return;
-      }
-      
-      if (!exam.isActive) {
-        toast.error("Bài thi này chưa được mở");
-        return;
-      }
-      
-      // Thêm thông tin tham gia
-      await addParticipant(exam.id, name, studentId, className);
-      
-      // Đăng nhập học sinh
-      await loginAsStudent(name, className, studentId, examCode);
-      
-      // Chuyển hướng đến trang chờ
-      navigate("/student/quiz");
+      await registerTeacher(name, faculty, username, password);
+      toast.success("Đăng ký tài khoản thành công");
+      navigate("/admin/login");
     } catch (error) {
-      toast.error((error as Error).message || "Không thể đăng ký tham gia");
-    } finally {
-      setIsLoading(false);
+      toast.error((error as Error).message || "Đăng ký thất bại");
     }
   };
 
@@ -64,9 +47,9 @@ const StudentRegister: React.FC = () => {
           <Card className="w-full max-w-md">
             <div className="space-y-6 p-6">
               <div className="space-y-2 text-center">
-                <h1 className="text-3xl font-bold">Đăng ký tham gia thi</h1>
+                <h1 className="text-3xl font-bold">Đăng ký tài khoản Giáo viên</h1>
                 <p className="text-sm text-muted-foreground">
-                  Nhập thông tin của bạn để tham gia bài thi
+                  Nhập thông tin đăng ký của bạn
                 </p>
               </div>
 
@@ -86,44 +69,61 @@ const StudentRegister: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none" htmlFor="studentId">
-                    Mã sinh viên
+                  <label className="text-sm font-medium leading-none" htmlFor="faculty">
+                    Khoa
                   </label>
                   <input
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    id="studentId"
-                    placeholder="SV12345"
+                    id="faculty"
+                    placeholder="Công nghệ thông tin"
                     required
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
+                    value={faculty}
+                    onChange={(e) => setFaculty(e.target.value)}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none" htmlFor="class">
-                    Lớp
+                  <label className="text-sm font-medium leading-none" htmlFor="username">
+                    Tên đăng nhập
                   </label>
                   <input
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    id="class"
-                    placeholder="10A1"
+                    id="username"
+                    placeholder="teacher123"
                     required
-                    value={className}
-                    onChange={(e) => setClassName(e.target.value)}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none" htmlFor="examCode">
-                    Mã bài thi
+                  <label className="text-sm font-medium leading-none" htmlFor="password">
+                    Mật khẩu
                   </label>
                   <input
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    id="examCode"
-                    placeholder="ABC123"
+                    id="password"
+                    placeholder="••••••••"
                     required
-                    value={examCode}
-                    onChange={(e) => setExamCode(e.target.value.toUpperCase())}
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    minLength={6}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none" htmlFor="confirm-password">
+                    Xác nhận mật khẩu
+                  </label>
+                  <input
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    id="confirm-password"
+                    placeholder="••••••••"
+                    required
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                 </div>
                 
@@ -135,17 +135,18 @@ const StudentRegister: React.FC = () => {
                   {isLoading ? (
                     <span className="animate-pulse">Đang xử lý...</span>
                   ) : (
-                    "Tham gia ngay"
+                    "Đăng ký"
                   )}
                 </button>
               </form>
 
               <div className="text-center text-sm">
+                <p className="text-gray-500">Đã có tài khoản?</p>
                 <button 
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={() => navigate("/role-selection")}
+                  className="text-primary hover:underline hover:text-primary/80"
+                  onClick={() => navigate("/admin/login")}
                 >
-                  Quay lại trang chọn vai trò
+                  Đăng nhập
                 </button>
               </div>
             </div>
@@ -156,4 +157,4 @@ const StudentRegister: React.FC = () => {
   );
 };
 
-export default StudentRegister;
+export default TeacherRegister;
