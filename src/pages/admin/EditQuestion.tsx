@@ -7,15 +7,16 @@ import Logo from "@/components/Logo";
 import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
-import { Option } from "@/types/models";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronLeft, Save, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const EditQuestion: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { questions, addQuestion, updateQuestion } = useQuiz();
+  const { questions, addQuestion, updateQuestion, deleteQuestion } = useQuiz();
   const isNewQuestion = id === "new";
 
   const [questionContent, setQuestionContent] = useState("");
@@ -29,15 +30,16 @@ const EditQuestion: React.FC = () => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin
-    if (!user || user.role !== "admin") {
+    // Kiểm tra quyền admin
+    if (!user || (user.role !== "admin" && user.role !== "teacher")) {
       navigate("/role-selection");
       return;
     }
 
-    // If editing an existing question, load it
+    // Nếu chỉnh sửa câu hỏi đã có, tải dữ liệu
     if (!isNewQuestion) {
       const question = questions.find((q) => q.id === id);
       if (question) {
@@ -57,17 +59,44 @@ const EditQuestion: React.FC = () => {
   ) => {
     const newOptions = [...options];
     if (field === "isCorrect") {
-      // Uncheck all other options
+      // Bỏ chọn tất cả các tùy chọn khác
       newOptions.forEach((option, i) => {
         option.isCorrect = i === index;
       });
     } else {
       newOptions[index] = {
         ...newOptions[index],
-        [field]: value as string, // Cast value to string when field is "content"
+        [field]: value as string, // Ép kiểu value thành string khi field là "content"
       };
     }
     setOptions(newOptions);
+  };
+
+  const handleAddOption = () => {
+    if (options.length < 6) { // Cho phép tối đa 6 tùy chọn
+      setOptions([
+        ...options,
+        { id: `${options.length + 1}`, content: "", isCorrect: false }
+      ]);
+    } else {
+      toast.warning("Không thể thêm quá 6 tùy chọn");
+    }
+  };
+
+  const handleRemoveOption = (index: number) => {
+    if (options.length > 2) { // Duy trì ít nhất 2 tùy chọn
+      const newOptions = [...options];
+      newOptions.splice(index, 1);
+      
+      // Nếu xóa tùy chọn đúng, đặt tùy chọn đầu tiên làm tùy chọn đúng
+      if (options[index].isCorrect && newOptions.length > 0) {
+        newOptions[0].isCorrect = true;
+      }
+      
+      setOptions(newOptions);
+    } else {
+      toast.warning("Cần có ít nhất 2 tùy chọn");
+    }
   };
 
   const handleExit = () => {
@@ -86,10 +115,36 @@ const EditQuestion: React.FC = () => {
     setShowExitConfirm(false);
   };
 
+  const handleDelete = () => {
+    if (!isNewQuestion) {
+      setShowDeleteConfirm(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!isNewQuestion && id) {
+      try {
+        setIsLoading(true);
+        await deleteQuestion(id);
+        toast.success("Đã xóa câu hỏi thành công");
+        navigate("/admin/questions");
+      } catch (error) {
+        toast.error("Không thể xóa câu hỏi");
+      } finally {
+        setIsLoading(false);
+        setShowDeleteConfirm(false);
+      }
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate
+    // Kiểm tra hợp lệ
     if (!questionContent.trim()) {
       toast.error("Vui lòng nhập nội dung câu hỏi");
       return;
@@ -137,41 +192,59 @@ const EditQuestion: React.FC = () => {
         <header className="flex items-center justify-between mb-8">
           <Logo />
           <button
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-sm text-muted-foreground hover:text-foreground flex items-center"
             onClick={handleExit}
           >
+            <ChevronLeft className="h-4 w-4 mr-1" />
             Quay lại danh sách
           </button>
         </header>
 
         {/* Xác nhận thoát khi có thay đổi chưa lưu */}
-        {showExitConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
-              <h3 className="text-lg font-medium mb-3">Xác nhận thoát</h3>
-              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
-                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-amber-800">
-                  Bạn có thay đổi chưa được lưu. Nếu thoát, các thay đổi sẽ bị mất.
-                </p>
-              </div>
-              <div className="flex justify-end gap-3">
-                <button 
-                  className="px-4 py-2 border border-input rounded-md text-sm"
-                  onClick={cancelExit}
-                >
-                  Ở lại
-                </button>
-                <button 
-                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md text-sm"
-                  onClick={confirmExit}
-                >
-                  Thoát và hủy thay đổi
-                </button>
-              </div>
+        <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Xác nhận thoát</DialogTitle>
+            </DialogHeader>
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                Bạn có thay đổi chưa được lưu. Nếu thoát, các thay đổi sẽ bị mất.
+              </p>
             </div>
-          </div>
-        )}
+            <DialogFooter>
+              <Button variant="outline" onClick={cancelExit}>
+                Ở lại
+              </Button>
+              <Button variant="destructive" onClick={confirmExit}>
+                Thoát và hủy thay đổi
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Xác nhận xóa câu hỏi */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Xác nhận xóa câu hỏi</DialogTitle>
+            </DialogHeader>
+            <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+              <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-destructive-foreground">
+                Bạn có chắc chắn muốn xóa câu hỏi này? Thao tác này không thể khôi phục.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={cancelDelete}>
+                Hủy
+              </Button>
+              <Button variant="destructive" onClick={confirmDelete} disabled={isLoading}>
+                {isLoading ? "Đang xóa..." : "Xóa câu hỏi"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <TransitionWrapper delay={300}>
           <div className="mb-6">
@@ -200,7 +273,19 @@ const EditQuestion: React.FC = () => {
               </div>
 
               <div className="space-y-4">
-                <label className="text-sm font-medium">Các đáp án:</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Các đáp án:</label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleAddOption}
+                    className="h-8"
+                  >
+                    Thêm đáp án
+                  </Button>
+                </div>
+                
                 {options.map((option, index) => (
                   <div key={option.id} className="flex items-center space-x-3">
                     <input
@@ -221,6 +306,17 @@ const EditQuestion: React.FC = () => {
                       className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
                     />
+                    {options.length > 2 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveOption(index)}
+                        className="h-9 w-9 p-0"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground">
@@ -228,25 +324,36 @@ const EditQuestion: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex justify-end space-x-3">
-                <button
+              <div className="flex justify-end space-x-3 pt-2">
+                {!isNewQuestion && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDelete}
+                    className="mr-auto"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Xóa câu hỏi
+                  </Button>
+                )}
+                <Button
                   type="button"
-                  className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                  variant="outline"
                   onClick={handleExit}
                 >
                   Hủy
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isLoading}
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none"
                 >
+                  <Save className="h-4 w-4 mr-1" />
                   {isLoading ? (
                     <span className="animate-pulse">Đang lưu...</span>
                   ) : (
                     "Lưu câu hỏi"
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </Card>

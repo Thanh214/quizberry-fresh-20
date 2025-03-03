@@ -1,7 +1,8 @@
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { Exam, ExamParticipant, Question } from "@/types/models";
 import { useAuth } from "./AuthContext";
+import { toast } from "sonner";
 
 // Định nghĩa kiểu dữ liệu cho context
 type ExamContextType = {
@@ -20,6 +21,7 @@ type ExamContextType = {
   // Tìm kiếm bài thi
   getExamByCode: (code: string) => Exam | null;
   getExamsByTeacher: (teacherId: string) => Exam[];
+  getParticipantsByExam: (examId: string) => ExamParticipant[];
   
   // Trạng thái
   isLoading: boolean;
@@ -53,14 +55,21 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Tự động lưu dữ liệu khi thay đổi
+  useEffect(() => {
+    localStorage.setItem("exams", JSON.stringify(exams));
+  }, [exams]);
+  
+  useEffect(() => {
+    localStorage.setItem("examParticipants", JSON.stringify(participants));
+  }, [participants]);
+
   // Lưu dữ liệu vào localStorage
   const saveExams = (data: Exam[]) => {
-    localStorage.setItem("exams", JSON.stringify(data));
     setExams(data);
   };
   
   const saveParticipants = (data: ExamParticipant[]) => {
-    localStorage.setItem("examParticipants", JSON.stringify(data));
     setParticipants(data);
   };
 
@@ -99,10 +108,13 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const updatedExams = [...exams, newExam];
       saveExams(updatedExams);
+      toast.success("Đã tạo bài thi mới thành công!");
       
       return newExam;
     } catch (error) {
-      setError((error as Error).message);
+      const errorMessage = (error as Error).message;
+      setError(errorMessage);
+      toast.error(`Lỗi: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -127,8 +139,11 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       saveExams(updatedExams);
+      toast.success("Đã cập nhật bài thi thành công!");
     } catch (error) {
-      setError((error as Error).message);
+      const errorMessage = (error as Error).message;
+      setError(errorMessage);
+      toast.error(`Lỗi: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -147,8 +162,12 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Xóa tất cả thông tin tham gia liên quan
       const updatedParticipants = participants.filter(p => p.examId !== id);
       saveParticipants(updatedParticipants);
+      
+      toast.success("Đã xóa bài thi thành công!");
     } catch (error) {
-      setError((error as Error).message);
+      const errorMessage = (error as Error).message;
+      setError(errorMessage);
+      toast.error(`Lỗi: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -160,8 +179,11 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       await updateExam(examId, { isActive });
+      toast.success(isActive ? "Đã kích hoạt bài thi!" : "Đã vô hiệu hóa bài thi!");
     } catch (error) {
-      setError((error as Error).message);
+      const errorMessage = (error as Error).message;
+      setError(errorMessage);
+      toast.error(`Lỗi: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -211,8 +233,11 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const updatedParticipants = [...participants, newParticipant];
       saveParticipants(updatedParticipants);
+      toast.success("Đã đăng ký tham gia bài thi thành công!");
     } catch (error) {
-      setError((error as Error).message);
+      const errorMessage = (error as Error).message;
+      setError(errorMessage);
+      toast.error(`Lỗi: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -238,8 +263,11 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       saveParticipants(updatedParticipants);
+      toast.success("Đã cập nhật điểm số thành công!");
     } catch (error) {
-      setError((error as Error).message);
+      const errorMessage = (error as Error).message;
+      setError(errorMessage);
+      toast.error(`Lỗi: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -255,6 +283,11 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getExamsByTeacher = (teacherId: string): Exam[] => {
     return exams.filter(e => e.teacherId === teacherId);
   };
+  
+  // Lấy danh sách người tham gia theo bài thi
+  const getParticipantsByExam = (examId: string): ExamParticipant[] => {
+    return participants.filter(p => p.examId === examId);
+  };
 
   return (
     <ExamContext.Provider
@@ -269,6 +302,7 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateParticipantScore,
         getExamByCode,
         getExamsByTeacher,
+        getParticipantsByExam,
         isLoading,
         error,
       }}

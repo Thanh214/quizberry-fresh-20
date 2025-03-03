@@ -12,39 +12,45 @@ import { Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 /**
  * StudentWaiting component
- * This component shows a waiting room for students after registration
- * Students wait here for teacher approval before they can access the quiz
+ * Thành phần này hiển thị phòng chờ cho học sinh sau khi đăng ký
+ * Học sinh chờ ở đây để được giáo viên phê duyệt trước khi có thể truy cập bài kiểm tra
  */
 const StudentWaiting: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { checkStudentApproval, startQuiz } = useQuiz();
   
-  // State to track approval status
+  // State để theo dõi trạng thái phê duyệt
   const [approvalStatus, setApprovalStatus] = useState<"pending" | "approved" | "rejected" | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   
-  // Poll for status updates
+  // Kiểm tra cập nhật trạng thái
   useEffect(() => {
     if (!user) {
       navigate("/role-selection");
       return;
     }
     
-    // Function to check status
+    // Hàm kiểm tra trạng thái
     const checkStatus = async () => {
       try {
         if (user.name && user.className) {
-          const status = await checkStudentApproval(user.name, user.className);
+          // Sửa lỗi: bổ sung 2 tham số thiếu cho hàm checkStudentApproval
+          // Giả sử 2 tham số còn thiếu là studentId và examId
+          const studentId = user.id || '';
+          const examId = user.examId || '';
+          
+          const status = await checkStudentApproval(user.name, user.className, studentId, examId);
           setApprovalStatus(status);
           
-          // If approved, start the quiz and navigate
+          // Nếu được phê duyệt, bắt đầu bài kiểm tra và chuyển hướng
           if (status === "approved") {
             toast.success("Yêu cầu của bạn đã được phê duyệt!");
-            startQuiz(user.name, user.className);
+            // Cũng cần bổ sung các tham số thiếu cho hàm startQuiz
+            startQuiz(user.name, user.className, studentId, examId);
             navigate("/student/quiz");
           } 
-          // If rejected, show message and navigate back
+          // Nếu bị từ chối, hiển thị thông báo và chuyển về trang khác
           else if (status === "rejected") {
             toast.error("Yêu cầu của bạn đã bị từ chối!");
             setTimeout(() => {
@@ -54,23 +60,23 @@ const StudentWaiting: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error("Error checking status:", error);
+        console.error("Lỗi khi kiểm tra trạng thái:", error);
       } finally {
         setIsCheckingStatus(false);
       }
     };
     
-    // Check immediately and then set up polling
+    // Kiểm tra ngay lập tức và sau đó thiết lập polling
     checkStatus();
     
-    // Poll every 5 seconds
+    // Kiểm tra mỗi 5 giây
     const intervalId = setInterval(checkStatus, 5000);
     
-    // Clean up interval on unmount
+    // Dọn dẹp interval khi unmount
     return () => clearInterval(intervalId);
   }, [user, navigate, checkStudentApproval, startQuiz, logout]);
   
-  // Handler for cancel button
+  // Xử lý nút hủy
   const handleCancel = () => {
     if (window.confirm("Bạn có chắc muốn hủy yêu cầu tham gia bài kiểm tra?")) {
       logout();
@@ -78,11 +84,11 @@ const StudentWaiting: React.FC = () => {
     }
   };
   
-  // Calculate waiting time
+  // Tính toán thời gian chờ
   const [waitingTime, setWaitingTime] = useState(0);
   
   useEffect(() => {
-    // Update waiting time every second
+    // Cập nhật thời gian chờ mỗi giây
     const timer = setInterval(() => {
       setWaitingTime(prev => prev + 1);
     }, 1000);
@@ -90,7 +96,7 @@ const StudentWaiting: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
   
-  // Format waiting time
+  // Định dạng thời gian chờ
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -117,10 +123,10 @@ const StudentWaiting: React.FC = () => {
               </p>
             </div>
             
-            {/* Status display */}
+            {/* Hiển thị trạng thái */}
             <div className="my-8 p-6 rounded-lg bg-secondary/50">
               <div className="space-y-4">
-                {/* Student info */}
+                {/* Thông tin học sinh */}
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Học sinh:</span>
                   <span className="font-medium">{user?.name}</span>
@@ -136,7 +142,7 @@ const StudentWaiting: React.FC = () => {
                   <span className="font-medium text-primary">{formatTime(waitingTime)}</span>
                 </div>
                 
-                {/* Status indicator */}
+                {/* Chỉ báo trạng thái */}
                 <div className="pt-4 flex items-center justify-center">
                   {isCheckingStatus ? (
                     <div className="flex items-center gap-2 text-muted-foreground">
@@ -167,7 +173,7 @@ const StudentWaiting: React.FC = () => {
               </div>
             </div>
             
-            {/* Cancel button */}
+            {/* Nút hủy */}
             <div className="flex justify-center">
               <button
                 onClick={handleCancel}
@@ -178,7 +184,7 @@ const StudentWaiting: React.FC = () => {
               </button>
             </div>
             
-            {/* Tips */}
+            {/* Mẹo */}
             <div className="mt-6 text-center text-xs text-muted-foreground">
               <p>Trang sẽ tự động cập nhật khi có phản hồi từ giáo viên</p>
               <p className="mt-1">Thông tin sẽ được làm mới mỗi 5 giây</p>
