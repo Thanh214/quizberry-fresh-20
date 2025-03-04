@@ -11,7 +11,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NeonEffect from "@/components/NeonEffect";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import NeonDecoration from "@/components/NeonDecoration";
+import { Badge } from "@/components/ui/badge";
 
 const StudentRegister: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ const StudentRegister: React.FC = () => {
   const [examCode, setExamCode] = useState(codeFromURL || "");
   const [isLoading, setIsLoading] = useState(false);
   const [examInfo, setExamInfo] = useState<{title: string; description?: string} | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Check for exam code in URL params
   useEffect(() => {
@@ -40,6 +43,7 @@ const StudentRegister: React.FC = () => {
   const validateExamCode = (code: string) => {
     if (!code) {
       setExamInfo(null);
+      setError(null);
       return;
     }
     
@@ -49,8 +53,14 @@ const StudentRegister: React.FC = () => {
         title: exam.title,
         description: exam.description
       });
+      setError(null);
     } else {
       setExamInfo(null);
+      if (code.trim()) {
+        setError("Không tìm thấy bài thi hoặc bài thi chưa được kích hoạt");
+      } else {
+        setError(null);
+      }
     }
   };
 
@@ -59,6 +69,7 @@ const StudentRegister: React.FC = () => {
     
     try {
       setIsLoading(true);
+      setError(null);
       
       // Kiểm tra mã bài thi
       const code = examCode.trim().toUpperCase();
@@ -66,14 +77,15 @@ const StudentRegister: React.FC = () => {
       
       if (!exam) {
         console.log("Looking for exam with code:", code);
-        console.log("Available exams:", getExamByCode);
         toast.error("Mã bài thi không hợp lệ hoặc không tồn tại");
+        setError("Mã bài thi không hợp lệ hoặc không tồn tại");
         setIsLoading(false);
         return;
       }
       
       if (!exam.isActive) {
         toast.error("Bài thi này chưa được mở");
+        setError("Bài thi này chưa được mở");
         setIsLoading(false);
         return;
       }
@@ -98,6 +110,7 @@ const StudentRegister: React.FC = () => {
     } catch (error) {
       console.error("Error during registration:", error);
       toast.error((error as Error).message || "Không thể đăng ký tham gia");
+      setError((error as Error).message || "Không thể đăng ký tham gia");
     } finally {
       setIsLoading(false);
     }
@@ -112,11 +125,13 @@ const StudentRegister: React.FC = () => {
 
   return (
     <Layout>
+      <NeonDecoration color="purple" position="top-left" size="lg" opacity={0.1} animate />
+      <NeonDecoration color="blue" position="bottom-right" size="md" opacity={0.1} animate />
+      
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <TransitionWrapper>
           <div className="flex items-center justify-center mb-8">
-            <Logo className="h-12 w-12 mr-2 drop-shadow-[0_0_15px_rgba(107,70,193,0.5)]" />
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">EPUTest</h1>
+            <Logo className="drop-shadow-[0_0_15px_rgba(107,70,193,0.5)]" />
           </div>
         </TransitionWrapper>
 
@@ -132,10 +147,20 @@ const StudentRegister: React.FC = () => {
 
               {examInfo && (
                 <div className="p-4 border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50 rounded-lg">
-                  <h3 className="font-medium">Bài thi: {examInfo.title}</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium">Bài thi: {examInfo.title}</h3>
+                    <Badge variant="success" neon neonColor="green">Đã tìm thấy</Badge>
+                  </div>
                   {examInfo.description && (
                     <p className="text-sm text-muted-foreground mt-1">{examInfo.description}</p>
                   )}
+                </div>
+              )}
+
+              {error && (
+                <div className="p-4 border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                 </div>
               )}
 
@@ -186,14 +211,24 @@ const StudentRegister: React.FC = () => {
                   <label className="text-sm font-medium leading-none" htmlFor="examCode">
                     Mã bài thi
                   </label>
-                  <Input
-                    id="examCode"
-                    placeholder="ABC123"
-                    required
-                    value={examCode}
-                    onChange={handleExamCodeChange}
-                    className="uppercase transition-all duration-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="examCode"
+                      placeholder="ABC123"
+                      required
+                      value={examCode}
+                      onChange={handleExamCodeChange}
+                      className="uppercase transition-all duration-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+                    />
+                    {examInfo && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Mã demo để test: DEMO123
+                  </p>
                 </div>
                 
                 <NeonEffect color="purple" padding="p-0" className="overflow-hidden rounded-md w-full mt-4">

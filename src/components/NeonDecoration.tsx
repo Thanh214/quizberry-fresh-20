@@ -7,6 +7,7 @@ interface NeonDecorationProps {
   size?: "sm" | "md" | "lg";
   opacity?: number;
   className?: string;
+  animate?: boolean;
 }
 
 const NeonDecoration: React.FC<NeonDecorationProps> = ({
@@ -15,6 +16,7 @@ const NeonDecoration: React.FC<NeonDecorationProps> = ({
   size = "md",
   opacity = 0.15,
   className = "",
+  animate = false,
 }) => {
   // Color gradient maps
   const colorMap = {
@@ -52,9 +54,11 @@ const NeonDecoration: React.FC<NeonDecorationProps> = ({
     "bottom-right": "-bottom-20 -right-20",
   };
 
+  const animationClass = animate ? "animate-pulse-slow" : "";
+
   return (
     <div
-      className={`absolute rounded-full bg-gradient-to-br ${colorMap[color]} ${sizeMap[size].width} ${sizeMap[size].height} ${sizeMap[size].blur} ${positionMap[position]} ${className}`}
+      className={`absolute rounded-full bg-gradient-to-br ${colorMap[color]} ${sizeMap[size].width} ${sizeMap[size].height} ${sizeMap[size].blur} ${positionMap[position]} ${animationClass} ${className}`}
       style={{ opacity }}
     />
   );

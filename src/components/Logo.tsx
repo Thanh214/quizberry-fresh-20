@@ -6,7 +6,7 @@ const Logo: React.FC<{ className?: string }> = ({ className }) => {
     <div className={`flex items-center ${className}`}>
       <div className="relative">
         <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur-md opacity-75 animate-pulse-light"></div>
-        <div className="relative rounded-full bg-white p-2">
+        <div className="relative rounded-full bg-white dark:bg-gray-800 p-2">
           <svg
             className="h-8 w-8 text-primary"
             fill="none"
