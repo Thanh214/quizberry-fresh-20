@@ -108,6 +108,8 @@ export interface Exam {
   createdAt: string;
   updatedAt: string;
   questionIds: string[]; // Danh sách ID các câu hỏi
+  hasStarted: boolean; // Trạng thái bài thi đã bắt đầu chưa
+  shareLink?: string; // Link để chia sẻ bài thi
 }
 
 // Thống kê sinh viên tham gia thi
@@ -117,8 +119,9 @@ export interface ExamParticipant {
   studentName: string;
   studentId: string;
   className: string;
-  status: "pending" | "completed";
+  status: "waiting" | "in_progress" | "completed"; // Thêm trạng thái waiting
   score?: number;
   startTime: string;
   endTime?: string;
+  joinLink?: string; // Đường link để tham gia
 }

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Card from "@/components/Card";
 import Logo from "@/components/Logo";
@@ -8,15 +8,29 @@ import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useExam } from "@/context/ExamContext";
 import { toast } from "sonner";
-import { Clock } from "lucide-react";
+import { Clock, Users, AlertCircle } from "lucide-react";
+import NeonEffect from "@/components/NeonEffect";
+import { Button } from "@/components/ui/button";
 
 const StudentWaiting: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { getExamByCode, exams, participants, toggleExamActive } = useExam();
+  const { 
+    getExamByCode, 
+    exams, 
+    participants, 
+    getWaitingParticipants,
+    getExamById 
+  } = useExam();
+  
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [examCode, setExamCode] = useState<string>("");
-  const [isCheckingApproval, setIsCheckingApproval] = useState(true);
+  const [examId, setExamId] = useState<string>("");
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const [waitingCount, setWaitingCount] = useState(0);
+  const [waitingPosition, setWaitingPosition] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
     // Kiểm tra xem người dùng có phải là học sinh đã đăng ký không
@@ -26,7 +40,7 @@ const StudentWaiting: React.FC = () => {
     }
 
     // Lấy mã bài thi từ localStorage (lưu khi đăng nhập)
-    const code = localStorage.getItem("studentExamCode");
+    const code = user.examCode || localStorage.getItem("studentExamCode");
     if (!code) {
       navigate("/student/register");
       return;
@@ -34,8 +48,8 @@ const StudentWaiting: React.FC = () => {
 
     setExamCode(code);
 
-    // Kiểm tra trạng thái chấp nhận
-    const checkStudentApproval = async () => {
+    // Kiểm tra trạng thái bài thi
+    const checkExamStatus = async () => {
       try {
         const exam = getExamByCode(code);
         if (!exam) {
@@ -44,6 +58,8 @@ const StudentWaiting: React.FC = () => {
           return;
         }
 
+        setExamId(exam.id);
+
         // Kiểm tra xem bài thi có đang mở không
         if (!exam.isActive) {
           toast.error("Bài thi đã bị đóng");
@@ -51,43 +67,49 @@ const StudentWaiting: React.FC = () => {
           return;
         }
 
-        // Kiểm tra xem học sinh đã được phê duyệt và bài thi đã bắt đầu chưa
-        const studentId = user.studentId || "";
-        const participant = participants.find(
-          p => p.examId === exam.id && p.studentId === studentId
-        );
+        // Hiển thị thời gian làm bài
+        setTimeLeft(exam.duration * 60);
+        
+        // Kiểm tra xem bài thi đã bắt đầu chưa
+        setHasStarted(exam.hasStarted);
 
-        if (!participant) {
-          toast.error("Bạn chưa đăng ký tham gia bài thi này");
-          navigate("/student/register");
-          return;
-        }
-
-        if (participant.status === "completed") {
-          toast.info("Bạn đã hoàn thành bài thi này");
-          navigate("/student/results");
-          return;
-        }
-
-        // Nếu đã có thời gian bắt đầu làm bài, chuyển đến trang làm bài
-        if (participant.startTime) {
+        // Nếu bài thi đã bắt đầu, chuyển đến trang làm bài
+        if (exam.hasStarted) {
           startQuiz();
           return;
         }
 
-        // Hiển thị thời gian còn lại
-        setTimeLeft(exam.duration * 60);
+        // Cập nhật số người đang chờ và vị trí trong hàng chờ
+        const waitingParticipants = getWaitingParticipants(exam.id);
+        setWaitingCount(waitingParticipants.length);
+        
+        // Tìm vị trí của người dùng hiện tại trong hàng chờ
+        const studentId = user.studentId || "";
+        const position = waitingParticipants.findIndex(p => p.studentId === studentId) + 1;
+        setWaitingPosition(position);
 
-        // Xác nhận phê duyệt, có thể chuyển đến trang làm bài
-        setIsCheckingApproval(false);
+        setIsCheckingStatus(false);
+
+        // Kiểm tra trạng thái bài thi mỗi 5 giây
+        const interval = setInterval(() => {
+          const updatedExam = getExamById(exam.id);
+          if (updatedExam && updatedExam.hasStarted) {
+            setHasStarted(true);
+            startQuiz();
+            clearInterval(interval);
+          }
+        }, 5000);
+
+        return () => clearInterval(interval);
+
       } catch (error) {
-        console.error("Lỗi khi kiểm tra phê duyệt:", error);
+        console.error("Lỗi khi kiểm tra trạng thái bài thi:", error);
         toast.error("Đã xảy ra lỗi khi kiểm tra trạng thái");
       }
     };
 
-    checkStudentApproval();
-  }, [user, navigate, participants, getExamByCode]);
+    checkExamStatus();
+  }, [user, navigate, participants, getExamByCode, getWaitingParticipants, getExamById]);
 
   // Cập nhật bộ đếm thời gian
   useEffect(() => {
@@ -121,45 +143,85 @@ const StudentWaiting: React.FC = () => {
     <Layout>
       <div className="flex flex-col items-center justify-center min-h-screen">
         <TransitionWrapper>
-          <Logo className="mb-8" />
+          <div className="flex items-center justify-center mb-6">
+            <Logo className="h-12 w-12 mr-2 drop-shadow-[0_0_15px_rgba(107,70,193,0.5)]" />
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">EPUTest</h1>
+          </div>
         </TransitionWrapper>
 
         <TransitionWrapper delay={300}>
-          <Card className="w-full max-w-md text-center p-8">
-            {isCheckingApproval ? (
-              <div className="py-6 space-y-4">
-                <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <Card className="w-full max-w-md text-center p-8 relative overflow-hidden">
+            {/* Background glow effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg blur opacity-10"></div>
+            
+            <div className="relative z-10">
+              {isCheckingStatus ? (
+                <div className="py-6 space-y-4">
+                  <div className="flex justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>
+                  <h2 className="text-xl font-semibold">Đang tải thông tin...</h2>
+                  <p className="text-muted-foreground">Vui lòng đợi trong giây lát</p>
                 </div>
-                <h2 className="text-xl font-semibold">Đang tải thông tin...</h2>
-                <p className="text-muted-foreground">Vui lòng đợi trong giây lát</p>
-              </div>
-            ) : (
-              <div className="py-6 space-y-6">
-                <h2 className="text-2xl font-bold">Sẵn sàng làm bài?</h2>
-                <p className="text-muted-foreground">
-                  Bài thi của bạn sẽ bắt đầu ngay khi bạn nhấn nút Bắt đầu làm bài
-                </p>
+              ) : hasStarted ? (
+                <div className="py-6 space-y-6">
+                  <h2 className="text-2xl font-bold">Bài thi đã bắt đầu!</h2>
+                  <p className="text-muted-foreground">
+                    Nhấn nút bên dưới để bắt đầu làm bài ngay
+                  </p>
+                  
+                  <NeonEffect color="green" padding="p-0" className="w-full overflow-hidden rounded-md mt-4">
+                    <Button
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-none text-white"
+                      onClick={startQuiz}
+                    >
+                      Bắt đầu làm bài
+                    </Button>
+                  </NeonEffect>
+                </div>
+              ) : (
+                <div className="py-6 space-y-6">
+                  <div className="inline-flex justify-center items-center gap-2 px-4 py-2 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Đang chờ bài thi bắt đầu</span>
+                  </div>
+                  
+                  <h2 className="text-2xl font-bold">Phòng chờ</h2>
+                  <p className="text-muted-foreground">
+                    Giáo viên sẽ bắt đầu bài thi cho tất cả học sinh. Vui lòng đợi...
+                  </p>
 
-                {timeLeft !== null && (
-                  <div className="bg-primary/5 p-4 rounded-lg">
-                    <div className="flex items-center justify-center space-x-2 text-primary">
-                      <Clock className="h-5 w-5" />
-                      <span className="text-lg font-medium">
-                        Thời gian làm bài: {formatTime(timeLeft)}
-                      </span>
+                  <div className="grid grid-cols-2 gap-4 mt-6">
+                    <div className="flex flex-col items-center justify-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                      <Users className="h-6 w-6 text-purple-500 mb-2" />
+                      <p className="text-sm text-muted-foreground">Số người chờ</p>
+                      <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{waitingCount}</p>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <Clock className="h-6 w-6 text-blue-500 mb-2" />
+                      <p className="text-sm text-muted-foreground">Thời gian làm bài</p>
+                      <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                        {timeLeft !== null ? formatTime(timeLeft) : "--:--"}
+                      </p>
                     </div>
                   </div>
-                )}
 
-                <button
-                  className="w-full inline-flex items-center justify-center h-10 rounded-md bg-primary text-white px-4 py-2 text-sm font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  onClick={startQuiz}
-                >
-                  Bắt đầu làm bài
-                </button>
-              </div>
-            )}
+                  {waitingPosition > 0 && (
+                    <div className="mt-4 p-4 border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                      <p className="text-sm text-center">
+                        <span className="font-medium">Vị trí của bạn:</span>{" "}
+                        <span className="text-purple-600 dark:text-purple-400 font-bold">{waitingPosition}</span> trong hàng chờ
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="text-sm text-muted-foreground">
+                    Bài thi sẽ tự động bắt đầu khi giáo viên khởi động. Vui lòng không tắt trình duyệt.
+                  </div>
+                </div>
+              )}
+            </div>
           </Card>
         </TransitionWrapper>
       </div>
