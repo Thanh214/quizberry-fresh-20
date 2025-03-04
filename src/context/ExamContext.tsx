@@ -67,10 +67,12 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Lưu dữ liệu vào localStorage
   const saveExams = (data: Exam[]) => {
     setExams(data);
+    localStorage.setItem("exams", JSON.stringify(data));
   };
   
   const saveParticipants = (data: ExamParticipant[]) => {
     setParticipants(data);
+    localStorage.setItem("examParticipants", JSON.stringify(data));
   };
 
   // Tạo bài thi mới
@@ -131,6 +133,14 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Không tìm thấy bài thi");
       }
       
+      // Kiểm tra xem bài thi đang mở không, nếu mở thì không cho chỉnh sửa nội dung
+      const currentExam = exams[examIndex];
+      if (currentExam.isActive && 
+         (data.title !== undefined || data.description !== undefined || 
+          data.duration !== undefined || data.questionIds !== undefined)) {
+        throw new Error("Không thể chỉnh sửa nội dung bài thi đang mở");
+      }
+      
       const updatedExams = [...exams];
       updatedExams[examIndex] = {
         ...updatedExams[examIndex],
@@ -139,7 +149,13 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       saveExams(updatedExams);
-      toast.success("Đã cập nhật bài thi thành công!");
+      
+      // Thông báo cho từng trường hợp
+      if (data.isActive !== undefined) {
+        // Không hiển thị thông báo vì đã hiển thị ở hàm toggleExamActive 
+      } else {
+        toast.success("Đã cập nhật bài thi thành công!");
+      }
     } catch (error) {
       const errorMessage = (error as Error).message;
       setError(errorMessage);
@@ -154,6 +170,12 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteExam = async (id: string) => {
     try {
       setIsLoading(true);
+      
+      // Kiểm tra xem bài thi có đang mở không
+      const exam = exams.find(e => e.id === id);
+      if (exam && exam.isActive) {
+        throw new Error("Không thể xóa bài thi đang mở");
+      }
       
       // Xóa bài thi
       const updatedExams = exams.filter(e => e.id !== id);
@@ -178,7 +200,21 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toggleExamActive = async (examId: string, isActive: boolean) => {
     try {
       setIsLoading(true);
-      await updateExam(examId, { isActive });
+      
+      const examIndex = exams.findIndex(e => e.id === examId);
+      if (examIndex === -1) {
+        throw new Error("Không tìm thấy bài thi");
+      }
+      
+      // Cập nhật trạng thái active
+      const updatedExams = [...exams];
+      updatedExams[examIndex] = {
+        ...updatedExams[examIndex],
+        isActive,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      saveExams(updatedExams);
       toast.success(isActive ? "Đã kích hoạt bài thi!" : "Đã vô hiệu hóa bài thi!");
     } catch (error) {
       const errorMessage = (error as Error).message;
@@ -276,7 +312,7 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Tìm bài thi theo mã code
   const getExamByCode = (code: string): Exam | null => {
-    return exams.find(e => e.code === code) || null;
+    return exams.find(e => e.code.toUpperCase() === code.toUpperCase().trim()) || null;
   };
 
   // Lấy danh sách bài thi theo giáo viên

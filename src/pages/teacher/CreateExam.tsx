@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Card from "@/components/Card";
@@ -8,11 +8,12 @@ import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useExam } from "@/context/ExamContext";
 import { useQuiz } from "@/context/QuizContext";
-import { Question, Option } from "@/types/models";
+import { Question } from "@/types/models";
 import { toast } from "sonner";
 import { 
-  ChevronLeft, Plus, Trash2, Save, Clock, AlertTriangle, 
-  Search, Filter, CheckCircle, XCircle, PlusCircle, Edit, Bookmark
+  ChevronLeft, Trash2, Save, Clock, AlertTriangle, 
+  Search, CheckCircle, XCircle, PlusCircle, Edit, Bookmark,
+  Plus, Filter
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,15 @@ const CreateExam: React.FC = () => {
   
   const isEditing = !!id;
 
+  // Fetch questions (memoized to prevent excessive calls)
+  const loadQuestions = useCallback(async () => {
+    try {
+      await fetchQuestions();
+    } catch (error) {
+      toast.error("Không thể tải danh sách câu hỏi");
+    }
+  }, [fetchQuestions]);
+
   useEffect(() => {
     // Kiểm tra quyền giáo viên
     if (!user || user.role !== "teacher") {
@@ -63,14 +73,6 @@ const CreateExam: React.FC = () => {
     }
 
     // Tải danh sách câu hỏi
-    const loadQuestions = async () => {
-      try {
-        await fetchQuestions();
-      } catch (error) {
-        toast.error("Không thể tải danh sách câu hỏi");
-      }
-    };
-
     loadQuestions();
     
     // Nếu đang chỉnh sửa, tải thông tin bài thi
@@ -86,7 +88,7 @@ const CreateExam: React.FC = () => {
         navigate("/teacher/exams");
       }
     }
-  }, [user, navigate, fetchQuestions, isEditing, id, exams]);
+  }, [user, navigate, loadQuestions, isEditing, id, exams]);
 
   // Cập nhật danh sách câu hỏi có sẵn
   useEffect(() => {
@@ -144,6 +146,35 @@ const CreateExam: React.FC = () => {
 
   const cancelExit = () => {
     setShowExitConfirm(false);
+  };
+
+  // Xử lý thêm/xóa đáp án
+  const handleAddOption = () => {
+    if (newQuestionOptions.length < 6) {
+      setNewQuestionOptions([
+        ...newQuestionOptions,
+        { id: Date.now().toString(), content: "", isCorrect: false }
+      ]);
+    } else {
+      toast.warning("Không thể thêm quá 6 tùy chọn");
+    }
+  };
+
+  const handleRemoveOption = (index: number) => {
+    if (newQuestionOptions.length > 2) {
+      const newOptions = [...newQuestionOptions];
+      const removedOption = newOptions[index];
+      newOptions.splice(index, 1);
+      
+      // Nếu xóa tùy chọn đúng, đặt tùy chọn đầu tiên làm tùy chọn đúng
+      if (removedOption.isCorrect && newOptions.length > 0) {
+        newOptions[0].isCorrect = true;
+      }
+      
+      setNewQuestionOptions(newOptions);
+    } else {
+      toast.warning("Cần có ít nhất 2 tùy chọn");
+    }
   };
 
   // Xử lý tạo câu hỏi mới
@@ -204,13 +235,14 @@ const CreateExam: React.FC = () => {
         options: newQuestionOptions,
       });
       
-      // Kiểm tra xem newQuestion có tồn tại và có id không trước khi sử dụng
+      // Kiểm tra newQuestion và id trước khi sử dụng
       if (newQuestion && typeof newQuestion === 'object' && 'id' in newQuestion) {
         // Thêm câu hỏi mới vào đề thi
         setSelectedQuestions(prev => [...prev, newQuestion.id]);
         
-        // Reset form 
+        // Reset form và đóng dialog
         resetNewQuestionForm();
+        setShowAddQuestionDialog(false);
         
         toast.success("Đã tạo câu hỏi mới và thêm vào đề thi");
       } else {
@@ -350,7 +382,7 @@ const CreateExam: React.FC = () => {
           if (!open) handleCloseDialog();
           else setShowAddQuestionDialog(true);
         }}>
-          <DialogContent className="sm:max-w-xl">
+          <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Quản lý câu hỏi</DialogTitle>
               <DialogDescription>
@@ -451,7 +483,19 @@ const CreateExam: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Các đáp án:</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Các đáp án:</label>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleAddOption}
+                        className="h-8"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Thêm đáp án
+                      </Button>
+                    </div>
                     <div className="space-y-2 mt-1.5">
                       {newQuestionOptions.map((option, index) => (
                         <div key={option.id} className="flex items-center space-x-3">
@@ -473,6 +517,17 @@ const CreateExam: React.FC = () => {
                             className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                             required
                           />
+                          {newQuestionOptions.length > 2 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveOption(index)}
+                              className="h-9 w-9 p-0"
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -561,8 +616,8 @@ const CreateExam: React.FC = () => {
 
                   <div className="pt-4">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-muted-foreground">
-                        Đã chọn {selectedQuestions.length} câu hỏi
+                      <p className="text-sm font-medium">
+                        Câu hỏi đã chọn: <span className="text-primary">{selectedQuestions.length}</span>
                       </p>
                       <Button
                         type="button"
@@ -618,7 +673,7 @@ const CreateExam: React.FC = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
                     {selectedQuestions.map((questionId, index) => {
                       const question = questions.find(q => q.id === questionId);
                       return question ? (

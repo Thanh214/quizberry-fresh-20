@@ -8,6 +8,8 @@ import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useExam } from "@/context/ExamContext";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const StudentRegister: React.FC = () => {
   const navigate = useNavigate();
@@ -27,14 +29,18 @@ const StudentRegister: React.FC = () => {
       setIsLoading(true);
       
       // Kiểm tra mã bài thi
-      const exam = getExamByCode(examCode.toUpperCase());
+      const code = examCode.trim().toUpperCase();
+      const exam = getExamByCode(code);
+      
       if (!exam) {
         toast.error("Mã bài thi không hợp lệ hoặc không tồn tại");
+        setIsLoading(false);
         return;
       }
       
       if (!exam.isActive) {
         toast.error("Bài thi này chưa được mở");
+        setIsLoading(false);
         return;
       }
       
@@ -42,15 +48,21 @@ const StudentRegister: React.FC = () => {
       await addParticipant(exam.id, name, studentId, className);
       
       // Đăng nhập học sinh
-      await loginAsStudent(name, className, studentId, examCode);
+      await loginAsStudent(name, className, studentId, code);
       
       // Chuyển hướng đến trang chờ
+      toast.success("Đăng ký tham gia thành công!");
       navigate("/student/quiz");
     } catch (error) {
       toast.error((error as Error).message || "Không thể đăng ký tham gia");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleExamCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Chuyển đổi thành chữ in hoa và loại bỏ khoảng trắng
+    setExamCode(e.target.value.toUpperCase().trim());
   };
 
   return (
@@ -75,8 +87,7 @@ const StudentRegister: React.FC = () => {
                   <label className="text-sm font-medium leading-none" htmlFor="name">
                     Họ và tên
                   </label>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  <Input
                     id="name"
                     placeholder="Nguyễn Văn A"
                     required
@@ -89,8 +100,7 @@ const StudentRegister: React.FC = () => {
                   <label className="text-sm font-medium leading-none" htmlFor="studentId">
                     Mã sinh viên
                   </label>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  <Input
                     id="studentId"
                     placeholder="SV12345"
                     required
@@ -103,8 +113,7 @@ const StudentRegister: React.FC = () => {
                   <label className="text-sm font-medium leading-none" htmlFor="class">
                     Lớp
                   </label>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  <Input
                     id="class"
                     placeholder="10A1"
                     required
@@ -117,18 +126,18 @@ const StudentRegister: React.FC = () => {
                   <label className="text-sm font-medium leading-none" htmlFor="examCode">
                     Mã bài thi
                   </label>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  <Input
                     id="examCode"
                     placeholder="ABC123"
                     required
                     value={examCode}
-                    onChange={(e) => setExamCode(e.target.value.toUpperCase())}
+                    onChange={handleExamCodeChange}
+                    className="uppercase"
                   />
                 </div>
                 
-                <button
-                  className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                <Button
+                  className="w-full bg-primary text-white hover:bg-primary/90"
                   type="submit"
                   disabled={isLoading}
                 >
@@ -137,7 +146,7 @@ const StudentRegister: React.FC = () => {
                   ) : (
                     "Tham gia ngay"
                   )}
-                </button>
+                </Button>
               </form>
 
               <div className="text-center text-sm">

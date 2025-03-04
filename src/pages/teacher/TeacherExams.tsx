@@ -9,7 +9,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useExam } from "@/context/ExamContext";
 import { Exam, ExamParticipant } from "@/types/models";
 import { toast } from "sonner";
-import { Calendar, Clock, FileText, Users, Check, X } from "lucide-react";
+import { 
+  Calendar, Clock, FileText, Users, 
+  ChevronLeft, Edit, Trash2, CheckCircle, XCircle
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const TeacherExams: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +31,7 @@ const TeacherExams: React.FC = () => {
   const [teacherExams, setTeacherExams] = useState<Exam[]>([]);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [examParticipants, setExamParticipants] = useState<ExamParticipant[]>([]);
+  const [isActivating, setIsActivating] = useState(false);
 
   useEffect(() => {
     // Kiểm tra xem người dùng có phải là giáo viên không
@@ -58,6 +64,7 @@ const TeacherExams: React.FC = () => {
 
   const handleToggleActive = async (exam: Exam) => {
     try {
+      setIsActivating(true);
       await toggleExamActive(exam.id, !exam.isActive);
       toast.success(
         exam.isActive 
@@ -66,6 +73,8 @@ const TeacherExams: React.FC = () => {
       );
     } catch (error) {
       toast.error("Không thể thay đổi trạng thái bài thi");
+    } finally {
+      setIsActivating(false);
     }
   };
 
@@ -88,6 +97,10 @@ const TeacherExams: React.FC = () => {
     navigate("/role-selection");
   };
 
+  const handleCreateExam = () => {
+    navigate("/teacher/create-exam");
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("vi-VN", {
       day: "2-digit",
@@ -106,12 +119,6 @@ const TeacherExams: React.FC = () => {
           <div className="flex items-center space-x-4">
             <button
               className="text-sm text-muted-foreground hover:text-foreground"
-              onClick={() => navigate("/teacher/create-exam")}
-            >
-              Tạo đề thi mới
-            </button>
-            <button
-              className="text-sm text-muted-foreground hover:text-foreground"
               onClick={handleLogout}
             >
               Đăng xuất
@@ -122,13 +129,13 @@ const TeacherExams: React.FC = () => {
         <TransitionWrapper delay={300}>
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Quản lý đề thi</h1>
-            <button
-              className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              onClick={() => navigate("/teacher/create-exam")}
+            <Button
+              onClick={handleCreateExam}
+              className="bg-primary text-white hover:bg-primary/90"
             >
               <FileText className="mr-2 h-4 w-4" />
               Tạo đề thi mới
-            </button>
+            </Button>
           </div>
         </TransitionWrapper>
 
@@ -144,17 +151,24 @@ const TeacherExams: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-6">
             {/* Danh sách bài thi */}
             <div className="md:col-span-1">
-              <Card className="p-4 h-full">
-                <h2 className="text-xl font-semibold mb-4">Danh sách bài thi</h2>
+              <Card className="p-4 h-full overflow-hidden">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Danh sách bài thi</h2>
+                  <Badge className="bg-primary/20 text-primary border-none">
+                    {teacherExams.length}
+                  </Badge>
+                </div>
+                
                 {teacherExams.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Chưa có bài thi nào</p>
-                    <button
-                      className="mt-2 text-primary hover:underline"
-                      onClick={() => navigate("/teacher/create-exam")}
+                  <div className="text-center py-12 px-4">
+                    <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-4">Chưa có bài thi nào</p>
+                    <Button
+                      onClick={handleCreateExam}
+                      className="bg-primary text-white hover:bg-primary/90"
                     >
-                      Tạo bài thi mới
-                    </button>
+                      Tạo bài thi đầu tiên
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
@@ -164,7 +178,7 @@ const TeacherExams: React.FC = () => {
                         className={`p-3 rounded-lg cursor-pointer transition-all ${
                           selectedExam?.id === exam.id
                             ? "bg-primary/10 border-l-4 border-primary"
-                            : "hover:bg-muted"
+                            : "hover:bg-muted border border-transparent hover:border-muted-foreground/20"
                         }`}
                         onClick={() => setSelectedExam(exam)}
                       >
@@ -209,28 +223,48 @@ const TeacherExams: React.FC = () => {
                       </p>
                     </div>
                     <div className="flex space-x-2">
-                      <button
-                        className={`px-3 py-1 rounded-md text-sm ${
-                          selectedExam.isActive
-                            ? "bg-red-100 text-red-800 hover:bg-red-200"
-                            : "bg-green-100 text-green-800 hover:bg-green-200"
-                        }`}
+                      <Button
+                        variant={selectedExam.isActive ? "destructive" : "success"}
+                        className={selectedExam.isActive ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"}
                         onClick={() => handleToggleActive(selectedExam)}
+                        disabled={isActivating}
                       >
-                        {selectedExam.isActive ? "Đóng bài thi" : "Mở bài thi"}
-                      </button>
-                      <button
-                        className="px-3 py-1 bg-primary/10 text-primary rounded-md text-sm hover:bg-primary/20"
+                        {isActivating ? (
+                          "Đang xử lý..."
+                        ) : (
+                          <>
+                            {selectedExam.isActive ? (
+                              <>
+                                <XCircle className="h-4 w-4 mr-1" />
+                                Đóng bài thi
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Mở bài thi
+                              </>
+                            )}
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
                         onClick={() => navigate(`/teacher/edit-exam/${selectedExam.id}`)}
+                        disabled={selectedExam.isActive}
                       >
+                        <Edit className="h-4 w-4 mr-1" />
                         Chỉnh sửa
-                      </button>
-                      <button
-                        className="px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200"
+                      </Button>
+                      
+                      <Button
+                        variant="destructive"
                         onClick={() => handleDeleteExam(selectedExam.id)}
+                        disabled={selectedExam.isActive}
                       >
+                        <Trash2 className="h-4 w-4 mr-1" />
                         Xóa
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
@@ -259,6 +293,13 @@ const TeacherExams: React.FC = () => {
                   {examParticipants.length === 0 ? (
                     <div className="text-center py-8 border border-dashed rounded-lg">
                       <p className="text-muted-foreground">Chưa có thí sinh tham gia</p>
+                      {selectedExam.isActive ? (
+                        <div className="mt-2 bg-green-50 text-green-700 p-2 rounded-md inline-block">
+                          <p className="text-sm">Học sinh có thể tham gia bài thi với mã: <strong>{selectedExam.code}</strong></p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-amber-600 mt-2">Bài thi chưa được mở</p>
+                      )}
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
@@ -315,12 +356,13 @@ const TeacherExams: React.FC = () => {
                         ? "Chọn một bài thi để xem chi tiết" 
                         : "Chưa có bài thi nào"}
                     </h3>
-                    <button
-                      className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-                      onClick={() => navigate("/teacher/create-exam")}
+                    <Button
+                      className="mt-4 bg-primary text-white hover:bg-primary/90"
+                      onClick={handleCreateExam}
                     >
+                      <FileText className="mr-2 h-4 w-4" />
                       Tạo đề thi mới
-                    </button>
+                    </Button>
                   </div>
                 </Card>
               )}
