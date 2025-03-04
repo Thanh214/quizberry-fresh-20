@@ -62,6 +62,7 @@ const ExamList: React.FC<ExamListProps> = ({
             setConfirmDelete={setConfirmDelete}
             setConfirmStart={setConfirmStart}
             setConfirmToggle={setConfirmToggle}
+            participants={participants}
           />
         ))}
       </div>
