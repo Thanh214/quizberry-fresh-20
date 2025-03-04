@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -15,6 +16,14 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        success:
+          "border-transparent bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+        warning:
+          "border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+        info:
+          "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+        purple:
+          "border-transparent bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
       },
     },
     defaultVariants: {
@@ -25,11 +34,29 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  neon?: boolean;
+  neonColor?: "purple" | "blue" | "green" | "red" | "pink";
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({ className, variant, neon, neonColor = "purple", ...props }: BadgeProps) {
+  const neonClasses = {
+    purple: "shadow-[0_0_5px_rgba(168,85,247,0.5)]",
+    blue: "shadow-[0_0_5px_rgba(59,130,246,0.5)]",
+    green: "shadow-[0_0_5px_rgba(34,197,94,0.5)]",
+    red: "shadow-[0_0_5px_rgba(239,68,68,0.5)]",
+    pink: "shadow-[0_0_5px_rgba(236,72,153,0.5)]",
+  };
+
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div
+      className={cn(
+        badgeVariants({ variant }), 
+        neon ? neonClasses[neonColor] : "", 
+        className
+      )}
+      {...props}
+    />
   )
 }
 

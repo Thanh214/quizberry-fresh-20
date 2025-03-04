@@ -5,24 +5,27 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Exam } from "@/types/models";
+import NeonEffect from "@/components/NeonEffect";
 
 interface ExamFormProps {
   onSubmit: (examData: Omit<Exam, "id" | "createdAt" | "updatedAt">) => Promise<void>;
   onCancel: () => void;
   teacherId: string;
   isLoading?: boolean;
+  initialData?: Partial<Exam>;
 }
 
 const ExamForm: React.FC<ExamFormProps> = ({ 
   onSubmit, 
   onCancel, 
   teacherId,
-  isLoading = false 
+  isLoading = false,
+  initialData
 }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [code, setCode] = useState("");
-  const [duration, setDuration] = useState(30); // Default 30 minutes
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [code, setCode] = useState(initialData?.code || "");
+  const [duration, setDuration] = useState(initialData?.duration || 30); // Default 30 minutes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,11 +50,12 @@ const ExamForm: React.FC<ExamFormProps> = ({
     await onSubmit({
       title,
       description,
-      code,
+      code: code.toUpperCase(),
       duration,
       teacherId,
       isActive: false,
-      questionIds: [],
+      questionIds: initialData?.questionIds || [],
+      hasStarted: false,
     });
   };
 
@@ -67,6 +71,7 @@ const ExamForm: React.FC<ExamFormProps> = ({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          className="transition-all duration-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
         />
       </div>
       
@@ -78,8 +83,9 @@ const ExamForm: React.FC<ExamFormProps> = ({
           id="exam-code"
           placeholder="Nhập mã bài thi (VD: EPU001)"
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
           required
+          className="transition-all duration-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
         />
         <p className="text-xs text-muted-foreground mt-1">
           Mã bài thi là mã duy nhất để sinh viên nhập vào khi tham gia thi
@@ -96,6 +102,8 @@ const ExamForm: React.FC<ExamFormProps> = ({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
+          neon
+          neonColor="purple"
         />
       </div>
       
@@ -110,6 +118,7 @@ const ExamForm: React.FC<ExamFormProps> = ({
           value={duration}
           onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
           required
+          className="transition-all duration-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
         />
       </div>
       
@@ -121,12 +130,15 @@ const ExamForm: React.FC<ExamFormProps> = ({
         >
           Hủy
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-        >
-          {isLoading ? "Đang tạo..." : "Tạo bài thi"}
-        </Button>
+        <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none w-full"
+          >
+            {isLoading ? "Đang xử lý..." : initialData ? "Cập nhật bài thi" : "Tạo bài thi"}
+          </Button>
+        </NeonEffect>
       </div>
     </form>
   );

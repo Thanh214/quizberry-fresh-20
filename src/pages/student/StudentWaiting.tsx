@@ -8,14 +8,19 @@ import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useExam } from "@/context/ExamContext";
 import { toast } from "sonner";
-import { Clock, Users, AlertCircle } from "lucide-react";
+import { Clock, Users, AlertCircle, Loader2 } from "lucide-react";
 import NeonEffect from "@/components/NeonEffect";
+import NeonDecoration from "@/components/NeonDecoration";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { formatDistance } from "date-fns";
+import { vi } from "date-fns/locale";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 
 const StudentWaiting: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { 
     getExamByCode, 
     exams, 
@@ -31,6 +36,8 @@ const StudentWaiting: React.FC = () => {
   const [waitingCount, setWaitingCount] = useState(0);
   const [waitingPosition, setWaitingPosition] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
+  const [waitingTime, setWaitingTime] = useState<string>("0 phút");
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   useEffect(() => {
     // Kiểm tra xem người dùng có phải là học sinh đã đăng ký không
@@ -88,6 +95,17 @@ const StudentWaiting: React.FC = () => {
         const position = waitingParticipants.findIndex(p => p.studentId === studentId) + 1;
         setWaitingPosition(position);
 
+        // Calculate waiting time
+        const waitingParticipant = waitingParticipants.find(p => p.studentId === studentId);
+        if (waitingParticipant) {
+          const startTime = new Date(waitingParticipant.startTime);
+          const timeWaited = formatDistance(new Date(), startTime, { 
+            addSuffix: false,
+            locale: vi 
+          });
+          setWaitingTime(timeWaited);
+        }
+
         setIsCheckingStatus(false);
 
         // Kiểm tra trạng thái bài thi mỗi 5 giây
@@ -97,6 +115,21 @@ const StudentWaiting: React.FC = () => {
             setHasStarted(true);
             startQuiz();
             clearInterval(interval);
+          }
+          
+          // Update waiting count
+          const currentWaitingParticipants = getWaitingParticipants(exam.id);
+          setWaitingCount(currentWaitingParticipants.length);
+          
+          // Update waiting time
+          const participant = currentWaitingParticipants.find(p => p.studentId === studentId);
+          if (participant) {
+            const startTime = new Date(participant.startTime);
+            const timeWaited = formatDistance(new Date(), startTime, { 
+              addSuffix: false,
+              locale: vi 
+            });
+            setWaitingTime(timeWaited);
           }
         }, 5000);
 
@@ -139,9 +172,22 @@ const StudentWaiting: React.FC = () => {
     navigate("/student/quiz");
   };
 
+  const handleExitWaiting = () => {
+    setShowExitConfirm(true);
+  };
+
+  const confirmExit = () => {
+    logout();
+    navigate("/role-selection");
+  };
+
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen relative">
+        {/* Neon decorations */}
+        <NeonDecoration color="purple" position="top-right" size="md" />
+        <NeonDecoration color="blue" position="bottom-left" size="sm" />
+        
         <TransitionWrapper>
           <div className="flex items-center justify-center mb-6">
             <Logo className="h-12 w-12 mr-2 drop-shadow-[0_0_15px_rgba(107,70,193,0.5)]" />
@@ -158,7 +204,7 @@ const StudentWaiting: React.FC = () => {
               {isCheckingStatus ? (
                 <div className="py-6 space-y-4">
                   <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   </div>
                   <h2 className="text-xl font-semibold">Đang tải thông tin...</h2>
                   <p className="text-muted-foreground">Vui lòng đợi trong giây lát</p>
@@ -191,6 +237,19 @@ const StudentWaiting: React.FC = () => {
                     Giáo viên sẽ bắt đầu bài thi cho tất cả học sinh. Vui lòng đợi...
                   </p>
 
+                  {/* Live waiting progress animation */}
+                  <div className="mt-4">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Đã chờ: {waitingTime}
+                    </p>
+                    <Progress
+                      value={Math.random() * 100}
+                      className="h-2 bg-muted overflow-hidden"
+                    >
+                      <div className="h-full animate-pulse bg-gradient-to-r from-blue-400 to-purple-400"></div>
+                    </Progress>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4 mt-6">
                     <div className="flex flex-col items-center justify-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                       <Users className="h-6 w-6 text-purple-500 mb-2" />
@@ -219,12 +278,34 @@ const StudentWaiting: React.FC = () => {
                   <div className="text-sm text-muted-foreground">
                     Bài thi sẽ tự động bắt đầu khi giáo viên khởi động. Vui lòng không tắt trình duyệt.
                   </div>
+                  
+                  <div className="mt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={handleExitWaiting}
+                    >
+                      Thoát khỏi hàng chờ
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
           </Card>
         </TransitionWrapper>
       </div>
+      
+      <ConfirmationDialog
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        onConfirm={confirmExit}
+        title="Xác nhận thoát"
+        description="Bạn có chắc chắn muốn thoát khỏi hàng chờ? Bạn sẽ phải đăng ký lại để tham gia bài thi."
+        confirmText="Xác nhận thoát"
+        cancelText="Tiếp tục chờ"
+        variant="destructive"
+      />
     </Layout>
   );
 };

@@ -65,6 +65,8 @@ const StudentRegister: React.FC = () => {
       const exam = getExamByCode(code);
       
       if (!exam) {
+        console.log("Looking for exam with code:", code);
+        console.log("Available exams:", getExamByCode);
         toast.error("Mã bài thi không hợp lệ hoặc không tồn tại");
         setIsLoading(false);
         return;
@@ -94,6 +96,7 @@ const StudentRegister: React.FC = () => {
         navigate("/student/waiting");
       }
     } catch (error) {
+      console.error("Error during registration:", error);
       toast.error((error as Error).message || "Không thể đăng ký tham gia");
     } finally {
       setIsLoading(false);

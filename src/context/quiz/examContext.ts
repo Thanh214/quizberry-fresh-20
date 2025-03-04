@@ -29,6 +29,8 @@ export const useExamState = () => {
         createdAt: now,
         updatedAt: now,
         questionIds: exam.questionIds,
+        hasStarted: false, // Initialize as not started
+        shareLink: `${window.location.origin}/student/register?code=${exam.code}`
       };
       
       const updatedExams = [...exams, newExam];
@@ -119,9 +121,42 @@ export const useExamState = () => {
       throw error;
     }
   };
+
+  const startExam = async (id: string) => {
+    try {
+      setIsLoading(true);
+      
+      const examIndex = exams.findIndex(e => e.id === id);
+      if (examIndex === -1) {
+        throw new Error("Exam not found");
+      }
+      
+      const updatedExams = [...exams];
+      
+      updatedExams[examIndex] = {
+        ...updatedExams[examIndex],
+        hasStarted: true,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      setExams(updatedExams);
+      localStorage.setItem("quizExams", JSON.stringify(updatedExams));
+      
+      setIsLoading(false);
+      toast.success("Bài thi đã bắt đầu");
+    } catch (error) {
+      setError("Failed to start exam");
+      setIsLoading(false);
+      throw error;
+    }
+  };
   
   const getExamByCode = (code: string) => {
     return exams.find(e => e.code === code);
+  };
+
+  const getExamById = (id: string) => {
+    return exams.find(e => e.id === id);
   };
 
   return {
@@ -130,7 +165,9 @@ export const useExamState = () => {
     updateExam,
     deleteExam,
     activateExam,
+    startExam,
     getExamByCode,
+    getExamById,
     isLoading,
     error,
   };

@@ -13,12 +13,12 @@ import QuizProgress from "./components/QuizProgress";
 import QuizQuestion from "./components/QuizQuestion";
 import ConfirmDialog from "./components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
+import NeonDecoration from "@/components/NeonDecoration";
 
 const StudentQuiz: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { startQuiz, submitAnswer, finishQuiz, currentSession } = useQuiz();
-  const { exams } = useExam();
+  const { startQuiz, submitAnswer, finishQuiz, currentSession, exams } = useQuiz();
   
   const [session, setSession] = useState<QuizSession | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<ShuffledQuestion | null>(null);
@@ -41,11 +41,27 @@ const StudentQuiz: React.FC = () => {
       return;
     }
 
+    // Get the exam code from user data
+    const examCode = user.examCode;
+    if (!examCode) {
+      toast.error("Không tìm thấy mã bài thi");
+      navigate("/student/register");
+      return;
+    }
+
+    // Find the exam based on the code
+    const exam = exams.find(e => e.code === examCode);
+    if (!exam) {
+      toast.error("Không tìm thấy bài thi");
+      navigate("/student/register");
+      return;
+    }
+
     // Initialize quiz if not already started
     if (!currentSession) {
-      // Đảm bảo có studentId và examId
-      if (!user.studentId || !session?.examId) {
-        toast.error("Thiếu thông tin sinh viên hoặc bài thi");
+      // Ensure we have studentId
+      if (!user.studentId) {
+        toast.error("Thiếu thông tin sinh viên");
         navigate("/student/waiting");
         return;
       }
@@ -54,7 +70,7 @@ const StudentQuiz: React.FC = () => {
         user.name || "Học sinh", 
         user.studentId || "", 
         user.className || "Không xác định",
-        session?.examId || ""
+        exam.id
       );
       
       setSession(newSession);
@@ -67,11 +83,8 @@ const StudentQuiz: React.FC = () => {
         currentIndexRef.current = 0;
       }
 
-      // Tìm thời gian làm bài từ đề thi
-      const exam = exams.find(e => e.id === newSession.examId);
-      if (exam) {
-        setRemainingTime(exam.duration * 60); // Chuyển phút thành giây
-      }
+      // Set remaining time from exam duration
+      setRemainingTime(exam.duration * 60); // Convert minutes to seconds
     } else {
       setSession(currentSession);
       totalQuestionsRef.current = currentSession.questions.length;
@@ -90,7 +103,7 @@ const StudentQuiz: React.FC = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [currentSession, navigate, startQuiz, user, exams, session?.examId]);
+  }, [currentSession, navigate, startQuiz, user, exams]);
 
   const handleOptionSelect = (optionId: string) => {
     setSelectedOption(optionId);
@@ -182,7 +195,10 @@ const StudentQuiz: React.FC = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen relative">
+        {/* Neon decorations */}
+        <NeonDecoration color="green" position="bottom-right" size="sm" opacity={0.1} />
+        
         <header className="flex items-center justify-between mb-8">
           <Logo />
           <div className="flex items-center gap-4">
@@ -260,7 +276,7 @@ const StudentQuiz: React.FC = () => {
             <Button
               className={`ml-auto ${
                 selectedOption
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none"
                   : "bg-muted text-muted-foreground"
               }`}
               onClick={handleSubmitAnswer}
