@@ -11,6 +11,7 @@ export interface User {
   className?: string;
   faculty?: string; // Thêm trường Khoa cho giáo viên
   studentId?: string; // Thêm mã sinh viên
+  examCode?: string; // Thêm mã bài thi
 }
 
 export interface Teacher {

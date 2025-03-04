@@ -167,6 +167,7 @@ const EditQuestion: React.FC = () => {
         await addQuestion({
           content: questionContent,
           options: options,
+          updatedAt: new Date().toISOString(),
         });
         toast.success("Thêm câu hỏi thành công");
       } else {
