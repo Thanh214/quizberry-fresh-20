@@ -1,364 +1,259 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
-import Card from "@/components/Card";
-import Logo from "@/components/Logo";
-import TransitionWrapper from "@/components/TransitionWrapper";
-import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
+import { Question, Option } from "@/types/models";
 import { toast } from "sonner";
-import { AlertTriangle, ChevronLeft, Save, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Trash2 } from "lucide-react";
 
 const EditQuestion: React.FC = () => {
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
-  const { questions, addQuestion, updateQuestion, deleteQuestion } = useQuiz();
-  const isNewQuestion = id === "new";
-
-  const [questionContent, setQuestionContent] = useState("");
-  const [options, setOptions] = useState<
-    Array<{ id: string; content: string; isCorrect: boolean }>
-  >([
-    { id: "1", content: "", isCorrect: false },
-    { id: "2", content: "", isCorrect: false },
-    { id: "3", content: "", isCorrect: false },
-    { id: "4", content: "", isCorrect: false },
-  ]);
+  const navigate = useNavigate();
+  const { questions, updateQuestion, deleteQuestion } = useQuiz();
+  
+  const [question, setQuestion] = useState<Question | null>(null);
+  const [content, setContent] = useState("");
+  const [options, setOptions] = useState<Option[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
+  
+  // Load question data
   useEffect(() => {
-    // Kiểm tra quyền admin
-    if (!user || (user.role !== "admin" && user.role !== "teacher")) {
-      navigate("/role-selection");
-      return;
-    }
-
-    // Nếu chỉnh sửa câu hỏi đã có, tải dữ liệu
-    if (!isNewQuestion) {
-      const question = questions.find((q) => q.id === id);
-      if (question) {
-        setQuestionContent(question.content);
-        setOptions(question.options);
+    if (id) {
+      const foundQuestion = questions.find(q => q.id === id);
+      if (foundQuestion) {
+        setQuestion(foundQuestion);
+        setContent(foundQuestion.content);
+        setOptions([...foundQuestion.options]);
       } else {
-        toast.error("Không tìm thấy câu hỏi");
+        toast.error("Câu hỏi không tồn tại");
         navigate("/admin/questions");
       }
     }
-  }, [id, isNewQuestion, navigate, questions, user]);
-
-  const handleOptionChange = (
-    index: number,
-    field: "content" | "isCorrect",
-    value: string | boolean
-  ) => {
+  }, [id, questions, navigate]);
+  
+  const handleOptionContentChange = (index: number, newContent: string) => {
     const newOptions = [...options];
-    if (field === "isCorrect") {
-      // Bỏ chọn tất cả các tùy chọn khác
-      newOptions.forEach((option, i) => {
-        option.isCorrect = i === index;
-      });
-    } else {
-      newOptions[index] = {
-        ...newOptions[index],
-        [field]: value as string, // Ép kiểu value thành string khi field là "content"
-      };
-    }
+    newOptions[index] = { ...newOptions[index], content: newContent };
     setOptions(newOptions);
   };
-
+  
+  const handleOptionCorrectChange = (index: number) => {
+    const newOptions = options.map((option, i) => ({
+      ...option,
+      isCorrect: i === index,
+    }));
+    setOptions(newOptions);
+  };
+  
   const handleAddOption = () => {
-    if (options.length < 6) { // Cho phép tối đa 6 tùy chọn
-      setOptions([
-        ...options,
-        { id: `${options.length + 1}`, content: "", isCorrect: false }
-      ]);
-    } else {
-      toast.warning("Không thể thêm quá 6 tùy chọn");
+    if (options.length >= 6) {
+      toast.error("Số lượng đáp án tối đa là 6");
+      return;
     }
-  };
-
-  const handleRemoveOption = (index: number) => {
-    if (options.length > 2) { // Duy trì ít nhất 2 tùy chọn
-      const newOptions = [...options];
-      newOptions.splice(index, 1);
-      
-      // Nếu xóa tùy chọn đúng, đặt tùy chọn đầu tiên làm tùy chọn đúng
-      if (options[index].isCorrect && newOptions.length > 0) {
-        newOptions[0].isCorrect = true;
-      }
-      
-      setOptions(newOptions);
-    } else {
-      toast.warning("Cần có ít nhất 2 tùy chọn");
-    }
-  };
-
-  const handleExit = () => {
-    if (questionContent || options.some(o => o.content)) {
-      setShowExitConfirm(true);
-    } else {
-      navigate("/admin/questions");
-    }
-  };
-
-  const confirmExit = () => {
-    navigate("/admin/questions");
-  };
-
-  const cancelExit = () => {
-    setShowExitConfirm(false);
-  };
-
-  const handleDelete = () => {
-    if (!isNewQuestion) {
-      setShowDeleteConfirm(true);
-    }
-  };
-
-  const confirmDelete = async () => {
-    if (!isNewQuestion && id) {
-      try {
-        setIsLoading(true);
-        await deleteQuestion(id);
-        toast.success("Đã xóa câu hỏi thành công");
-        navigate("/admin/questions");
-      } catch (error) {
-        toast.error("Không thể xóa câu hỏi");
-      } finally {
-        setIsLoading(false);
-        setShowDeleteConfirm(false);
-      }
-    }
-  };
-
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     
-    // Kiểm tra hợp lệ
-    if (!questionContent.trim()) {
+    const newOption: Option = {
+      id: `new-option-${Date.now()}`,
+      content: "",
+      isCorrect: false,
+    };
+    
+    setOptions([...options, newOption]);
+  };
+  
+  const handleRemoveOption = (index: number) => {
+    if (options.length <= 2) {
+      toast.error("Cần ít nhất 2 đáp án");
+      return;
+    }
+    
+    // If removing the correct option, make the first remaining option correct
+    const removingCorrectOption = options[index].isCorrect;
+    
+    const newOptions = options.filter((_, i) => i !== index);
+    
+    if (removingCorrectOption && newOptions.length > 0) {
+      newOptions[0] = { ...newOptions[0], isCorrect: true };
+    }
+    
+    setOptions(newOptions);
+  };
+  
+  const handleSave = async () => {
+    if (!id) return;
+    
+    // Validations
+    if (!content.trim()) {
       toast.error("Vui lòng nhập nội dung câu hỏi");
       return;
     }
-
-    if (options.some((option) => !option.content.trim())) {
-      toast.error("Vui lòng nhập đầy đủ nội dung các đáp án");
+    
+    if (options.length < 2) {
+      toast.error("Cần ít nhất 2 đáp án");
       return;
     }
-
-    if (!options.some((option) => option.isCorrect)) {
-      toast.error("Vui lòng chọn đáp án đúng");
+    
+    if (!options.some(opt => opt.isCorrect)) {
+      toast.error("Cần chọn ít nhất 1 đáp án đúng");
       return;
     }
-
+    
+    if (options.some(opt => !opt.content.trim())) {
+      toast.error("Vui lòng nhập nội dung cho tất cả các đáp án");
+      return;
+    }
+    
+    // Update question
     try {
       setIsLoading(true);
       
-      if (isNewQuestion) {
-        await addQuestion({
-          content: questionContent,
-          options: options,
-          updatedAt: new Date().toISOString(),
-        });
-        toast.success("Thêm câu hỏi thành công");
-      } else {
-        await updateQuestion(id!, {
-          content: questionContent,
-          options: options,
-        });
-        toast.success("Cập nhật câu hỏi thành công");
-      }
+      await updateQuestion(id, {
+        content,
+        options,
+      });
       
+      toast.success("Cập nhật câu hỏi thành công");
       navigate("/admin/questions");
     } catch (error) {
-      toast.error("Không thể lưu câu hỏi");
+      toast.error("Không thể cập nhật câu hỏi");
       console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
-
+  
+  const handleDelete = async () => {
+    if (!id) return;
+    
+    if (window.confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
+      try {
+        setIsLoading(true);
+        await deleteQuestion(id);
+        toast.success("Xóa câu hỏi thành công");
+        navigate("/admin/questions");
+      } catch (error) {
+        toast.error("Không thể xóa câu hỏi");
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+  
+  if (!question) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-pulse flex space-x-4">
+            <div className="rounded-full bg-slate-200 h-10 w-10"></div>
+            <div className="flex-1 space-y-6 py-1">
+              <div className="h-2 bg-slate-200 rounded"></div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="h-2 bg-slate-200 rounded col-span-2"></div>
+                  <div className="h-2 bg-slate-200 rounded col-span-1"></div>
+                </div>
+                <div className="h-2 bg-slate-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+  
   return (
     <Layout>
-      <div className="flex flex-col min-h-screen">
-        <header className="flex items-center justify-between mb-8">
-          <Logo />
-          <button
-            className="text-sm text-muted-foreground hover:text-foreground flex items-center"
-            onClick={handleExit}
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Quay lại danh sách
-          </button>
-        </header>
-
-        {/* Xác nhận thoát khi có thay đổi chưa lưu */}
-        <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Xác nhận thoát</DialogTitle>
-            </DialogHeader>
-            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
-              <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-800">
-                Bạn có thay đổi chưa được lưu. Nếu thoát, các thay đổi sẽ bị mất.
-              </p>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={cancelExit}>
-                Ở lại
-              </Button>
-              <Button variant="destructive" onClick={confirmExit}>
-                Thoát và hủy thay đổi
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Xác nhận xóa câu hỏi */}
-        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Xác nhận xóa câu hỏi</DialogTitle>
-            </DialogHeader>
-            <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-              <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-destructive-foreground">
-                Bạn có chắc chắn muốn xóa câu hỏi này? Thao tác này không thể khôi phục.
-              </p>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={cancelDelete}>
-                Hủy
-              </Button>
-              <Button variant="destructive" onClick={confirmDelete} disabled={isLoading}>
-                {isLoading ? "Đang xóa..." : "Xóa câu hỏi"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <TransitionWrapper delay={300}>
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">
-              {isNewQuestion ? "Thêm câu hỏi mới" : "Chỉnh sửa câu hỏi"}
-            </h1>
+      <div className="container mx-auto py-8">
+        <h1 className="text-2xl font-bold mb-6">Chỉnh sửa câu hỏi</h1>
+        
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="mb-4">
+            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
+              Nội dung câu hỏi
+            </label>
+            <Input
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full"
+              placeholder="Nhập nội dung câu hỏi"
+            />
           </div>
-        </TransitionWrapper>
-
-        <TransitionWrapper delay={400}>
-          <Card className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="question-content">
-                  Nội dung câu hỏi
-                </label>
-                <textarea
-                  id="question-content"
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Nhập nội dung câu hỏi"
-                  rows={3}
-                  value={questionContent}
-                  onChange={(e) => setQuestionContent(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Các đáp án:</label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleAddOption}
-                    className="h-8"
-                  >
-                    Thêm đáp án
-                  </Button>
-                </div>
-                
-                {options.map((option, index) => (
-                  <div key={option.id} className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id={`correct-${option.id}`}
-                      name="correct-option"
-                      checked={option.isCorrect}
-                      onChange={() => handleOptionChange(index, "isCorrect", true)}
-                      className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
-                    />
-                    <input
-                      type="text"
-                      placeholder={`Đáp án ${index + 1}`}
-                      value={option.content}
-                      onChange={(e) =>
-                        handleOptionChange(index, "content", e.target.value)
-                      }
-                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      required
-                    />
-                    {options.length > 2 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveOption(index)}
-                        className="h-9 w-9 p-0"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <p className="text-xs text-muted-foreground">
-                  Chọn đáp án đúng bằng cách click vào nút radio bên trái
-                </p>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-2">
-                {!isNewQuestion && (
+          
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-medium">Đáp án</h3>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={handleAddOption}
+              >
+                Thêm đáp án
+              </Button>
+            </div>
+            
+            <div className="space-y-3">
+              {options.map((option, index) => (
+                <div key={option.id} className="flex items-center space-x-3">
+                  <input
+                    type="radio"
+                    id={`correct-${option.id}`}
+                    checked={option.isCorrect}
+                    onChange={() => handleOptionCorrectChange(index)}
+                    className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                  />
+                  <Input
+                    value={option.content}
+                    onChange={(e) => handleOptionContentChange(index, e.target.value)}
+                    className="flex-1"
+                    placeholder={`Đáp án ${index + 1}`}
+                  />
                   <Button
                     type="button"
-                    variant="destructive"
-                    onClick={handleDelete}
-                    className="mr-auto"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveOption(index)}
                   >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Xóa câu hỏi
+                    <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleExit}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  {isLoading ? (
-                    <span className="animate-pulse">Đang lưu...</span>
-                  ) : (
-                    "Lưu câu hỏi"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </TransitionWrapper>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="flex justify-between">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isLoading}
+            >
+              Xóa câu hỏi
+            </Button>
+            
+            <div className="space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/admin/questions")}
+                disabled={isLoading}
+              >
+                Hủy
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={isLoading}
+              >
+                {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </Layout>
   );

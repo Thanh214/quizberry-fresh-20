@@ -2,15 +2,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import Card from "@/components/Card";
 import Logo from "@/components/Logo";
-import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { ShuffledQuestion, QuizSession } from "@/types/models";
 import { toast } from "sonner";
-import { AlertTriangle, Clock } from "lucide-react";
 import { useExam } from "@/context/ExamContext";
+import QuizTimer from "./components/QuizTimer";
+import QuizProgress from "./components/QuizProgress";
+import QuizQuestion from "./components/QuizQuestion";
+import ConfirmDialog from "./components/ConfirmDialog";
+import { Button } from "@/components/ui/button";
 
 const StudentQuiz: React.FC = () => {
   const navigate = useNavigate();
@@ -89,38 +91,6 @@ const StudentQuiz: React.FC = () => {
       }
     };
   }, [currentSession, navigate, startQuiz, user, exams, session?.examId]);
-
-  // Thiết lập bộ đếm ngược
-  useEffect(() => {
-    if (remainingTime > 0 && !timerRef.current) {
-      timerRef.current = setInterval(() => {
-        setRemainingTime(prev => {
-          if (prev <= 1) {
-            // Hết giờ, tự động nộp bài
-            if (timerRef.current) clearInterval(timerRef.current);
-            handleFinishQuiz();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [remainingTime]);
-
-  const formatTime = (seconds: number): string => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const handleOptionSelect = (optionId: string) => {
     setSelectedOption(optionId);
@@ -206,9 +176,9 @@ const StudentQuiz: React.FC = () => {
     setShowLogoutConfirm(false);
   };
 
-  const progressPercentage = totalQuestionsRef.current > 0
-    ? (currentIndexRef.current / totalQuestionsRef.current) * 100
-    : 0;
+  const handleTimeUp = () => {
+    handleFinishQuiz();
+  };
 
   return (
     <Layout>
@@ -217,12 +187,12 @@ const StudentQuiz: React.FC = () => {
           <Logo />
           <div className="flex items-center gap-4">
             {/* Đồng hồ đếm ngược */}
-            <div className="flex items-center gap-2 bg-muted px-3 py-1 rounded-md">
-              <Clock className="h-4 w-4 text-primary" />
-              <span className={remainingTime <= 300 ? "text-red-500 font-medium" : ""}>
-                {formatTime(remainingTime)}
-              </span>
-            </div>
+            {remainingTime > 0 && (
+              <QuizTimer 
+                initialTime={remainingTime} 
+                onTimeUp={handleTimeUp} 
+              />
+            )}
             <button
               className="text-sm text-muted-foreground hover:text-foreground"
               onClick={handleQuit}
@@ -233,61 +203,30 @@ const StudentQuiz: React.FC = () => {
         </header>
 
         {showLogoutConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
-              <h3 className="text-lg font-medium mb-3">Xác nhận thoát</h3>
-              <p className="mb-5 text-muted-foreground">Bạn có chắc chắn muốn thoát? Mọi tiến trình làm bài sẽ bị mất.</p>
-              <div className="flex justify-end gap-3">
-                <button 
-                  className="px-4 py-2 border border-input rounded-md text-sm"
-                  onClick={cancelLogout}
-                >
-                  Hủy
-                </button>
-                <button 
-                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md text-sm"
-                  onClick={confirmLogout}
-                >
-                  Xác nhận thoát
-                </button>
-              </div>
-            </div>
-          </div>
+          <ConfirmDialog
+            title="Xác nhận thoát"
+            message="Bạn có chắc chắn muốn thoát? Mọi tiến trình làm bài sẽ bị mất."
+            cancelText="Hủy"
+            confirmText="Xác nhận thoát"
+            onCancel={cancelLogout}
+            onConfirm={confirmLogout}
+          />
         )}
 
-        {confirmSubmit && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
-              <h3 className="text-lg font-medium mb-2">Xác nhận nộp bài</h3>
-              
-              {session && session.answers.length < session.questions.length && (
-                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
-                  <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-800">
-                    Bạn còn {session.questions.length - session.answers.length} câu hỏi chưa trả lời. 
-                    Bạn có chắc chắn muốn nộp bài?
-                  </p>
-                </div>
-              )}
-              
-              <p className="mb-5 text-muted-foreground">Sau khi nộp bài, bạn sẽ không thể quay lại để sửa đổi câu trả lời.</p>
-              
-              <div className="flex justify-end gap-3">
-                <button 
-                  className="px-4 py-2 border border-input rounded-md text-sm"
-                  onClick={handleCancelSubmit}
-                >
-                  Quay lại làm bài
-                </button>
-                <button 
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
-                  onClick={handleFinishQuiz}
-                >
-                  Nộp bài
-                </button>
-              </div>
-            </div>
-          </div>
+        {confirmSubmit && session && (
+          <ConfirmDialog
+            title="Xác nhận nộp bài"
+            message="Sau khi nộp bài, bạn sẽ không thể quay lại để sửa đổi câu trả lời."
+            cancelText="Quay lại làm bài"
+            confirmText="Nộp bài"
+            onCancel={handleCancelSubmit}
+            onConfirm={handleFinishQuiz}
+            warning={
+              session.answers.length < session.questions.length
+                ? `Bạn còn ${session.questions.length - session.answers.length} câu hỏi chưa trả lời. Bạn có chắc chắn muốn nộp bài?`
+                : undefined
+            }
+          />
         )}
 
         {!currentQuestion ? (
@@ -301,84 +240,36 @@ const StudentQuiz: React.FC = () => {
         ) : (
           <>
             {/* Progress Bar */}
-            <TransitionWrapper delay={200}>
-              <div className="mb-6">
-                <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-500 ease-in-out"
-                    style={{ width: `${progressPercentage}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                  <span>
-                    Câu hỏi {currentIndexRef.current + 1}/{totalQuestionsRef.current}
-                  </span>
-                  <span>{user?.name} - {user?.studentId}</span>
-                </div>
-              </div>
-            </TransitionWrapper>
+            <QuizProgress
+              currentIndex={currentIndexRef.current}
+              totalQuestions={totalQuestionsRef.current}
+              studentName={user?.name}
+              studentId={user?.studentId}
+            />
 
             {/* Question */}
-            <TransitionWrapper
-              delay={300}
-              className={`transition-opacity duration-500 ${
-                isSubmitting ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              <Card className="p-6 mb-6">
-                <h2 className="text-xl font-medium mb-8">
-                  {currentIndexRef.current + 1}. {currentQuestion.content}
-                </h2>
-                <div className="space-y-4">
-                  {currentQuestion.shuffledOptions.map((option) => (
-                    <div
-                      key={option.id}
-                      className={`p-4 rounded-md border cursor-pointer transition-all duration-300 ${
-                        selectedOption === option.id
-                          ? "bg-primary/10 border-primary"
-                          : "bg-background hover:bg-muted/50 border-input"
-                      }`}
-                      onClick={() => handleOptionSelect(option.id)}
-                    >
-                      <div className="flex items-center">
-                        <div
-                          className={`w-5 h-5 rounded-full border ${
-                            selectedOption === option.id
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground"
-                          } mr-3 flex items-center justify-center`}
-                        >
-                          {selectedOption === option.id && (
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                          )}
-                        </div>
-                        <span>{option.content}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </TransitionWrapper>
+            <QuizQuestion
+              question={currentQuestion}
+              questionNumber={currentIndexRef.current + 1}
+              selectedOption={selectedOption}
+              onOptionSelect={handleOptionSelect}
+              isSubmitting={isSubmitting}
+            />
 
             {/* Navigation Buttons */}
-            <TransitionWrapper delay={400}>
-              <div className="flex justify-end">
-                <button
-                  className={`inline-flex h-10 items-center justify-center rounded-md px-6 py-2 text-sm font-medium transition-colors 
-                    ${
-                      selectedOption
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : "bg-muted text-muted-foreground"
-                    } focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none`}
-                  onClick={handleSubmitAnswer}
-                  disabled={!selectedOption || isSubmitting}
-                >
-                  {currentIndexRef.current + 1 < totalQuestionsRef.current
-                    ? "Câu tiếp theo"
-                    : "Hoàn thành"}
-                </button>
-              </div>
-            </TransitionWrapper>
+            <Button
+              className={`ml-auto ${
+                selectedOption
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-muted text-muted-foreground"
+              }`}
+              onClick={handleSubmitAnswer}
+              disabled={!selectedOption || isSubmitting}
+            >
+              {currentIndexRef.current + 1 < totalQuestionsRef.current
+                ? "Câu tiếp theo"
+                : "Hoàn thành"}
+            </Button>
           </>
         )}
       </div>

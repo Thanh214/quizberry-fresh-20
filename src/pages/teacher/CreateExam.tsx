@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Card from "@/components/Card";
@@ -8,128 +9,227 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Exam, Question } from "@/types/models";
+import QuestionForm from "./components/QuestionForm";
+import ExamForm from "./components/ExamForm";
+import QuestionList from "./components/QuestionList";
 
 const CreateExam: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addQuestion } = useQuiz();
+  const { 
+    questions, 
+    addQuestion, 
+    deleteQuestion, 
+    addExam,
+    isLoading 
+  } = useQuiz();
 
-  const [questionContent, setQuestionContent] = useState("");
-  const [options, setOptions] = useState<
-    Array<{ id: string; content: string; isCorrect: boolean }>
-  >([
-    { id: "1", content: "", isCorrect: true },
-    { id: "2", content: "", isCorrect: false },
-    { id: "3", content: "", isCorrect: false },
-    { id: "4", content: "", isCorrect: false },
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
+  const [showExamForm, setShowExamForm] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState("questions");
 
-  const handleAddQuestion = async () => {
+  // Reset the selection when questions change
+  useEffect(() => {
+    setSelectedQuestions([]);
+  }, [questions]);
+
+  const handleAddQuestion = async (content: string, options: Array<{ id: string; content: string; isCorrect: boolean }>) => {
     try {
-      const newQuestion = await addQuestion({
-        content: questionContent,
-        options: options,
-        updatedAt: new Date().toISOString(),
+      await addQuestion({
+        content,
+        options,
       });
       
-      if (newQuestion && newQuestion.id) {
-        setQuestionContent("");
-        setOptions([
-          { id: "1", content: "", isCorrect: true },
-          { id: "2", content: "", isCorrect: false },
-          { id: "3", content: "", isCorrect: false },
-          { id: "4", content: "", isCorrect: false },
-        ]);
-        setShowQuestionForm(false);
-        toast.success("Thêm câu hỏi thành công");
-      }
+      setShowQuestionForm(false);
+      toast.success("Thêm câu hỏi thành công");
     } catch (error) {
       toast.error("Không thể thêm câu hỏi");
       console.error(error);
     }
   };
 
+  const handleCreateExam = async (examData: Omit<Exam, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      if (selectedQuestions.length === 0) {
+        toast.error("Vui lòng chọn ít nhất một câu hỏi cho bài thi");
+        return;
+      }
+      
+      const newExamData = {
+        ...examData,
+        questionIds: selectedQuestions,
+      };
+      
+      await addExam(newExamData);
+      
+      toast.success("Tạo bài thi thành công");
+      navigate("/teacher/exams");
+    } catch (error) {
+      toast.error("Không thể tạo bài thi");
+      console.error(error);
+    }
+  };
+
+  const handleToggleQuestion = (questionId: string) => {
+    setSelectedQuestions(prev => 
+      prev.includes(questionId)
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
+    );
+  };
+
+  const handleEditQuestion = (questionId: string) => {
+    navigate(`/admin/questions/edit/${questionId}`);
+  };
+
+  const handleDeleteQuestion = async (questionId: string) => {
+    if (window.confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
+      try {
+        await deleteQuestion(questionId);
+        
+        // Remove from selection if it was selected
+        setSelectedQuestions(prev => prev.filter(id => id !== questionId));
+        
+        toast.success("Xóa câu hỏi thành công");
+      } catch (error) {
+        toast.error("Không thể xóa câu hỏi");
+        console.error(error);
+      }
+    }
+  };
+
   return (
     <Layout>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen pb-10">
         <header className="flex items-center justify-between mb-8">
-          <Logo />
-          <h1 className="text-2xl font-bold">Tạo bài thi</h1>
+          <div className="flex items-center">
+            <Logo className="mr-4" />
+            <h1 className="text-2xl font-bold">Tạo bài thi</h1>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate("/teacher/exams")}
+              variant="outline"
+            >
+              Quay lại
+            </Button>
+            {selectedQuestions.length > 0 && (
+              <Button 
+                onClick={() => setShowExamForm(true)}
+              >
+                Tạo bài thi ({selectedQuestions.length} câu hỏi)
+              </Button>
+            )}
+          </div>
         </header>
 
         <TransitionWrapper>
-          <Card className="p-6">
-            <h2 className="text-xl font-medium mb-4">Thêm câu hỏi</h2>
-            {showQuestionForm ? (
-              <form onSubmit={(e) => { e.preventDefault(); handleAddQuestion(); }} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium" htmlFor="question-content">
-                    Nội dung câu hỏi
-                  </label>
-                  <Input
-                    id="question-content"
-                    placeholder="Nhập nội dung câu hỏi"
-                    value={questionContent}
-                    onChange={(e) => setQuestionContent(e.target.value)}
-                    required
-                  />
+          <Tabs 
+            value={activeTab} 
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="mb-6">
+              <TabsTrigger value="questions">Quản lý câu hỏi</TabsTrigger>
+              <TabsTrigger value="preview">Xem trước bài thi</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="questions">
+              <Card className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-medium">Danh sách câu hỏi</h2>
+                  <Button 
+                    onClick={() => setShowQuestionForm(true)}
+                    className="bg-primary text-white hover:bg-primary/90"
+                  >
+                    Thêm câu hỏi mới
+                  </Button>
                 </div>
-                {options.map((option, index) => (
-                  <div key={option.id} className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id={`correct-${option.id}`}
-                      name="correct-option"
-                      checked={option.isCorrect}
-                      onChange={() => {
-                        const newOptions = options.map((opt, i) => ({
-                          ...opt,
-                          isCorrect: i === index,
-                        }));
-                        setOptions(newOptions);
-                      }}
-                      className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
-                    />
-                    <Input
-                      type="text"
-                      placeholder={`Đáp án ${index + 1}`}
-                      value={option.content}
-                      onChange={(e) => {
-                        const newOptions = [...options];
-                        newOptions[index].content = e.target.value;
-                        setOptions(newOptions);
-                      }}
-                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      required
-                    />
+                
+                {showQuestionForm ? (
+                  <QuestionForm 
+                    onSubmit={handleAddQuestion}
+                    onCancel={() => setShowQuestionForm(false)}
+                    isLoading={isLoading}
+                  />
+                ) : (
+                  <QuestionList 
+                    questions={questions}
+                    selectedQuestions={selectedQuestions}
+                    onToggleQuestion={handleToggleQuestion}
+                    onEditQuestion={handleEditQuestion}
+                    onDeleteQuestion={handleDeleteQuestion}
+                  />
+                )}
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="preview">
+              <Card className="p-6">
+                <h2 className="text-xl font-medium mb-6">Xem trước bài thi</h2>
+                
+                {selectedQuestions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <h3 className="text-lg font-medium text-muted-foreground">Chưa có câu hỏi nào được chọn</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Hãy quay lại tab "Quản lý câu hỏi" để chọn câu hỏi cho bài thi
+                    </p>
                   </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowQuestionForm(false)}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Đang lưu..." : "Lưu câu hỏi"}
-                </Button>
-              </form>
-            ) : (
-              <Button
-                onClick={() => setShowQuestionForm(true)}
-                className="w-full bg-primary text-white hover:bg-primary/90"
-              >
-                Thêm câu hỏi mới
-              </Button>
-            )}
-          </Card>
+                ) : (
+                  <div className="space-y-6">
+                    {selectedQuestions.map((questionId, index) => {
+                      const question = questions.find(q => q.id === questionId);
+                      if (!question) return null;
+                      
+                      return (
+                        <div key={question.id} className="border border-gray-200 rounded-md p-4">
+                          <div className="font-medium mb-3">
+                            Câu {index + 1}: {question.content}
+                          </div>
+                          <div className="space-y-2">
+                            {question.options.map((option, optionIndex) => (
+                              <div key={option.id} className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center">
+                                  {String.fromCharCode(65 + optionIndex)}
+                                </div>
+                                <span>{option.content}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    <div className="flex justify-end mt-6">
+                      <Button 
+                        onClick={() => setShowExamForm(true)}
+                      >
+                        Tạo bài thi ({selectedQuestions.length} câu hỏi)
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+          </Tabs>
+          
+          {showExamForm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
+                <h3 className="text-lg font-medium mb-4">Tạo bài thi mới</h3>
+                
+                <ExamForm 
+                  onSubmit={handleCreateExam}
+                  onCancel={() => setShowExamForm(false)}
+                  teacherId={user?.id || ""}
+                  isLoading={isLoading}
+                />
+              </div>
+            </div>
+          )}
         </TransitionWrapper>
       </div>
     </Layout>

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Card from "@/components/Card";
@@ -8,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Trash2 } from "lucide-react";
+import { CheckCircle, Trash2, Plus } from "lucide-react";
 
 const TeacherExams: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +45,10 @@ const TeacherExams: React.FC = () => {
     }
   };
 
+  const handleCreateExam = () => {
+    navigate("/teacher/create-exam");
+  };
+
   return (
     <Layout>
       <div className="min-h-screen pb-10">
@@ -52,6 +57,10 @@ const TeacherExams: React.FC = () => {
             <Logo className="mr-4" />
             <h1 className="text-2xl font-bold">Quản lý bài thi</h1>
           </div>
+          <Button onClick={handleCreateExam} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Tạo bài thi mới
+          </Button>
         </div>
 
         <TransitionWrapper>
@@ -60,11 +69,11 @@ const TeacherExams: React.FC = () => {
               <h2 className="text-xl font-semibold">Danh sách bài thi</h2>
             </div>
 
-            {exams.length === 0 ? (
+            {!exams || exams.length === 0 ? (
               <div className="text-center py-12">
                 <h3 className="text-lg font-medium text-muted-foreground">Chưa có bài thi nào</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Bấm vào nút "Thêm bài thi" để tạo bài thi đầu tiên
+                  Bấm vào nút "Tạo bài thi mới" để tạo bài thi đầu tiên
                 </p>
               </div>
             ) : (
@@ -76,11 +85,15 @@ const TeacherExams: React.FC = () => {
                       <div className="flex items-center space-x-1">
                         <Button
                           variant="default"
-                          className="text-primary-foreground bg-green-500 hover:bg-green-600 transition-colors"
+                          className={`text-primary-foreground ${
+                            exam.isActive 
+                              ? "bg-red-500 hover:bg-red-600" 
+                              : "bg-green-500 hover:bg-green-600"
+                          } transition-colors`}
                           onClick={() => handleActivateExam(exam.id)}
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          Kích hoạt
+                          {exam.isActive ? "Đóng bài thi" : "Mở bài thi"}
                         </Button>
                         <Button
                           variant="destructive"
@@ -91,6 +104,15 @@ const TeacherExams: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground">{exam.description}</p>
+                    <div className="mt-2 text-sm">
+                      <span className="font-medium">Mã bài thi:</span> {exam.code}
+                    </div>
+                    <div className="mt-1 text-sm">
+                      <span className="font-medium">Trạng thái:</span>{" "}
+                      <span className={exam.isActive ? "text-green-500" : "text-red-500"}>
+                        {exam.isActive ? "Đang mở" : "Đã đóng"}
+                      </span>
+                    </div>
                   </Card>
                 ))}
               </div>
