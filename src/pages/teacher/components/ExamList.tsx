@@ -75,6 +75,12 @@ const ExamList: React.FC<ExamListProps> = ({
     }
   };
 
+  // This function handles the direct start of the exam without confirmation
+  const handleStartExam = (examId: string) => {
+    onStart(examId);
+    toast.success("Bài thi đã bắt đầu");
+  };
+
   return (
     <>
       <div className="space-y-4">
@@ -228,7 +234,7 @@ const ExamList: React.FC<ExamListProps> = ({
                       <Button
                         size="sm"
                         className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-none"
-                        onClick={() => setConfirmStart(exam.id)}
+                        onClick={() => handleStartExam(exam.id)}
                       >
                         <PlayCircle className="h-4 w-4 mr-2" />
                         Bắt đầu bài thi ({waitingCount} học sinh đang chờ)
