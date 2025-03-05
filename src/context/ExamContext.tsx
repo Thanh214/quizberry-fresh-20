@@ -153,18 +153,21 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const result = await addParticipantMutation(newParticipantData);
       
+      // Ensure result is of the correct type
+      const participantResult = result as SupabaseExamParticipant;
+      
       // Transform to our model format
       const transformedParticipant: ExamParticipant = {
-        id: result.id,
-        examId: result.exam_id,
-        studentName: result.student_name,
-        studentId: result.student_id,
-        className: result.class_name,
-        status: result.status as "waiting" | "in_progress" | "completed",
-        startTime: result.start_time,
-        joinLink: result.join_link,
-        exitCount: result.exit_count,
-        score: result.score
+        id: participantResult.id,
+        examId: participantResult.exam_id,
+        studentName: participantResult.student_name,
+        studentId: participantResult.student_id,
+        className: participantResult.class_name,
+        status: participantResult.status as "waiting" | "in_progress" | "completed",
+        startTime: participantResult.start_time,
+        joinLink: participantResult.join_link || undefined,
+        exitCount: participantResult.exit_count || 0,
+        score: participantResult.score || undefined
       };
       
       return transformedParticipant;

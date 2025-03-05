@@ -39,6 +39,12 @@ export interface SupabaseExam {
   share_link?: string | null;
 }
 
+// Generic type for Supabase responses to fix excessive type nesting
+type SupabaseData = 
+  | SupabaseExamParticipant 
+  | SupabaseExam 
+  | Record<string, any>;
+
 /**
  * Custom hook để lấy dữ liệu từ Supabase
  */
@@ -112,11 +118,9 @@ export function useSupabaseMutation(tableName: TableNames) {
   const add = async <T extends Record<string, any>>(data: T) => {
     try {
       setLoading(true);
-      // Use as any to avoid type constraints - we know what we're doing here
-      // since we're passing valid table names as TableNames
       const { data: result, error } = await supabase.from(tableName).insert(data as any).select();
       if (error) throw error;
-      return result[0];
+      return result[0] as SupabaseData;
     } catch (err: any) {
       console.error("Lỗi khi thêm dữ liệu vào Supabase:", err);
       setError(err);
@@ -130,14 +134,13 @@ export function useSupabaseMutation(tableName: TableNames) {
   const update = async <T extends Record<string, any>>(id: string, data: Partial<T>) => {
     try {
       setLoading(true);
-      // Use as any to avoid type constraints
       const { data: result, error } = await supabase
         .from(tableName)
         .update(data as any)
         .eq("id", id)
         .select();
       if (error) throw error;
-      return result[0];
+      return result[0] as SupabaseData;
     } catch (err: any) {
       console.error("Lỗi khi cập nhật dữ liệu trong Supabase:", err);
       setError(err);
@@ -173,7 +176,8 @@ export function useSupabaseMutation(tableName: TableNames) {
   };
 }
 
-interface AuthResult {
+// Define proper type for auth result
+export interface AuthResult {
   data: {
     user: User | null;
     session: Session | null;
