@@ -101,8 +101,9 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           animation: "animate-fall-slow-rotate",
           gradientColors: "from-pink-200/70 to-blue-100/60",
           overlayColor: "bg-pink-500/5",
-          buttonBg: "bg-pink-50/90 hover:bg-pink-100/90 border-pink-200",
-          buttonText: "text-pink-600"
+          buttonBg: "bg-gradient-to-r from-pink-300 to-pink-200",
+          buttonShadow: "shadow-pink-200",
+          buttonRingColor: "ring-pink-400"
         };
       case "summer":
         return {
@@ -119,8 +120,9 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           animation: "animate-float-pulse",
           gradientColors: "from-amber-200/70 to-yellow-100/60",
           overlayColor: "bg-amber-500/5",
-          buttonBg: "bg-amber-50/90 hover:bg-amber-100/90 border-amber-200",
-          buttonText: "text-amber-600"
+          buttonBg: "bg-gradient-to-r from-amber-300 to-yellow-200",
+          buttonShadow: "shadow-amber-200",
+          buttonRingColor: "ring-amber-400"
         };
       case "autumn":
         return {
@@ -137,8 +139,9 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           animation: "animate-fall-rotate",
           gradientColors: "from-orange-200/70 to-amber-100/60",
           overlayColor: "bg-orange-500/5",
-          buttonBg: "bg-orange-50/90 hover:bg-orange-100/90 border-orange-200",
-          buttonText: "text-orange-600"
+          buttonBg: "bg-gradient-to-r from-orange-300 to-amber-200",
+          buttonShadow: "shadow-orange-200",
+          buttonRingColor: "ring-orange-400"
         };
       case "winter":
         return {
@@ -155,22 +158,14 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           animation: "animate-fall",
           gradientColors: "from-blue-200/70 to-indigo-100/60",
           overlayColor: "bg-blue-500/5",
-          buttonBg: "bg-blue-50/90 hover:bg-blue-100/90 border-blue-200",
-          buttonText: "text-blue-600"
+          buttonBg: "bg-gradient-to-r from-blue-300 to-indigo-200",
+          buttonShadow: "shadow-blue-200",
+          buttonRingColor: "ring-blue-400"
         };
     }
   };
 
   const seasonalStyles = getSeasonalStyles();
-
-  const getSeasonName = (season: Season): string => {
-    switch (season) {
-      case "spring": return "Mùa Xuân";
-      case "summer": return "Mùa Hè";
-      case "autumn": return "Mùa Thu";
-      case "winter": return "Mùa Đông";
-    }
-  };
 
   const getSeasonIcon = (season: Season): string => {
     switch (season) {
@@ -672,47 +667,143 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
             right: "1.5rem"
           }}
         >
+          {/* Nút tròn nhỏ có hiệu ứng thay đổi thời tiết */}
           <motion.button
             onClick={cycleSeason}
             className={`
-              px-6 py-2.5 rounded-full text-sm font-medium shadow-lg
-              backdrop-blur-md border 
-              transition-all duration-500
+              w-12 h-12 rounded-full shadow-lg
+              backdrop-blur-md border flex items-center justify-center
+              transition-all duration-500 relative overflow-hidden
+              ring-2 ring-offset-2 ring-offset-background
               ${isTransitioning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
               ${seasonalStyles.buttonBg}
+              ${seasonalStyles.buttonShadow}
+              ${seasonalStyles.buttonRingColor}
             `}
-            whileHover={{ scale: 1.05, boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.1)" }}
+            whileHover={{ scale: 1.1, boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.1)" }}
             whileTap={{ scale: 0.95 }}
             disabled={isTransitioning}
           >
             <motion.div 
-              className="flex items-center gap-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              className="absolute inset-0 opacity-25"
+              animate={{
+                background: [
+                  "radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 50%)",
+                  "radial-gradient(circle at center, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%)",
+                  "radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 50%)",
+                ]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            />
+            
+            <motion.span 
+              className="text-xl relative z-10"
+              animate={{ 
+                rotate: isHovering ? [0, 20, -20, 20, 0] : [0, 15, -15, 0],
+                scale: isHovering ? [1, 1.3, 1] : [1, 1.2, 1]
+              }}
+              transition={{ 
+                duration: isHovering ? 1.5 : 3,
+                repeat: Infinity,
+                repeatType: "reverse",
+                repeatDelay: isHovering ? 0 : 2
+              }}
             >
-              <motion.span 
-                className="text-lg"
-                animate={{ 
-                  rotate: isHovering ? [0, 10, -10, 10, 0] : [0, 10, -10, 0],
-                  scale: isHovering ? [1, 1.3, 1] : [1, 1.2, 1]
+              {getSeasonIcon(season)}
+            </motion.span>
+            
+            {/* Hiệu ứng tỏa sáng */}
+            <motion.div 
+              className="absolute inset-0 rounded-full"
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: [0.1, 0.3, 0.1],
+                scale: [0.8, 1.2, 0.8],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+              style={{
+                background: `radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%)`,
+              }}
+            />
+
+            {/* Hiệu ứng theo mùa */}
+            {season === "winter" && (
+              <motion.div 
+                className="absolute inset-0 opacity-50"
+                animate={{
+                  background: [
+                    "radial-gradient(circle at 30% 30%, rgba(191,219,254,0.8) 0%, rgba(191,219,254,0) 50%)",
+                    "radial-gradient(circle at 70% 70%, rgba(191,219,254,0.8) 0%, rgba(191,219,254,0) 50%)",
+                    "radial-gradient(circle at 30% 30%, rgba(191,219,254,0.8) 0%, rgba(191,219,254,0) 50%)",
+                  ]
                 }}
-                transition={{ 
-                  duration: isHovering ? 1 : 2,
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              />
+            )}
+            
+            {season === "summer" && (
+              <motion.div 
+                className="absolute h-5 w-5 bg-yellow-300 rounded-full blur-sm"
+                style={{ top: "20%", left: "20%" }}
+                animate={{
+                  opacity: [0.7, 1, 0.7],
+                  scale: [1, 1.3, 1],
+                }}
+                transition={{
+                  duration: 3,
                   repeat: Infinity,
                   repeatType: "reverse",
-                  repeatDelay: isHovering ? 0 : 3
                 }}
-              >
-                {getSeasonIcon(season)}
-              </motion.span>
-              <span className={`
-                font-medium transition-colors duration-500
-                ${seasonalStyles.buttonText}
-              `}>
-                {getSeasonName(season)}
-              </span>
-            </motion.div>
+              />
+            )}
+            
+            {season === "spring" && (
+              <motion.div 
+                className="absolute inset-0"
+                animate={{
+                  background: [
+                    "radial-gradient(circle at 30% 70%, rgba(249,168,212,0.5) 0%, rgba(249,168,212,0) 50%)",
+                    "radial-gradient(circle at 70% 30%, rgba(249,168,212,0.5) 0%, rgba(249,168,212,0) 50%)",
+                    "radial-gradient(circle at 30% 70%, rgba(249,168,212,0.5) 0%, rgba(249,168,212,0) 50%)",
+                  ]
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              />
+            )}
+            
+            {season === "autumn" && (
+              <motion.div 
+                className="absolute inset-0"
+                animate={{
+                  background: [
+                    "radial-gradient(circle at 70% 30%, rgba(251,146,60,0.5) 0%, rgba(251,146,60,0) 50%)",
+                    "radial-gradient(circle at 30% 70%, rgba(251,146,60,0.5) 0%, rgba(251,146,60,0) 50%)",
+                    "radial-gradient(circle at 70% 30%, rgba(251,146,60,0.5) 0%, rgba(251,146,60,0) 50%)",
+                  ]
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              />
+            )}
           </motion.button>
         </motion.div>
       )}

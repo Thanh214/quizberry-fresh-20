@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Card from "@/components/Card";
 import { 
-  PlayCircle, 
   Edit, 
   Trash2, 
   ToggleLeft, 
@@ -125,27 +124,7 @@ const ExamCard: React.FC<ExamCardProps> = ({
             
             {isTeacher && (
               <div className="flex items-center gap-2 flex-wrap mt-2 sm:mt-0">
-                {exam.isActive && (
-                  <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.2 }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <NeonEffect color="green" padding="p-0" className="rounded-full overflow-hidden">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="text-green-500 border-green-200 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:border-green-800 transition-all duration-300"
-                        onClick={() => setConfirmStart(exam.id)}
-                        disabled={exam.hasStarted}
-                      >
-                        <PlayCircle className="h-4 w-4" />
-                      </Button>
-                    </NeonEffect>
-                  </motion.div>
-                )}
+                {/* Đã loại bỏ nút tròn màu xanh lá cây */}
                 
                 <motion.div
                   initial={{ scale: 0.5, opacity: 0 }}
