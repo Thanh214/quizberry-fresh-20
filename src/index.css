@@ -165,15 +165,23 @@
   }
 
   .pb-safe {
-    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 1.5rem));
+    padding-bottom: max(2rem, calc(5rem + env(safe-area-inset-bottom, 0)));
   }
   
   .mb-safe {
-    margin-bottom: calc(4rem + env(safe-area-inset-bottom, 1.5rem));
+    margin-bottom: max(2rem, calc(5rem + env(safe-area-inset-bottom, 0)));
   }
   
   .fixed-safe-bottom {
-    bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+    bottom: max(1rem, calc(1rem + env(safe-area-inset-bottom, 0)));
+  }
+  
+  .safe-bottom-margin {
+    margin-bottom: env(safe-area-inset-bottom, 1.5rem);
+  }
+  
+  .safe-bottom-padding {
+    padding-bottom: env(safe-area-inset-bottom, 1.5rem);
   }
 }
 
@@ -263,25 +271,25 @@ button, a {
 
 @media (max-width: 640px) {
   .pb-safe {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 1.5rem));
+    padding-bottom: max(6rem, calc(6rem + env(safe-area-inset-bottom, 0)));
   }
   
   .mb-safe {
-    margin-bottom: calc(5rem + env(safe-area-inset-bottom, 1.5rem));
+    margin-bottom: max(6rem, calc(6rem + env(safe-area-inset-bottom, 0)));
   }
   
   .button-container {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-bottom: calc(2rem + env(safe-area-inset-bottom, 1rem));
+    margin-bottom: max(3rem, calc(3rem + env(safe-area-inset-bottom, 0)));
   }
   
   .button-container-horizontal {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-bottom: calc(2rem + env(safe-area-inset-bottom, 1rem));
+    margin-bottom: max(3rem, calc(3rem + env(safe-area-inset-bottom, 0)));
   }
   
   .stacked-buttons > * {
@@ -289,7 +297,7 @@ button, a {
   }
   
   .page-bottom-spacer {
-    height: calc(5rem + env(safe-area-inset-bottom, 1.5rem));
+    height: max(6rem, calc(6rem + env(safe-area-inset-bottom, 0)));
   }
 }
 

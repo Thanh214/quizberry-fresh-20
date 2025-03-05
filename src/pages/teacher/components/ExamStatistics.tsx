@@ -21,18 +21,18 @@ const ExamStatistics: React.FC<ExamStatisticsProps> = ({
   totalParticipants 
 }) => {
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 mt-4 mb-4">
-      <div className="flex items-center gap-2 text-sm">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 mb-4">
+      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
         <Clock className="h-4 w-4 text-blue-500 flex-shrink-0" />
         <span>{exam.duration} phút</span>
       </div>
       
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
         <Eye className="h-4 w-4 text-purple-500 flex-shrink-0" />
         <span>{exam.questionIds.length} câu hỏi</span>
       </div>
       
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
         <Users className="h-4 w-4 text-green-500 flex-shrink-0" />
         <span className="flex flex-wrap items-center">
           <span className="mr-1">{totalParticipants} thí sinh</span>
@@ -42,7 +42,7 @@ const ExamStatistics: React.FC<ExamStatisticsProps> = ({
         </span>
       </div>
       
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
         <Clock className="h-4 w-4 text-gray-500 flex-shrink-0" />
         <span>
           {formatDistanceToNow(new Date(exam.createdAt), {

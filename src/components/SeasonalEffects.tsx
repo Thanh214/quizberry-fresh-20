@@ -392,6 +392,10 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           transition={{ delay: 0.5 }}
           onHoverStart={() => setIsHovering(true)}
           onHoverEnd={() => setIsHovering(false)}
+          style={{ 
+            bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0))",
+            right: "1.5rem"
+          }}
         >
           <motion.button
             onClick={cycleSeason}
