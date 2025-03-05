@@ -14,6 +14,7 @@ type ExamContextType = {
   exams: Exam[];
   startExam: (examId: string) => Promise<void>;
   endExam: (examId: string) => Promise<void>;
+  recordExamExit: (participantId: string) => Promise<void>; // Thêm hàm này
 };
 
 const ExamContext = createContext<ExamContextType | undefined>(undefined);
@@ -64,7 +65,8 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         className,
         status: "waiting",
         startTime: new Date().toISOString(),
-        joinLink
+        joinLink,
+        exitCount: 0 // Khởi tạo số lần thoát
       };
       
       setParticipants(prev => [...prev, newParticipant]);
@@ -97,6 +99,33 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Thêm hàm để ghi nhận khi học sinh thoát khỏi bài thi
+  const recordExamExit = async (participantId: string): Promise<void> => {
+    try {
+      setParticipants(prev => 
+        prev.map(p => {
+          if (p.id === participantId) {
+            const exitCount = (p.exitCount || 0) + 1;
+            // Thông báo cho giáo viên
+            toast.warning(
+              `Thí sinh ${p.studentName} (${p.studentId}) đã thoát khỏi màn hình bài thi lần thứ ${exitCount}`,
+              { duration: 5000 }
+            );
+            
+            return {
+              ...p,
+              exitCount: exitCount,
+              lastExitTime: new Date().toISOString()
+            };
+          }
+          return p;
+        })
+      );
+    } catch (error) {
+      console.error("Không thể cập nhật số lần thoát", error);
+    }
+  };
+
   const getWaitingParticipants = (examId: string): ExamParticipant[] => {
     return participants.filter(p => p.examId === examId && p.status === "waiting");
   };
@@ -112,7 +141,8 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         getExamById,
         exams,
         startExam,
-        endExam
+        endExam,
+        recordExamExit // Thêm hàm mới này vào provider
       }}
     >
       {children}
@@ -127,3 +157,4 @@ export const useExam = () => {
   }
   return context;
 };
+

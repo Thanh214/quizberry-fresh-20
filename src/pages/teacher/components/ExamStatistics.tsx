@@ -1,9 +1,16 @@
 
 import React from "react";
 import { Exam } from "@/types/models";
-import { Clock, Users, Eye, Hash } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { vi } from "date-fns/locale";
+import { 
+  Clock, 
+  Users, 
+  CheckCircle2, 
+  AlertTriangle,
+  Clock4 
+} from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import ExitWarning from "./ExitWarning"; // Import component mới
+import { useExam } from "@/context/ExamContext"; // Import useExam hook
 
 interface ExamStatisticsProps {
   exam: Exam;
@@ -13,51 +20,67 @@ interface ExamStatisticsProps {
   totalParticipants: number;
 }
 
-const ExamStatistics: React.FC<ExamStatisticsProps> = ({ 
-  exam, 
-  waitingCount, 
-  inProgressCount, 
-  completedCount, 
-  totalParticipants 
+const ExamStatistics: React.FC<ExamStatisticsProps> = ({
+  exam,
+  waitingCount,
+  inProgressCount,
+  completedCount,
+  totalParticipants
 }) => {
+  const { participants } = useExam(); // Lấy danh sách thí sinh
+
+  // Tính phần trăm hoàn thành
+  const completionPercentage = totalParticipants > 0
+    ? Math.round((completedCount / totalParticipants) * 100)
+    : 0;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 mb-4">
-      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
-        <Hash className="h-4 w-4 text-amber-500 flex-shrink-0" />
-        <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">Mã bài thi:</span>
-          <span className="font-mono font-medium">{exam.code}</span>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
-        <Clock className="h-4 w-4 text-blue-500 flex-shrink-0" />
-        <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">Thời gian:</span>
+    <div className="mt-4">
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium">
+          <Clock className="h-3.5 w-3.5" />
           <span>{exam.duration} phút</span>
         </div>
+        
+        <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-full text-xs font-medium">
+          <Users className="h-3.5 w-3.5" />
+          <span>{totalParticipants} thí sinh</span>
+        </div>
+        
+        {waitingCount > 0 && (
+          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 rounded-full text-xs font-medium">
+            <Clock4 className="h-3.5 w-3.5" />
+            <span>{waitingCount} đang chờ</span>
+          </div>
+        )}
+        
+        {inProgressCount > 0 && (
+          <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-medium">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span>{inProgressCount} đang làm bài</span>
+          </div>
+        )}
+        
+        {completedCount > 0 && (
+          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full text-xs font-medium">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span>{completedCount} hoàn thành</span>
+          </div>
+        )}
+        
+        {/* Thêm component cảnh báo thoát màn hình */}
+        <ExitWarning participants={participants} examId={exam.id} />
       </div>
       
-      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
-        <Eye className="h-4 w-4 text-purple-500 flex-shrink-0" />
-        <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">Số câu hỏi:</span>
-          <span>{exam.questionIds.length} câu hỏi</span>
+      {totalParticipants > 0 && (
+        <div className="mt-2">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>Tiến độ làm bài: {completionPercentage}%</span>
+            <span>{completedCount}/{totalParticipants} thí sinh</span>
+          </div>
+          <Progress value={completionPercentage} className="h-1.5" />
         </div>
-      </div>
-      
-      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
-        <Users className="h-4 w-4 text-green-500 flex-shrink-0" />
-        <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">Thí sinh:</span>
-          <span className="flex flex-wrap items-center">
-            <span className="mr-1">{totalParticipants}</span>
-            {waitingCount > 0 && (
-              <span className="text-amber-500">({waitingCount} đang chờ)</span>
-            )}
-          </span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
