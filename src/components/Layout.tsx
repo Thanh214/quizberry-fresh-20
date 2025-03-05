@@ -66,6 +66,11 @@ const Layout: React.FC<LayoutProps> = ({
   
   // Get season-specific container classes with more distinct colors
   const getSeasonClasses = (): string => {
+    // Only apply gradient if seasonal effects are shown
+    if (!showSeasonalEffects) {
+      return "bg-background";
+    }
+    
     switch (season) {
       case "spring": 
         return "bg-gradient-to-b from-pink-50/80 to-blue-50/80 dark:from-pink-950/40 dark:to-blue-950/40";
@@ -130,7 +135,7 @@ const Layout: React.FC<LayoutProps> = ({
           onSeasonChange={handleSeasonChange}
           className={cn(
             "pb-safe z-50",
-            isMobile ? "mb-16" : ""
+            isMobile ? "fixed bottom-4 right-4 z-50" : "fixed bottom-6 right-6 z-50"
           )} 
         />
       )}
@@ -144,7 +149,7 @@ const Layout: React.FC<LayoutProps> = ({
           transition={{ duration: 0.5 }}
           className={cn(
             "mx-auto max-w-5xl relative z-10",
-            isMobile ? "pb-28" : "pb-safe"
+            isMobile ? "pb-20" : "pb-16"
           )}
         >
           {children}

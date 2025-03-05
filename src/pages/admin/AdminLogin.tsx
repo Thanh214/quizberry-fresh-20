@@ -7,6 +7,7 @@ import Logo from "@/components/Logo";
 import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -33,17 +34,19 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <Layout>
-      <div className="flex flex-col items-center justify-center min-h-[80vh]">
+    <Layout showSeasonalEffects={false} className="flex items-center justify-center">
+      <div className="w-full max-w-md px-4">
         <TransitionWrapper>
-          <Logo className="mb-12" />
+          <div className="flex justify-center mb-10">
+            <Logo className="h-16" />
+          </div>
         </TransitionWrapper>
 
         <TransitionWrapper delay={300}>
-          <Card className="w-full max-w-md">
+          <Card className="w-full bg-white/90 dark:bg-gray-800/90 shadow-lg">
             <div className="space-y-6 p-6">
               <div className="space-y-2 text-center">
-                <h1 className="text-3xl font-bold">Đăng nhập Giáo viên</h1>
+                <h1 className="text-2xl font-bold">Đăng nhập Giáo viên</h1>
                 <p className="text-sm text-muted-foreground">
                   Nhập thông tin đăng nhập của bạn
                 </p>
@@ -54,8 +57,7 @@ const AdminLogin: React.FC = () => {
                   <label className="text-sm font-medium leading-none" htmlFor="username">
                     Tên đăng nhập
                   </label>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  <Input
                     id="username"
                     placeholder="admin hoặc tên đăng nhập của bạn"
                     required
@@ -67,8 +69,7 @@ const AdminLogin: React.FC = () => {
                   <label className="text-sm font-medium leading-none" htmlFor="password">
                     Mật khẩu
                   </label>
-                  <input
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  <Input
                     id="password"
                     placeholder="••••••••"
                     required
