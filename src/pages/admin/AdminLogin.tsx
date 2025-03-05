@@ -33,17 +33,17 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <Layout showSeasonalEffects={false}>
-      <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 py-8">
+    <Layout>
+      <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <TransitionWrapper>
-          <Logo className="mb-8 md:mb-12" />
+          <Logo className="mb-12" />
         </TransitionWrapper>
 
         <TransitionWrapper delay={300}>
           <Card className="w-full max-w-md">
-            <div className="space-y-6 p-4 md:p-6">
+            <div className="space-y-6 p-6">
               <div className="space-y-2 text-center">
-                <h1 className="text-2xl md:text-3xl font-bold">Đăng nhập Giáo viên</h1>
+                <h1 className="text-3xl font-bold">Đăng nhập Giáo viên</h1>
                 <p className="text-sm text-muted-foreground">
                   Nhập thông tin đăng nhập của bạn
                 </p>
@@ -99,7 +99,7 @@ const AdminLogin: React.FC = () => {
                   Đăng ký tài khoản giáo viên
                 </button>
                 
-                <div className="pt-2 pb-4">
+                <div className="pt-2">
                   <button 
                     className="text-muted-foreground hover:underline hover:text-foreground"
                     onClick={() => navigate("/role-selection")}

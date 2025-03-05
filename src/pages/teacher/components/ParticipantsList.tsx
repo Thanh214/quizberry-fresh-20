@@ -29,7 +29,7 @@ const ParticipantsList: React.FC<ParticipantsListProps> = ({
   }
 
   return (
-    <div className="mt-4 pb-16">
+    <div className="mt-4">
       <div 
         className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-900/30 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors"
         onClick={() => setShowParticipants(!showParticipants)}
@@ -50,7 +50,7 @@ const ParticipantsList: React.FC<ParticipantsListProps> = ({
           {/* Danh sách học sinh đang chờ */}
           {waitingParticipants.length > 0 && (
             <div className="bg-amber-50 dark:bg-amber-900/10">
-              <div className="px-3 py-2 font-medium text-xs sm:text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 flex items-center gap-2">
+              <div className="px-3 py-2 font-medium text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Đang chờ ({waitingParticipants.length})
               </div>
@@ -70,7 +70,7 @@ const ParticipantsList: React.FC<ParticipantsListProps> = ({
           {/* Danh sách học sinh đang làm bài */}
           {inProgressParticipants.length > 0 && (
             <div className="bg-blue-50 dark:bg-blue-900/10">
-              <div className="px-3 py-2 font-medium text-xs sm:text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-2">
+              <div className="px-3 py-2 font-medium text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 Đang làm bài ({inProgressParticipants.length})
               </div>
@@ -90,7 +90,7 @@ const ParticipantsList: React.FC<ParticipantsListProps> = ({
           {/* Danh sách học sinh đã hoàn thành */}
           {completedParticipants.length > 0 && (
             <div className="bg-green-50 dark:bg-green-900/10">
-              <div className="px-3 py-2 font-medium text-xs sm:text-sm bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 flex items-center gap-2">
+              <div className="px-3 py-2 font-medium text-sm bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 flex items-center gap-2">
                 <GraduationCap className="h-4 w-4" />
                 Đã hoàn thành ({completedParticipants.length})
               </div>
