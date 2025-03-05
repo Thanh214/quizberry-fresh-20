@@ -449,9 +449,7 @@ const RoleSelection: React.FC = () => {
             <motion.div className={`festival-circle w-16 h-16 mx-auto mb-4 bg-white border-2 ${seasonStyles.studentCircle} shadow-sm`} variants={circleVariants}>
               <GraduationCap className={`h-8 w-8 ${seasonStyles.studentIcon}`} strokeWidth={1.5} />
             </motion.div>
-            <h2 className={`text-2xl font-semibold text-center mb-2 ${seasonStyles.studentIcon}`}>
-              Học sinh
-            </h2>
+            <h2 className={`text-2xl font-semibold text-center mb-2 ${seasonStyles.studentIcon}`}>Sinh viên</h2>
             <p className="text-center text-muted-foreground mb-6">
               Nhập tên và lớp của bạn để tham gia làm bài kiểm tra
             </p>
