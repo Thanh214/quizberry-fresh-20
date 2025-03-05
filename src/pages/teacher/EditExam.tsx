@@ -15,6 +15,7 @@ import { Question } from "@/types/models";
 import ExamQuestionManager from "./components/ExamQuestionManager";
 import ExamStatistics from "./components/ExamStatistics";
 import EditExamDetails from "./components/EditExamDetails";
+import ExamPreview from "./components/ExamPreview";
 
 const EditExam: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -119,11 +120,15 @@ const EditExam: React.FC = () => {
     navigate("/teacher/exams");
   };
 
-  const handleAddQuestion = async (content: string, options: Array<{ id: string; content: string; isCorrect: boolean }>) => {
+  // Fix the addQuestion function signature to match what ExamQuestionManager expects
+  const handleAddQuestion = async (data: { 
+    content: string; 
+    options: Array<{ id: string; content: string; isCorrect: boolean }>
+  }) => {
     try {
       const newQuestion = await addQuestion({
-        content,
-        options,
+        content: data.content,
+        options: data.options,
         examId: exam?.id,
       });
       
@@ -153,6 +158,7 @@ const EditExam: React.FC = () => {
     }
   };
 
+  // Fix the deleteQuestion function signature to return void instead of boolean
   const handleDeleteQuestion = async (questionId: string) => {
     try {
       await deleteQuestion(questionId);
@@ -174,7 +180,6 @@ const EditExam: React.FC = () => {
       toast.success("Xóa câu hỏi thành công", {
         id: "delete-question-success" // Add ID to prevent duplicate toasts
       });
-      return true;
     } catch (error) {
       toast.error("Không thể xóa câu hỏi", {
         id: "delete-question-error" // Add ID to prevent duplicate toasts
@@ -213,6 +218,11 @@ const EditExam: React.FC = () => {
     );
   }
 
+  const handleCreateExam = () => {
+    // Function to handle the create exam action from the preview tab
+    handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-8">
@@ -230,12 +240,12 @@ const EditExam: React.FC = () => {
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold">Chỉnh sửa bài thi</h1>
               <Badge 
-                variant={exam.isActive ? "success" : "secondary"} 
-                className={exam.isActive ? "animate-pulse" : ""}
+                variant={exam?.isActive ? "success" : "secondary"} 
+                className={exam?.isActive ? "animate-pulse" : ""}
               >
-                {exam.isActive ? "Đang mở" : "Đã đóng"}
+                {exam?.isActive ? "Đang mở" : "Đã đóng"}
               </Badge>
-              {exam.hasStarted && (
+              {exam?.hasStarted && (
                 <Badge variant="destructive" className="animate-pulse">
                   Đã bắt đầu
                 </Badge>
@@ -249,10 +259,10 @@ const EditExam: React.FC = () => {
           {exam && (
             <ExamStatistics 
               exam={exam}
-              waitingCount={waitingCount}
-              inProgressCount={inProgressCount}
-              completedCount={completedCount}
-              totalParticipants={totalParticipants}
+              waitingCount={0}
+              inProgressCount={0}
+              completedCount={0}
+              totalParticipants={0}
             />
           )}
         </TransitionWrapper>
@@ -266,6 +276,7 @@ const EditExam: React.FC = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="details">Thông tin bài thi</TabsTrigger>
               <TabsTrigger value="questions">Quản lý câu hỏi</TabsTrigger>
+              <TabsTrigger value="preview">Xem trước</TabsTrigger>
             </TabsList>
             
             <TabsContent value="details">
@@ -277,7 +288,7 @@ const EditExam: React.FC = () => {
                   setDescription={setDescription}
                   duration={duration}
                   setDuration={setDuration}
-                  examCode={exam.code}
+                  examCode={exam?.code || ""}
                   handleSubmit={handleSubmit}
                   handleCancel={handleCancel}
                   isLoading={isLoading}
@@ -311,6 +322,16 @@ const EditExam: React.FC = () => {
                   deleteQuestion={handleDeleteQuestion}
                   isLoading={isLoading}
                   onEditQuestion={handleEditQuestion}
+                />
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="preview">
+              <Card className="p-6">
+                <ExamPreview 
+                  selectedQuestions={selectedQuestions}
+                  questions={questions}
+                  onCreateExam={handleCreateExam}
                 />
               </Card>
             </TabsContent>

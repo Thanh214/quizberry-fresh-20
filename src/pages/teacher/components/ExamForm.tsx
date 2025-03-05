@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,7 +51,8 @@ const ExamForm: React.FC<ExamFormProps> = ({
     }
   }, [isEditMode, code]);
 
-  const handleSubmit = async (e: React.Event) => {
+  // Fix the handleSubmit function to use the correct React.FormEvent type
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation(); // Add this to prevent event bubbling
     
