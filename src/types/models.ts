@@ -61,9 +61,10 @@ export interface Class {
   id: string;
   name: string;
   description?: string;
-  teacherId: string;
+  teacherId?: string;
   isQuizActive: boolean;
   createdAt: string;
+  updatedAt?: string; // Added to fix classContext errors
 }
 
 // ExamParticipant interface for tracking exam takers
@@ -91,6 +92,7 @@ export interface QuizRequest {
   examId: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
+  requestedAt: string; // Added to fix ManageRequests errors
 }
 
 // QuizSession interface for active quiz sessions
