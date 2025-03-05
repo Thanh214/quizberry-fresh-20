@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,22 +31,29 @@ const ExamQuestionManager: React.FC<ExamQuestionManagerProps> = ({
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
 
-  // Toggle select all questions
-  useEffect(() => {
-    if (selectAll) {
-      setSelectedQuestions(questions.map(q => q.id));
-    } else if (selectedQuestions.length === questions.length && questions.length > 0) {
-      // If all questions are selected but the selectAll is toggled off
-      setSelectedQuestions([]);
-    }
-  }, [selectAll, questions, setSelectedQuestions]);
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleToggleQuestion = useCallback((questionId: string) => {
+    setSelectedQuestions(prev => 
+      prev.includes(questionId)
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
+    );
+  }, [setSelectedQuestions]);
 
-  // Check if all questions are selected to update the selectAll state
+  const handleSelectAllQuestions = useCallback(() => {
+    if (selectAll) {
+      setSelectedQuestions([]);
+    } else {
+      setSelectedQuestions(questions.map(q => q.id));
+    }
+    setSelectAll(!selectAll);
+  }, [selectAll, setSelectedQuestions, questions]);
+
+  // Update selectAll when selectedQuestions changes
   useEffect(() => {
-    if (questions.length > 0 && selectedQuestions.length === questions.length) {
-      setSelectAll(true);
-    } else if (selectAll && selectedQuestions.length !== questions.length) {
-      setSelectAll(false);
+    const allSelected = questions.length > 0 && selectedQuestions.length === questions.length;
+    if (selectAll !== allSelected) {
+      setSelectAll(allSelected);
     }
   }, [selectedQuestions, questions.length, selectAll]);
 
@@ -63,18 +70,6 @@ const ExamQuestionManager: React.FC<ExamQuestionManagerProps> = ({
       toast.error("Không thể thêm câu hỏi");
       console.error(error);
     }
-  };
-
-  const handleToggleQuestion = (questionId: string) => {
-    setSelectedQuestions(prev => 
-      prev.includes(questionId)
-        ? prev.filter(id => id !== questionId)
-        : [...prev, questionId]
-    );
-  };
-
-  const handleSelectAllQuestions = () => {
-    setSelectAll(!selectAll);
   };
 
   const handleBulkDelete = async () => {
@@ -174,8 +169,14 @@ const ExamQuestionManager: React.FC<ExamQuestionManagerProps> = ({
           onToggleQuestion={handleToggleQuestion}
           onEditQuestion={onEditQuestion}
           onDeleteQuestion={deleteQuestion}
-          onSelectAll={() => setSelectAll(true)}
-          onDeselectAll={() => setSelectAll(false)}
+          onSelectAll={() => {
+            setSelectedQuestions(questions.map(q => q.id));
+            setSelectAll(true);
+          }}
+          onDeselectAll={() => {
+            setSelectedQuestions([]);
+            setSelectAll(false);
+          }}
         />
       )}
     </>

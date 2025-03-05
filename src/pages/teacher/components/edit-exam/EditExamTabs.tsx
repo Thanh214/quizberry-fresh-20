@@ -6,8 +6,6 @@ import Card from "@/components/Card";
 import EditExamDetails from "../EditExamDetails";
 import ExamQuestionManager from "../ExamQuestionManager";
 import ExamPreview from "../ExamPreview";
-import { FilePlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import TransitionWrapper from "@/components/TransitionWrapper";
 
 interface EditExamTabsProps {
@@ -90,22 +88,6 @@ const EditExamTabs: React.FC<EditExamTabsProps> = ({
         
         <TabsContent value="questions">
           <Card className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-4">
-                <h2 className="text-xl font-medium">Danh sách câu hỏi</h2>
-                <div className="text-sm text-muted-foreground">
-                  ({selectedQuestions.length} câu hỏi)
-                </div>
-              </div>
-              <Button 
-                onClick={() => setActiveTab("add-question")}
-                className="bg-primary text-white hover:bg-primary/90"
-              >
-                <FilePlus className="mr-2 h-4 w-4" />
-                Thêm câu hỏi mới
-              </Button>
-            </div>
-            
             <ExamQuestionManager
               questions={examQuestions}
               selectedQuestions={selectedQuestions}
