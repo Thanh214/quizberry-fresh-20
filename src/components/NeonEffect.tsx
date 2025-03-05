@@ -84,19 +84,6 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
     }
   };
 
-  // Define pulse animation with proper typing for framer-motion
-  const pulseAnimation = {
-    animate: {
-      scale: intensityMap[intensity].pulse.scale,
-      opacity: intensityMap[intensity].pulse.opacity,
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        repeatType: "reverse" as const // Type casting to valid repeatType
-      }
-    }
-  };
-
   return (
     <motion.div 
       className={cn(
@@ -113,7 +100,18 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
       animate={disabled ? "disabled" : "animate"}
       whileHover={disabled ? undefined : "hover"}
       whileTap={disabled ? undefined : "tap"}
-      {...(animate && !disabled ? pulseAnimation : {})}
+      // Fixed TypeScript error by properly handling animate prop
+      {...(animate && !disabled ? { 
+        animate: {
+          scale: intensityMap[intensity].pulse.scale as number[],
+          opacity: intensityMap[intensity].pulse.opacity as number[],
+          transition: {
+            duration: 2,
+            repeat: Infinity,
+            repeatType: "reverse" as const
+          }
+        }
+      } : {})}
     >
       <div className="relative z-10">
         {children}

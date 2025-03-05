@@ -41,6 +41,12 @@ const Layout: React.FC<LayoutProps> = ({
     // Add a custom data attribute for season to the body element
     // This allows for global CSS targeting with [data-season="spring"] etc.
     document.body.dataset.season = season;
+    
+    // Dispatch a custom event that components can listen for
+    const seasonChangeEvent = new CustomEvent('seasonchange', { 
+      detail: { season } 
+    });
+    document.dispatchEvent(seasonChangeEvent);
   }, [season]);
   
   // Handle season change from SeasonalEffects component
@@ -113,6 +119,7 @@ const Layout: React.FC<LayoutProps> = ({
         "--season-border-accent": getSeasonAccentBorderColor(),
         "--season-bg-accent": getSeasonAccentBgColor(),
       } as React.CSSProperties}
+      data-season={season}
     >
       {showSeasonalEffects && (
         <SeasonalEffects 

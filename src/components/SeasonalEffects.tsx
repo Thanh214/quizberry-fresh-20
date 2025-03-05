@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Season = "spring" | "summer" | "autumn" | "winter";
@@ -19,9 +18,23 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
 }) => {
   // Determine season based on current month if not provided
   const [season, setSeason] = useState<Season>(initialSeason || getCurrentSeason());
+  const [isHovering, setIsHovering] = useState(false);
+  const [animKey, setAnimKey] = useState(0); // For forcing re-animation
   
   // Background transition animation
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Keep track of original season to detect changes
+  const prevSeasonRef = useRef(season);
+  
+  useEffect(() => {
+    if (initialSeason !== prevSeasonRef.current) {
+      setSeason(initialSeason || getCurrentSeason());
+      prevSeasonRef.current = initialSeason || getCurrentSeason();
+      // Force particle animation refresh
+      setAnimKey(prev => prev + 1);
+    }
+  }, [initialSeason]);
   
   function getCurrentSeason(): Season {
     const month = new Date().getMonth(); // 0-11
@@ -43,15 +56,15 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
 
   const particleCount = getParticleCount();
   
-  // Create particles array for animation
-  const particles = Array.from({ length: particleCount }).map((_, i) => ({
+  // Create particles array for animation with memoization to prevent rerenders
+  const particles = React.useMemo(() => Array.from({ length: particleCount }).map((_, i) => ({
     id: i,
     x: Math.random() * 100, // random position
     y: -10 - Math.random() * 10, // start above the viewport
     size: 5 + Math.random() * 15,
     duration: 10 + Math.random() * 20,
     delay: Math.random() * 10
-  }));
+  })), [particleCount, animKey]);
 
   // Provide seasonal styles and animations
   const getSeasonalStyles = () => {
@@ -64,9 +77,10 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
             "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ec4899' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3a9 9 0 1 0 9 9'%3E%3C/path%3E%3Cpath d='M12 3v6'%3E%3C/path%3E%3Cpath d='M5 10c8 0 10-7 10-7'%3E%3C/path%3E%3Cpath d='M5 10h6'%3E%3C/path%3E%3Cpath d='M19 10c-8 0-10-7-10-7'%3E%3C/path%3E%3Cpath d='M19 10h-6'%3E%3C/path%3E%3C/svg%3E"
           ],
           animation: "animate-fall-slow-rotate",
-          gradientColors: "from-pink-200/60 to-blue-100/60",
+          gradientColors: "from-pink-200/70 to-blue-100/60",
           overlayColor: "bg-pink-500/5",
-          buttonBg: "bg-pink-50/80 hover:bg-pink-100/90 border-pink-200"
+          buttonBg: "bg-pink-50/90 hover:bg-pink-100/90 border-pink-200",
+          buttonText: "text-pink-600"
         };
       case "summer":
         return {
@@ -76,9 +90,10 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
             "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23fcd34d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22.608 12.195l-1.4-1.4c-.625-.625-1.608-.924-2.514-.737a5.258 5.258 0 0 1-5.666-5.666c.188-.906-.111-1.89-.737-2.514l-1.4-1.4c-.5-.5-1.301-.5-1.8 0L4.883 4.687c-.5.5-.5 1.3 0 1.8l1.4 1.4c.625.624.925 1.608.737 2.514a5.258 5.258 0 0 1 5.666 5.666c-.188.906.112 1.89.737 2.514l1.4 1.4c.5.5 1.301.5 1.8 0l5.308-5.308c.5-.5.5-1.3 0-1.8Z'%3E%3C/path%3E%3Cpath d='M15 9l-3 2'%3E%3C/path%3E%3Cpath d='M1 1l5 5'%3E%3C/path%3E%3C/svg%3E"
           ],
           animation: "animate-float-pulse",
-          gradientColors: "from-amber-200/60 to-yellow-100/60",
+          gradientColors: "from-amber-200/70 to-yellow-100/60",
           overlayColor: "bg-amber-500/5",
-          buttonBg: "bg-amber-50/80 hover:bg-amber-100/90 border-amber-200"
+          buttonBg: "bg-amber-50/90 hover:bg-amber-100/90 border-amber-200",
+          buttonText: "text-amber-600"
         };
       case "autumn":
         return {
@@ -88,9 +103,10 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
             "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23b45309' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z'%3E%3C/path%3E%3Cpath d='M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12'%3E%3C/path%3E%3C/svg%3E"
           ],
           animation: "animate-fall-rotate",
-          gradientColors: "from-orange-200/60 to-amber-100/60",
+          gradientColors: "from-orange-200/70 to-amber-100/60",
           overlayColor: "bg-orange-500/5",
-          buttonBg: "bg-orange-50/80 hover:bg-orange-100/90 border-orange-200"
+          buttonBg: "bg-orange-50/90 hover:bg-orange-100/90 border-orange-200",
+          buttonText: "text-orange-600"
         };
       case "winter":
         return {
@@ -100,9 +116,10 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
             "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23bfdbfe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12h20'%3E%3C/path%3E%3Cpath d='M12 2v20'%3E%3C/path%3E%3Cpath d='m4.93 4.93 14.14 14.14'%3E%3C/path%3E%3Cpath d='m19.07 4.93-14.14 14.14'%3E%3C/path%3E%3C/svg%3E"
           ],
           animation: "animate-fall",
-          gradientColors: "from-blue-200/60 to-indigo-100/60",
+          gradientColors: "from-blue-200/70 to-indigo-100/60",
           overlayColor: "bg-blue-500/5",
-          buttonBg: "bg-blue-50/80 hover:bg-blue-100/90 border-blue-200"
+          buttonBg: "bg-blue-50/90 hover:bg-blue-100/90 border-blue-200",
+          buttonText: "text-blue-600"
         };
     }
   };
@@ -140,8 +157,13 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
     const nextIndex = (currentIndex + 1) % seasons.length;
     const nextSeason = seasons[nextIndex];
     
+    // Update particles animation key to trigger refresh
+    setAnimKey(prev => prev + 1);
+    
     setTimeout(() => {
       setSeason(nextSeason);
+      prevSeasonRef.current = nextSeason;
+      
       if (onSeasonChange) {
         onSeasonChange(nextSeason);
       }
@@ -150,6 +172,118 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
         setIsTransitioning(false);
       }, 500);
     }, 400);
+  };
+
+  // Seasonal background elements (more complex and tailored to each season)
+  const renderSeasonalBackground = () => {
+    switch (season) {
+      case "spring":
+        return (
+          <motion.div 
+            className="absolute inset-0 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7 }}
+            key="spring-bg"
+          >
+            <motion.div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] rounded-full bg-pink-100/30 blur-3xl"
+              animate={{ 
+                scale: [1, 1.1, 1],
+                opacity: [0.3, 0.4, 0.3],
+              }}
+              transition={{ duration: 8, repeat: Infinity, repeatType: "reverse" }}
+            />
+            <motion.div className="absolute -bottom-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-blue-100/30 blur-3xl"
+              animate={{ 
+                scale: [1, 1.15, 1],
+                opacity: [0.2, 0.35, 0.2],
+              }}
+              transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", delay: 1 }}
+            />
+          </motion.div>
+        );
+      case "summer":
+        return (
+          <motion.div 
+            className="absolute inset-0 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7 }}
+            key="summer-bg"
+          >
+            <motion.div className="absolute -top-[5%] -right-[10%] w-[40%] h-[40%] rounded-full bg-yellow-100/40 blur-3xl"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.4, 0.6, 0.4],
+              }}
+              transition={{ duration: 6, repeat: Infinity, repeatType: "reverse" }}
+            />
+            <motion.div className="absolute -bottom-[15%] -left-[5%] w-[30%] h-[30%] rounded-full bg-amber-100/40 blur-3xl"
+              animate={{ 
+                scale: [1, 1.1, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{ duration: 8, repeat: Infinity, repeatType: "reverse", delay: 2 }}
+            />
+          </motion.div>
+        );
+      case "autumn":
+        return (
+          <motion.div 
+            className="absolute inset-0 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7 }}
+            key="autumn-bg"
+          >
+            <motion.div className="absolute -top-[15%] -left-[5%] w-[45%] h-[45%] rounded-full bg-orange-100/30 blur-3xl"
+              animate={{ 
+                scale: [1, 1.15, 1],
+                opacity: [0.3, 0.45, 0.3],
+              }}
+              transition={{ duration: 9, repeat: Infinity, repeatType: "reverse" }}
+            />
+            <motion.div className="absolute -bottom-[10%] -right-[10%] w-[35%] h-[35%] rounded-full bg-amber-100/40 blur-3xl"
+              animate={{ 
+                scale: [1, 1.1, 1],
+                opacity: [0.25, 0.4, 0.25],
+              }}
+              transition={{ duration: 7, repeat: Infinity, repeatType: "reverse", delay: 1.5 }}
+            />
+          </motion.div>
+        );
+      case "winter":
+        return (
+          <motion.div 
+            className="absolute inset-0 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7 }}
+            key="winter-bg"
+          >
+            <motion.div className="absolute top-[10%] left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/30 blur-3xl"
+              animate={{ 
+                scale: [1, 1.05, 1],
+                opacity: [0.2, 0.3, 0.2],
+              }}
+              transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+            />
+            <motion.div className="absolute -bottom-[5%] -right-[5%] w-[40%] h-[40%] rounded-full bg-indigo-100/30 blur-3xl"
+              animate={{ 
+                scale: [1, 1.08, 1],
+                opacity: [0.2, 0.35, 0.2],
+              }}
+              transition={{ duration: 12, repeat: Infinity, repeatType: "reverse", delay: 2 }}
+            />
+          </motion.div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -166,6 +300,11 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
         />
       </AnimatePresence>
 
+      {/* Enhanced season-specific background elements */}
+      <AnimatePresence mode="wait">
+        {renderSeasonalBackground()}
+      </AnimatePresence>
+
       {/* Additional seasonal overlays for more distinct visuals */}
       <AnimatePresence mode="wait">
         <motion.div 
@@ -179,7 +318,7 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           {/* Season-specific decorative elements */}
           {season === 'spring' && (
             <motion.div 
-              className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-pink-100/30 to-transparent"
+              className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-pink-100/40 to-transparent"
               initial={{ y: 24 }}
               animate={{ y: 0 }}
               transition={{ duration: 1 }}
@@ -188,10 +327,10 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           {season === 'summer' && (
             <div className="absolute top-0 left-0 w-full">
               <motion.div 
-                className="absolute top-10 right-10 w-20 h-20 rounded-full bg-yellow-300/30 blur-xl"
+                className="absolute top-10 right-10 w-20 h-20 rounded-full bg-yellow-300/40 blur-xl"
                 animate={{ 
                   scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.5, 0.3] 
+                  opacity: [0.3, 0.6, 0.3] 
                 }}
                 transition={{ 
                   duration: 5,
@@ -203,7 +342,7 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           )}
           {season === 'autumn' && (
             <motion.div 
-              className="absolute top-0 right-0 w-full h-24 bg-gradient-to-b from-orange-100/30 to-transparent"
+              className="absolute top-0 right-0 w-full h-24 bg-gradient-to-b from-orange-100/40 to-transparent"
               initial={{ y: -24 }}
               animate={{ y: 0 }}
               transition={{ duration: 1 }}
@@ -211,7 +350,7 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           )}
           {season === 'winter' && (
             <motion.div 
-              className="absolute inset-0 bg-gradient-radial from-blue-100/10 to-transparent"
+              className="absolute inset-0 bg-gradient-radial from-blue-100/15 to-transparent"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1.5 }}
@@ -225,7 +364,7 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
         <AnimatePresence mode="sync">
           {particles.map((particle) => (
             <motion.img
-              key={`${season}-${particle.id}`}
+              key={`${season}-${particle.id}-${animKey}`}
               src={seasonalStyles.particleImages[particle.id % seasonalStyles.particleImages.length]}
               alt=""
               className={`absolute opacity-${20 + Math.floor(particle.size) * 2} ${seasonalStyles.animation}`}
@@ -269,6 +408,8 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
+          onHoverStart={() => setIsHovering(true)}
+          onHoverEnd={() => setIsHovering(false)}
         >
           <motion.button
             onClick={cycleSeason}
@@ -292,24 +433,21 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
               <motion.span 
                 className="text-lg"
                 animate={{ 
-                  rotate: [0, 10, -10, 0],
-                  scale: [1, 1.2, 1]
+                  rotate: isHovering ? [0, 10, -10, 10, 0] : [0, 10, -10, 0],
+                  scale: isHovering ? [1, 1.3, 1] : [1, 1.2, 1]
                 }}
                 transition={{ 
-                  duration: 2,
+                  duration: isHovering ? 1 : 2,
                   repeat: Infinity,
                   repeatType: "reverse",
-                  repeatDelay: 3
+                  repeatDelay: isHovering ? 0 : 3
                 }}
               >
                 {getSeasonIcon(season)}
               </motion.span>
               <span className={`
                 font-medium transition-colors duration-500
-                ${season === 'spring' ? 'text-pink-600' : ''}
-                ${season === 'summer' ? 'text-amber-600' : ''}
-                ${season === 'autumn' ? 'text-orange-600' : ''}
-                ${season === 'winter' ? 'text-blue-600' : ''}
+                ${seasonalStyles.buttonText}
               `}>
                 {getSeasonName(season)}
               </span>
