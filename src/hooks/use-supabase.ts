@@ -40,7 +40,7 @@ export interface SupabaseExam {
 }
 
 // Generic type for Supabase responses to fix excessive type nesting
-type SupabaseData = 
+export type SupabaseData = 
   | SupabaseExamParticipant 
   | SupabaseExam 
   | Record<string, any>;
@@ -58,6 +58,7 @@ export function useSupabaseQuery<T>(
     select?: string;
   }
 ) {
+  // Use explicit generic type to prevent excessive type instantiation
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -90,9 +91,8 @@ export function useSupabaseQuery<T>(
 
         if (error) throw error;
         
-        // Cast to T[] - this assumes that the data returned from Supabase
-        // can be safely converted to type T[]
-        setData(result as unknown as T[]);
+        // Explicitly cast to T[] to avoid deep type instantiation
+        setData(result as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);
