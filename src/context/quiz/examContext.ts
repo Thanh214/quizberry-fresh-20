@@ -3,6 +3,7 @@ import { Exam } from "@/types/models";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { SupabaseExam } from "@/hooks/use-supabase";
 
 export const useExamState = () => {
   const [exams, setExams] = useState<Exam[]>(() => {
@@ -128,20 +129,22 @@ export const useExamState = () => {
 
       if (error) throw error;
       
+      const supabaseExam = data as SupabaseExam;
+      
       // Transform the snake_case data to camelCase for our model
       const updatedExam: Exam = {
-        id: data.id,
-        code: data.code,
-        title: data.title,
-        description: data.description,
-        duration: data.duration,
-        teacherId: data.teacher_id,
-        isActive: data.is_active,
-        hasStarted: data.has_started,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-        questionIds: data.question_ids || [],
-        shareLink: data.share_link
+        id: supabaseExam.id,
+        code: supabaseExam.code,
+        title: supabaseExam.title,
+        description: supabaseExam.description || "",
+        duration: supabaseExam.duration,
+        teacherId: supabaseExam.teacher_id || "",
+        isActive: supabaseExam.is_active,
+        hasStarted: supabaseExam.has_started,
+        createdAt: supabaseExam.created_at,
+        updatedAt: supabaseExam.updated_at,
+        questionIds: supabaseExam.question_ids || [],
+        shareLink: supabaseExam.share_link || ""
       };
       
       // Cập nhật state

@@ -7,6 +7,38 @@ import { Session, AuthError, User } from "@supabase/supabase-js";
 // Định nghĩa các bảng supabase được phép truy cập
 export type TableNames = "exams" | "profiles" | "questions" | "quiz_results" | "options" | "exam_participants" | "question_answers" | "quiz_sessions";
 
+// Define interfaces for Supabase table data to prevent excessive type nesting
+export interface SupabaseExamParticipant {
+  id: string;
+  exam_id: string;
+  student_name: string;
+  student_id: string;
+  class_name: string;
+  status: string;
+  start_time: string;
+  end_time?: string | null;
+  join_link?: string | null;
+  exit_count?: number | null;
+  last_exit_time?: string | null;
+  score?: number | null;
+  user_id?: string | null;
+}
+
+export interface SupabaseExam {
+  id: string;
+  code: string;
+  title: string;
+  description?: string | null;
+  duration: number;
+  teacher_id?: string | null;
+  is_active: boolean;
+  has_started: boolean;
+  created_at: string;
+  updated_at: string;
+  question_ids?: string[] | null;
+  share_link?: string | null;
+}
+
 /**
  * Custom hook để lấy dữ liệu từ Supabase
  */

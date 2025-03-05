@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Exam, ExamParticipant } from "@/types/models";
 import { useQuiz } from "./QuizContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseQuery, useSupabaseMutation } from "@/hooks/use-supabase";
+import { useSupabaseQuery, useSupabaseMutation, SupabaseExamParticipant } from "@/hooks/use-supabase";
 import { useAuth } from "./AuthContext";
 
 type ExamContextType = {
@@ -25,7 +25,7 @@ const ExamContext = createContext<ExamContextType | undefined>(undefined);
 export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { exams, getExamByCode, getExamById, startExam, endExam } = useQuiz();
   const { user } = useAuth();
-  const { data: participantsData, loading: participantsLoading } = useSupabaseQuery<any>('exam_participants');
+  const { data: participantsData, loading: participantsLoading } = useSupabaseQuery<SupabaseExamParticipant>('exam_participants');
   
   const [participants, setParticipants] = useState<ExamParticipant[]>([]);
   const { add: addParticipantMutation, update: updateParticipantMutation } = useSupabaseMutation('exam_participants');
@@ -34,7 +34,7 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!participantsLoading && participantsData) {
       // Transform data from snake_case to camelCase for our data model
-      const transformedParticipants: ExamParticipant[] = participantsData.map((p: any) => ({
+      const transformedParticipants: ExamParticipant[] = participantsData.map((p: SupabaseExamParticipant) => ({
         id: p.id,
         examId: p.exam_id,
         studentName: p.student_name,
@@ -64,7 +64,7 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }, (payload) => {
         // Cập nhật danh sách participants khi có thay đổi
         if (payload.eventType === 'INSERT') {
-          const newParticipant = payload.new as any;
+          const newParticipant = payload.new as SupabaseExamParticipant;
           // Transform to our model format
           const transformedParticipant: ExamParticipant = {
             id: newParticipant.id,
@@ -82,7 +82,7 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
           setParticipants(prev => [...prev, transformedParticipant]);
         } else if (payload.eventType === 'UPDATE') {
-          const updatedParticipant = payload.new as any;
+          const updatedParticipant = payload.new as SupabaseExamParticipant;
           // Transform to our model format
           const transformedParticipant: ExamParticipant = {
             id: updatedParticipant.id,
@@ -102,7 +102,7 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
             prev.map(p => p.id === transformedParticipant.id ? transformedParticipant : p)
           );
         } else if (payload.eventType === 'DELETE') {
-          const oldParticipant = payload.old as any;
+          const oldParticipant = payload.old as SupabaseExamParticipant;
           setParticipants(prev => prev.filter(p => p.id !== oldParticipant.id));
         }
       })
