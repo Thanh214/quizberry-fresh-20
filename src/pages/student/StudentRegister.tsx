@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -159,7 +158,7 @@ const StudentRegister = () => {
             </div>
             
             <div className="pt-2">
-              <NeonEffect color="violet" padding="p-0">
+              <NeonEffect color="purple" padding="p-0">
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
