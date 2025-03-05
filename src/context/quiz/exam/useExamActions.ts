@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +37,7 @@ export const useExamActions = (
         has_started: exam.hasStarted,
         created_at: now,
         updated_at: now,
-        question_ids: JSON.stringify(exam.questionIds || []), // Convert to JSON string
+        question_ids: exam.questionIds || [], // Send as a JSONB array directly
         share_link: exam.shareLink || ""
       };
 
@@ -62,7 +63,7 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        questionIds: supabaseExam.question_ids ? JSON.parse(supabaseExam.question_ids) : [], // Parse JSON string
+        questionIds: supabaseExam.question_ids || [], // It's already parsed from JSONB
         shareLink: supabaseExam.share_link || ""
       };
       
@@ -108,7 +109,7 @@ export const useExamActions = (
       }
       
       if (examData.questionIds !== undefined) {
-        dbData.question_ids = JSON.stringify(examData.questionIds); // Convert to JSON string
+        dbData.question_ids = examData.questionIds; // Send as JSONB directly, no need to stringify
         delete dbData.questionIds;
       }
       
@@ -141,7 +142,7 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        questionIds: supabaseExam.question_ids ? JSON.parse(supabaseExam.question_ids) : [], // Parse JSON string
+        questionIds: supabaseExam.question_ids || [], // It's already parsed from JSONB
         shareLink: supabaseExam.share_link || ""
       };
       

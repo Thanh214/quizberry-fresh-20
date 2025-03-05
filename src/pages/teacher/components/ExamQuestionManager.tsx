@@ -1,22 +1,25 @@
 
-import React, { useState, useEffect, useCallback } from "react";
-import { toast } from "sonner";
+import React, { useState } from "react";
+import { Question } from "@/types/models";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2, Plus } from "lucide-react";
+import { Search, Plus, CheckCircle, XCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import QuestionList from "./QuestionList";
 import QuestionForm from "./QuestionForm";
-import { Question } from "@/types/models";
+import NeonEffect from "@/components/NeonEffect";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ExamQuestionManagerProps {
   questions: Question[];
   selectedQuestions: string[];
-  setSelectedQuestions: React.Dispatch<React.SetStateAction<string[]>>;
-  addQuestion: (data: { content: string; options: Array<{ id: string; content: string; isCorrect: boolean }> }) => Promise<any>;
+  setSelectedQuestions: (questionIds: string[]) => void;
+  addQuestion: (data: { 
+    content: string; 
+    options: Array<{ id: string; content: string; isCorrect: boolean }>
+  }) => Promise<any>;
   deleteQuestion: (id: string) => Promise<void>;
   isLoading: boolean;
-  onEditQuestion?: (id: string) => void;
+  onEditQuestion: (id: string) => void;
 }
 
 const ExamQuestionManager: React.FC<ExamQuestionManagerProps> = ({
@@ -26,160 +29,130 @@ const ExamQuestionManager: React.FC<ExamQuestionManagerProps> = ({
   addQuestion,
   deleteQuestion,
   isLoading,
-  onEditQuestion
+  onEditQuestion,
 }) => {
-  const [showQuestionForm, setShowQuestionForm] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  
+  // Filter questions based on search term
+  const filteredQuestions = questions.filter(
+    (question) => question.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  // Memoize handlers to prevent unnecessary re-renders
-  const handleToggleQuestion = useCallback((questionId: string) => {
-    setSelectedQuestions(prev => 
-      prev.includes(questionId)
-        ? prev.filter(id => id !== questionId)
-        : [...prev, questionId]
-    );
-  }, [setSelectedQuestions]);
-
-  const handleSelectAllQuestions = useCallback(() => {
-    if (selectAll) {
-      setSelectedQuestions([]);
+  const handleToggleQuestion = (questionId: string) => {
+    if (selectedQuestions.includes(questionId)) {
+      setSelectedQuestions(selectedQuestions.filter((id) => id !== questionId));
     } else {
-      setSelectedQuestions(questions.map(q => q.id));
-    }
-    setSelectAll(!selectAll);
-  }, [selectAll, setSelectedQuestions, questions]);
-
-  // Update selectAll when selectedQuestions changes
-  useEffect(() => {
-    const allSelected = questions.length > 0 && selectedQuestions.length === questions.length;
-    if (selectAll !== allSelected) {
-      setSelectAll(allSelected);
-    }
-  }, [selectedQuestions, questions.length, selectAll]);
-
-  const handleAddQuestion = async (content: string, options: Array<{ id: string; content: string; isCorrect: boolean }>) => {
-    try {
-      await addQuestion({
-        content,
-        options,
-      });
-      
-      setShowQuestionForm(false);
-      toast.success("Thêm câu hỏi thành công");
-    } catch (error) {
-      toast.error("Không thể thêm câu hỏi");
-      console.error(error);
+      setSelectedQuestions([...selectedQuestions, questionId]);
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedQuestions.length === 0) {
-      toast.error("Chưa có câu hỏi nào được chọn để xóa");
-      return;
+  const handleDeleteQuestion = async (id: string) => {
+    if (window.confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
+      await deleteQuestion(id);
     }
+  };
 
+  const handleAddQuestion = async (data: { 
+    content: string; 
+    options: Array<{ id: string; content: string; isCorrect: boolean }> 
+  }) => {
     try {
-      // Delete all selected questions
-      const deletionPromises = selectedQuestions.map(questionId => deleteQuestion(questionId));
-      await Promise.all(deletionPromises);
-      
-      setSelectedQuestions([]);
-      toast.success(`Đã xóa ${selectedQuestions.length} câu hỏi`, {
-        id: "bulk-delete-success" // Use an ID to prevent duplicate toasts
-      });
+      const question = await addQuestion(data);
+      setShowForm(false);
+      return question;
     } catch (error) {
-      toast.error("Có lỗi xảy ra khi xóa câu hỏi", {
-        id: "bulk-delete-error" // Use an ID to prevent duplicate toasts
-      });
-      console.error(error);
+      console.error("Failed to add question:", error);
+      throw error;
     }
+  };
+
+  const handleSelectAll = () => {
+    if (filteredQuestions.length === 0) return;
+    setSelectedQuestions(filteredQuestions.map((q) => q.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedQuestions([]);
   };
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-medium">Danh sách câu hỏi</h2>
-          {questions.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="select-all" 
-                checked={selectAll}
-                onCheckedChange={handleSelectAllQuestions} 
+    <div className="space-y-6">
+      {!showForm ? (
+        <>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Tìm kiếm câu hỏi..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 transition-all duration-300 focus:ring-2 focus:ring-primary/50"
               />
-              <label 
-                htmlFor="select-all" 
-                className="text-sm font-medium leading-none cursor-pointer"
+            </div>
+            <NeonEffect color="blue" padding="p-0" className="rounded-md overflow-hidden">
+              <Button
+                onClick={() => setShowForm(true)}
+                className="gap-1 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 border-none"
               >
-                Chọn tất cả
-              </label>
-              <span className="text-sm text-muted-foreground">
-                ({selectedQuestions.length}/{questions.length})
-              </span>
+                <Plus className="h-4 w-4" />
+                Tạo câu hỏi mới
+              </Button>
+            </NeonEffect>
+          </div>
+
+          {filteredQuestions.length > 0 && (
+            <div className="flex justify-between items-center">
+              <div className="text-sm">
+                <span className="font-medium">{selectedQuestions.length}</span> / {filteredQuestions.length} câu hỏi được chọn
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="text-xs flex items-center gap-1"
+                >
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  Chọn tất cả
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeselectAll}
+                  className="text-xs flex items-center gap-1"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                  Bỏ chọn tất cả
+                </Button>
+              </div>
             </div>
           )}
-        </div>
-        <div className="flex gap-2">
-          {selectedQuestions.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="destructive"
-                  className="gap-1"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Xóa đã chọn ({selectedQuestions.length})
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Xác nhận xóa câu hỏi</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Bạn có chắc chắn muốn xóa {selectedQuestions.length} câu hỏi đã chọn? 
-                    Hành động này không thể hoàn tác.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Hủy</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleBulkDelete}>Xác nhận xóa</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <Button 
-            onClick={() => setShowQuestionForm(true)}
-            className="bg-primary text-white hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Thêm câu hỏi mới
-          </Button>
-        </div>
-      </div>
-      
-      {showQuestionForm ? (
-        <QuestionForm 
-          onSubmit={handleAddQuestion}
-          onCancel={() => setShowQuestionForm(false)}
-          isLoading={isLoading}
-        />
+
+          <QuestionList
+            questions={filteredQuestions}
+            selectedQuestions={selectedQuestions}
+            onToggleQuestion={handleToggleQuestion}
+            onEditQuestion={onEditQuestion}
+            onDeleteQuestion={handleDeleteQuestion}
+          />
+        </>
       ) : (
-        <QuestionList 
-          questions={questions}
-          selectedQuestions={selectedQuestions}
-          onToggleQuestion={handleToggleQuestion}
-          onEditQuestion={onEditQuestion}
-          onDeleteQuestion={deleteQuestion}
-          onSelectAll={() => {
-            setSelectedQuestions(questions.map(q => q.id));
-            setSelectAll(true);
-          }}
-          onDeselectAll={() => {
-            setSelectedQuestions([]);
-            setSelectAll(false);
-          }}
-        />
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <QuestionForm
+              onSubmit={handleAddQuestion}
+              onCancel={() => setShowForm(false)}
+              isLoading={isLoading}
+            />
+          </motion.div>
+        </AnimatePresence>
       )}
-    </>
+    </div>
   );
 };
 

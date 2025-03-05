@@ -74,6 +74,7 @@ export type Database = {
           has_started: boolean
           id: string
           is_active: boolean
+          question_ids: Json | null
           share_link: string | null
           teacher_id: string | null
           title: string
@@ -87,6 +88,7 @@ export type Database = {
           has_started?: boolean
           id?: string
           is_active?: boolean
+          question_ids?: Json | null
           share_link?: string | null
           teacher_id?: string | null
           title: string
@@ -100,6 +102,7 @@ export type Database = {
           has_started?: boolean
           id?: string
           is_active?: boolean
+          question_ids?: Json | null
           share_link?: string | null
           teacher_id?: string | null
           title?: string

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect } from "react";
 import { useQuestionState } from "./quiz/questionContext";
 import { useClassState } from "./quiz/classContext";
@@ -82,7 +83,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasStarted: e.has_started,
         createdAt: e.created_at,
         updatedAt: e.updated_at,
-        questionIds: e.question_ids ? JSON.parse(e.question_ids) : [], // Parse the JSON string
+        questionIds: e.question_ids || [], // Already JSONB, no need to parse
         shareLink: e.share_link
       }));
       
@@ -141,7 +142,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hasStarted: newExam.has_started,
             createdAt: newExam.created_at,
             updatedAt: newExam.updated_at,
-            questionIds: newExam.question_ids ? JSON.parse(newExam.question_ids) : [], // Parse the JSON string
+            questionIds: newExam.question_ids || [], // Already JSONB, no need to parse
             shareLink: newExam.share_link
           };
           examState.addExamToState(exam);
@@ -160,7 +161,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hasStarted: updatedExam.has_started,
             createdAt: updatedExam.created_at,
             updatedAt: updatedExam.updated_at,
-            questionIds: updatedExam.question_ids ? JSON.parse(updatedExam.question_ids) : [], // Parse the JSON string
+            questionIds: updatedExam.question_ids || [], // Already JSONB, no need to parse
             shareLink: updatedExam.share_link
           };
           examState.updateExamInState(updatedExam.id, exam);
