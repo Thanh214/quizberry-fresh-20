@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Teacher } from "@/types/models";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseAuth } from "@/hooks/use-supabase";
+import { useSupabaseAuth } from "@/hooks/supabase/use-supabase-auth";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Exam, ExamParticipant } from "@/types/models";
 import { useQuiz } from "./QuizContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseQuery, useSupabaseMutation, SupabaseExamParticipant } from "@/hooks/use-supabase";
+import { useSupabaseQuery, useSupabaseMutation, SupabaseExamParticipant } from "@/hooks/supabase";
 import { useAuth } from "./AuthContext";
 
 type ExamContextType = {
