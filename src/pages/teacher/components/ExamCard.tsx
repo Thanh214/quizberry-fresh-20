@@ -84,7 +84,7 @@ const ExamCard: React.FC<ExamCardProps> = ({
         
         {/* Content */}
         <div className="relative z-10">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xl font-bold">{exam.title}</h3>
@@ -118,7 +118,7 @@ const ExamCard: React.FC<ExamCardProps> = ({
             </div>
             
             {isTeacher && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap mt-2 sm:mt-0">
                 {!exam.hasStarted && exam.isActive && waitingCount > 0 && (
                   <motion.div
                     initial={{ scale: 0.5, opacity: 0 }}

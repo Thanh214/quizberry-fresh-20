@@ -163,6 +163,11 @@
     transform: scale(0.9);
     transition: opacity 300ms, transform 300ms;
   }
+
+  /* Mobile-specific utilities */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
 }
 
 /* Font imports for Vietnamese language support */
@@ -252,5 +257,16 @@ button, a {
   }
   100% {
     background-position: 200% 0;
+  }
+}
+
+/* Add some extra padding at the bottom of the page on mobile to prevent buttons from being obscured */
+@media (max-width: 640px) {
+  .pb-safe {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0));
+  }
+  
+  .mb-safe {
+    margin-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0));
   }
 }

@@ -88,7 +88,7 @@ const TeacherExams: React.FC = () => {
     <Layout>
       <div className="container mx-auto py-8">
         <TransitionWrapper>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold">Quản lý bài thi</h1>
               <p className="text-muted-foreground mt-1">
@@ -105,7 +105,7 @@ const TeacherExams: React.FC = () => {
               <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
                 <Button
                   onClick={handleCreateExam}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none relative group overflow-hidden"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none relative group overflow-hidden w-full sm:w-auto"
                 >
                   {/* Shine effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />

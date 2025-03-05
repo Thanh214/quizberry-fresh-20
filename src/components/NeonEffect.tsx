@@ -84,6 +84,19 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
     }
   };
 
+  // Animation properties for the pulsing effect
+  const pulseAnimation = animate && !disabled ? {
+    animate: {
+      scale: intensityMap[intensity].pulse.scale,
+      opacity: intensityMap[intensity].pulse.opacity,
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "reverse" as const
+      }
+    }
+  } : {};
+
   return (
     <motion.div 
       className={cn(
@@ -100,18 +113,7 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
       animate={disabled ? "disabled" : "animate"}
       whileHover={disabled ? undefined : "hover"}
       whileTap={disabled ? undefined : "tap"}
-      // Fixed TypeScript error by properly handling animate prop
-      {...(animate && !disabled ? { 
-        animate: {
-          scale: intensityMap[intensity].pulse.scale as number[],
-          opacity: intensityMap[intensity].pulse.opacity as number[],
-          transition: {
-            duration: 2,
-            repeat: Infinity,
-            repeatType: "reverse" as const
-          }
-        }
-      } : {})}
+      {...pulseAnimation}
     >
       <div className="relative z-10">
         {children}

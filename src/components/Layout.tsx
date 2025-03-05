@@ -126,6 +126,7 @@ const Layout: React.FC<LayoutProps> = ({
           season={season} 
           intensity="medium" 
           onSeasonChange={handleSeasonChange}
+          className="pb-20 sm:pb-0" // Add padding at the bottom on mobile
         />
       )}
       
@@ -136,7 +137,7 @@ const Layout: React.FC<LayoutProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.5 }}
-          className="mx-auto max-w-5xl relative z-10"
+          className="mx-auto max-w-5xl relative z-10 pb-20 sm:pb-0" // Add padding at the bottom on mobile
         >
           {children}
         </motion.div>
