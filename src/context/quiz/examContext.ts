@@ -38,7 +38,7 @@ export const useExamState = () => {
         ...exam,
         created_at: now,
         updated_at: now,
-        // Handle the questionIds fields
+        // Chuyển đổi từ camelCase sang snake_case cho Supabase
         question_ids: exam.questionIds || []
       };
 

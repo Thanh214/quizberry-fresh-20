@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Session, AuthError, User } from "@supabase/supabase-js";
 
 // Định nghĩa các bảng supabase được phép truy cập
-type TableNames = "exams" | "profiles" | "questions" | "quiz_results" | "options" | "exam_participants" | "question_answers" | "quiz_sessions";
+export type TableNames = "exams" | "profiles" | "questions" | "quiz_results" | "options" | "exam_participants" | "question_answers" | "quiz_sessions";
 
 /**
  * Custom hook để lấy dữ liệu từ Supabase

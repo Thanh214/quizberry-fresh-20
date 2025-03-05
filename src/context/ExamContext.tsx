@@ -25,7 +25,7 @@ const ExamContext = createContext<ExamContextType | undefined>(undefined);
 export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { exams, getExamByCode, getExamById, startExam, endExam } = useQuiz();
   const { user } = useAuth();
-  const { data: participantsData, loading: participantsLoading } = useSupabaseQuery<ExamParticipant>('exam_participants');
+  const { data: participantsData, loading: participantsLoading } = useSupabaseQuery<any>('exam_participants');
   
   const [participants, setParticipants] = useState<ExamParticipant[]>([]);
   const { add: addParticipantMutation, update: updateParticipantMutation } = useSupabaseMutation('exam_participants');
@@ -34,7 +34,7 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!participantsLoading && participantsData) {
       // Transform data from snake_case to camelCase for our data model
-      const transformedParticipants: ExamParticipant[] = participantsData.map(p => ({
+      const transformedParticipants: ExamParticipant[] = participantsData.map((p: any) => ({
         id: p.id,
         examId: p.exam_id,
         studentName: p.student_name,
@@ -102,7 +102,8 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
             prev.map(p => p.id === transformedParticipant.id ? transformedParticipant : p)
           );
         } else if (payload.eventType === 'DELETE') {
-          setParticipants(prev => prev.filter(p => p.id !== payload.old.id));
+          const oldParticipant = payload.old as any;
+          setParticipants(prev => prev.filter(p => p.id !== oldParticipant.id));
         }
       })
       .subscribe();
