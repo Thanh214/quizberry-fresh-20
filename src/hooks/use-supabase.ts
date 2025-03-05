@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Session, AuthError, User } from "@supabase/supabase-js";
 
-// Định nghĩa các bảng supabase được phép truy cập
+// Define table names
 export type TableNames = "exams" | "profiles" | "questions" | "quiz_results" | "options" | "exam_participants" | "question_answers" | "quiz_sessions";
 
-// Define interfaces for Supabase table data to prevent excessive type nesting
+// Define interfaces for Supabase table data
 export interface SupabaseExamParticipant {
   id: string;
   exam_id: string;
@@ -39,26 +39,25 @@ export interface SupabaseExam {
   share_link?: string | null;
 }
 
-// Generic type for Supabase responses to fix excessive type nesting
-export type SupabaseData = 
-  | SupabaseExamParticipant 
-  | SupabaseExam 
-  | Record<string, any>;
+// Base type for all Supabase data responses
+export type SupabaseData = Record<string, any>;
+
+// Options for querying Supabase
+export interface QueryOptions {
+  columns?: string;
+  eq?: [string, any][];
+  order?: [string, "asc" | "desc"];
+  limit?: number;
+  select?: string;
+}
 
 /**
- * Custom hook để lấy dữ liệu từ Supabase
+ * Custom hook to fetch data from Supabase
  */
-export function useSupabaseQuery<T>(
+export function useSupabaseQuery<T extends Record<string, any>>(
   tableName: TableNames,
-  options?: {
-    columns?: string;
-    eq?: [string, any][];
-    order?: [string, "asc" | "desc"];
-    limit?: number;
-    select?: string;
-  }
+  options?: QueryOptions
 ) {
-  // Use explicit generic type to prevent excessive type instantiation
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -69,20 +68,20 @@ export function useSupabaseQuery<T>(
         setLoading(true);
         let query = supabase.from(tableName).select(options?.select || "*");
 
-        // Thêm điều kiện lọc nếu có
+        // Add filter conditions if any
         if (options?.eq) {
           options.eq.forEach(([column, value]) => {
             query = query.eq(column, value);
           });
         }
 
-        // Thêm sắp xếp nếu có
+        // Add sorting if specified
         if (options?.order) {
           const [column, direction] = options.order;
           query = query.order(column, { ascending: direction === "asc" });
         }
 
-        // Thêm giới hạn nếu có
+        // Add limit if specified
         if (options?.limit) {
           query = query.limit(options.limit);
         }
@@ -91,7 +90,7 @@ export function useSupabaseQuery<T>(
 
         if (error) throw error;
         
-        // Explicitly cast to T[] to avoid deep type instantiation
+        // Directly cast as T[] to avoid deep type recursion
         setData(result as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
@@ -109,7 +108,7 @@ export function useSupabaseQuery<T>(
 }
 
 /**
- * Hook để thêm/cập nhật/xóa dữ liệu trong Supabase
+ * Hook for adding/updating/deleting data in Supabase
  */
 export function useSupabaseMutation(tableName: TableNames) {
   const [loading, setLoading] = useState(false);
@@ -118,9 +117,9 @@ export function useSupabaseMutation(tableName: TableNames) {
   const add = async <T extends Record<string, any>>(data: T) => {
     try {
       setLoading(true);
-      const { data: result, error } = await supabase.from(tableName).insert(data as any).select();
+      const { data: result, error } = await supabase.from(tableName).insert(data).select();
       if (error) throw error;
-      return result[0] as SupabaseData;
+      return result[0] as Record<string, any>;
     } catch (err: any) {
       console.error("Lỗi khi thêm dữ liệu vào Supabase:", err);
       setError(err);
@@ -136,11 +135,11 @@ export function useSupabaseMutation(tableName: TableNames) {
       setLoading(true);
       const { data: result, error } = await supabase
         .from(tableName)
-        .update(data as any)
+        .update(data)
         .eq("id", id)
         .select();
       if (error) throw error;
-      return result[0] as SupabaseData;
+      return result[0] as Record<string, any>;
     } catch (err: any) {
       console.error("Lỗi khi cập nhật dữ liệu trong Supabase:", err);
       setError(err);
@@ -176,7 +175,7 @@ export function useSupabaseMutation(tableName: TableNames) {
   };
 }
 
-// Define proper type for auth result
+// Define type for auth result
 export interface AuthResult {
   data: {
     user: User | null;
@@ -186,7 +185,7 @@ export interface AuthResult {
 }
 
 /**
- * Hook để quản lý xác thực người dùng
+ * Hook for managing user authentication
  */
 export function useSupabaseAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -194,7 +193,7 @@ export function useSupabaseAuth() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Lấy phiên hiện tại
+    // Get current session
     const getInitialSession = async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
@@ -203,7 +202,7 @@ export function useSupabaseAuth() {
     
     getInitialSession();
 
-    // Theo dõi thay đổi trạng thái xác thực
+    // Monitor auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setLoading(false);
