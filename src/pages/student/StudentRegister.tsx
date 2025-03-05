@@ -1,80 +1,23 @@
 
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useQuiz } from "@/context/QuizContext";
 import NeonEffect from "@/components/NeonEffect";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
+import { useRegistration } from "@/hooks/use-registration";
 
 const StudentRegister = () => {
-  const navigate = useNavigate();
-  const { loginAsStudent } = useAuth();
-  const { getExamByCode } = useQuiz();
-
   const [name, setName] = useState("");
   const [studentId, setStudentId] = useState("");
   const [className, setClassName] = useState("");
   const [examCode, setExamCode] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { registerStudent, isSubmitting } = useRegistration();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate form
-    if (!name.trim()) {
-      toast.error("Vui lòng nhập họ và tên");
-      return;
-    }
-    
-    if (!studentId.trim()) {
-      toast.error("Vui lòng nhập mã sinh viên");
-      return;
-    }
-    
-    if (!className.trim()) {
-      toast.error("Vui lòng nhập lớp");
-      return;
-    }
-    
-    if (!examCode.trim()) {
-      toast.error("Vui lòng nhập mã bài thi");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Validate exam code
-      const exam = getExamByCode(examCode);
-      
-      if (!exam) {
-        toast.error("Mã bài thi không hợp lệ hoặc không tồn tại");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      if (!exam.isActive) {
-        toast.error("Bài thi đã kết thúc hoặc chưa được kích hoạt");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Login as student
-      await loginAsStudent(name, className, studentId, examCode);
-      
-      // Redirect to waiting page
-      toast.success("Đăng ký thành công, đang chuyển đến phòng chờ");
-      navigate("/student/waiting");
-    } catch (error) {
-      console.error(error);
-      toast.error("Đã xảy ra lỗi khi đăng ký");
-    } finally {
-      setIsSubmitting(false);
-    }
+    await registerStudent(name, studentId, className, examCode);
   };
   
   return (
@@ -180,15 +123,6 @@ const StudentRegister = () => {
                 required
                 className="transition-all duration-300 focus:ring-2 focus:ring-primary focus:border-primary"
               />
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
-              className="text-sm text-muted-foreground"
-            >
-              Mã demo để test: DEMO123
             </motion.div>
             
             <motion.div 
