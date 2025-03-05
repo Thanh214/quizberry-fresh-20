@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { TableNames, QueryOptions, SupabaseData } from "./types";
+import { TableNames, QueryOptions } from "./types";
 
 /**
  * Custom hook to fetch data from Supabase
@@ -43,9 +43,9 @@ export function useSupabaseQuery<T extends Record<string, any>>(
 
         if (error) throw error;
         
-        // Cast to unknown first to avoid deep type instantiation issues
-        const safeResult = result as unknown;
-        setData(safeResult as T[]);
+        // Type safe assignment with explicit typing to avoid deep instantiation
+        const typedResult = (result || []) as any[];
+        setData(typedResult as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);
