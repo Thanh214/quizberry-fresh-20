@@ -14,9 +14,10 @@ import { Exam, Question } from "@/types/models";
 import QuestionForm from "./components/QuestionForm";
 import ExamForm from "./components/ExamForm";
 import QuestionList from "./components/QuestionList";
-import { CheckSquare, ArrowLeft, Save } from "lucide-react";
+import { CheckSquare, ArrowLeft, Save, Trash2 } from "lucide-react";
 import NeonEffect from "@/components/NeonEffect";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const CreateExam: React.FC = () => {
   const navigate = useNavigate();
@@ -129,6 +130,26 @@ const CreateExam: React.FC = () => {
     setSelectAll(!selectAll);
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedQuestions.length === 0) {
+      toast.error("Chưa có câu hỏi nào được chọn để xóa");
+      return;
+    }
+
+    try {
+      // Delete all selected questions
+      for (const questionId of selectedQuestions) {
+        await deleteQuestion(questionId);
+      }
+      
+      setSelectedQuestions([]);
+      toast.success(`Đã xóa ${selectedQuestions.length} câu hỏi`);
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi xóa câu hỏi");
+      console.error(error);
+    }
+  };
+
   return (
     <Layout>
       <div className="flex flex-col min-h-screen pb-10">
@@ -195,12 +216,40 @@ const CreateExam: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <Button 
-                    onClick={() => setShowQuestionForm(true)}
-                    className="bg-primary text-white hover:bg-primary/90"
-                  >
-                    Thêm câu hỏi mới
-                  </Button>
+                  <div className="flex gap-2">
+                    {selectedQuestions.length > 0 && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="destructive"
+                            className="gap-1"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Xóa đã chọn ({selectedQuestions.length})
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Xác nhận xóa câu hỏi</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Bạn có chắc chắn muốn xóa {selectedQuestions.length} câu hỏi đã chọn? 
+                              Hành động này không thể hoàn tác.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Hủy</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleBulkDelete}>Xác nhận xóa</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    <Button 
+                      onClick={() => setShowQuestionForm(true)}
+                      className="bg-primary text-white hover:bg-primary/90"
+                    >
+                      Thêm câu hỏi mới
+                    </Button>
+                  </div>
                 </div>
                 
                 {showQuestionForm ? (
@@ -216,6 +265,8 @@ const CreateExam: React.FC = () => {
                     onToggleQuestion={handleToggleQuestion}
                     onEditQuestion={handleEditQuestion}
                     onDeleteQuestion={handleDeleteQuestion}
+                    onSelectAll={() => setSelectAll(true)}
+                    onDeselectAll={() => setSelectAll(false)}
                   />
                 )}
               </Card>
