@@ -122,12 +122,13 @@ const Layout: React.FC<LayoutProps> = ({
       data-season={season}
     >
       {showSeasonalEffects && (
-        <SeasonalEffects 
-          season={season} 
-          intensity="medium" 
-          onSeasonChange={handleSeasonChange}
-          className="pb-safe" 
-        />
+        <div className="fixed bottom-4 right-4 z-50">
+          <SeasonalEffects 
+            season={season} 
+            intensity="medium" 
+            onSeasonChange={handleSeasonChange}
+          />
+        </div>
       )}
       
       <AnimatePresence mode="wait">
@@ -137,7 +138,7 @@ const Layout: React.FC<LayoutProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.5 }}
-          className="mx-auto max-w-5xl relative z-10 pb-safe"
+          className="mx-auto max-w-5xl relative z-10 pb-16 md:pb-20"
         >
           {children}
         </motion.div>
