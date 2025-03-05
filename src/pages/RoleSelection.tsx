@@ -395,7 +395,8 @@ const RoleSelection: React.FC = () => {
           <Logo className="mx-auto transform transition-transform duration-300 drop-shadow-lg" />
           <motion.div className="mt-4 inline-flex items-center px-4 py-1 rounded-full bg-festival-red/10 text-festival-red border border-festival-red/20" variants={titleEffect}>
             <Award className="w-4 h-4 mr-1" /> 
-            <span className="text-sm font-medium">Phiên bản Tết 2024</span>
+            <span className="text-sm font-medium">Phiên bản  1.3.0
+          </span>
           </motion.div>
         </motion.div>
 
@@ -424,7 +425,7 @@ const RoleSelection: React.FC = () => {
             <motion.div className={`festival-circle w-16 h-16 mx-auto mb-4 bg-white border-2 ${seasonStyles.teacherCircle} shadow-sm`} variants={circleVariants}>
               <UserCog className={`h-8 w-8 ${seasonStyles.teacherIcon}`} strokeWidth={1.5} />
             </motion.div>
-            <h2 className={`text-2xl font-semibold text-center mb-2 ${seasonStyles.teacherIcon}`}>Giảng Viên</h2>
+            <h2 className={`text-2xl font-semibold text-center mb-2 ${seasonStyles.teacherIcon}`}>Giảng viên</h2>
             <p className="text-center text-muted-foreground mb-6">
               Đăng nhập để quản lý câu hỏi, lớp học và xem kết quả
             </p>
