@@ -90,8 +90,9 @@ export function useSupabaseQuery<T extends Record<string, any>>(
 
         if (error) throw error;
         
-        // Use double type assertion with unknown as intermediate step to avoid deep instantiation error
-        setData(result as unknown as T[]);
+        // Cast to unknown first to avoid deep type instantiation issues
+        const safeResult = result as unknown;
+        setData(safeResult as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);
@@ -117,10 +118,11 @@ export function useSupabaseMutation(tableName: TableNames) {
   const add = async <T extends SupabaseData>(data: T): Promise<Record<string, any>> => {
     try {
       setLoading(true);
-      // Use explicit type assertion to avoid compatibility issues
+      // Cast to any to avoid type compatibility issues
+      const dataToInsert = data as any;
       const { data: result, error } = await supabase
         .from(tableName)
-        .insert(data as any)
+        .insert(dataToInsert)
         .select();
       
       if (error) throw error;
@@ -138,9 +140,10 @@ export function useSupabaseMutation(tableName: TableNames) {
   const update = async <T extends SupabaseData>(id: string, data: Partial<T>): Promise<Record<string, any>> => {
     try {
       setLoading(true);
+      const dataToUpdate = data as any;
       const { data: result, error } = await supabase
         .from(tableName)
-        .update(data as any)
+        .update(dataToUpdate)
         .eq("id", id)
         .select();
       
