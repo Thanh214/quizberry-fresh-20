@@ -114,6 +114,26 @@
     @apply rounded-full flex items-center justify-center;
   }
   
+  .text-ellipsis {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+  
+  .multiline-ellipsis {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
   .animate-shine {
     animation: shine 1.5s infinite;
   }
@@ -299,10 +319,24 @@ button, a {
   .page-bottom-spacer {
     height: max(6rem, calc(6rem + env(safe-area-inset-bottom, 0)));
   }
+  
+  .seasonal-selector {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 50;
+  }
 }
 
 @media (max-width: 480px) {
   .button-container-horizontal > * {
     flex: 1 1 100%;
+  }
+  
+  .text-xs-truncate {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

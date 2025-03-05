@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import SeasonalEffects from "./SeasonalEffects";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Season = "spring" | "summer" | "autumn" | "winter";
 
@@ -30,6 +31,7 @@ const Layout: React.FC<LayoutProps> = ({
   });
   
   const [transitioning, setTransitioning] = useState(false);
+  const isMobile = useIsMobile();
   
   // When season changes, save to localStorage
   useEffect(() => {
@@ -109,7 +111,7 @@ const Layout: React.FC<LayoutProps> = ({
   return (
     <div 
       className={cn(
-        "min-h-screen px-4 py-6 md:px-6 md:py-10 transition-colors duration-1000", 
+        "min-h-screen px-3 py-6 md:px-6 md:py-10 transition-colors duration-1000", 
         getSeasonClasses(),
         transitioning ? "animate-pulse" : "",
         className
@@ -126,7 +128,10 @@ const Layout: React.FC<LayoutProps> = ({
           season={season} 
           intensity="medium" 
           onSeasonChange={handleSeasonChange}
-          className="pb-safe" 
+          className={cn(
+            "pb-safe z-50",
+            isMobile ? "mb-16" : ""
+          )} 
         />
       )}
       
@@ -137,7 +142,10 @@ const Layout: React.FC<LayoutProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.5 }}
-          className="mx-auto max-w-5xl relative z-10 pb-safe"
+          className={cn(
+            "mx-auto max-w-5xl relative z-10",
+            isMobile ? "pb-28" : "pb-safe"
+          )}
         >
           {children}
         </motion.div>
