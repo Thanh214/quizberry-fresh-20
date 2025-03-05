@@ -25,6 +25,7 @@ import ManageRequests from "./pages/admin/ManageRequests";
 // Teacher routes
 import TeacherExams from "./pages/teacher/TeacherExams";
 import CreateExam from "./pages/teacher/CreateExam";
+import EditExam from "./pages/teacher/EditExam";
 
 // Student routes
 import StudentRegister from "./pages/student/StudentRegister";
@@ -62,7 +63,7 @@ const App = () => (
                   {/* Teacher routes */}
                   <Route path="/teacher/exams" element={<TeacherExams />} />
                   <Route path="/teacher/create-exam" element={<CreateExam />} />
-                  <Route path="/teacher/edit-exam/:id" element={<CreateExam />} />
+                  <Route path="/teacher/edit-exam/:id" element={<EditExam />} />
                   
                   {/* Student routes */}
                   <Route path="/student/register" element={<StudentRegister />} />

@@ -50,6 +50,7 @@ const TeacherExams: React.FC = () => {
   };
 
   const handleEditExam = (examId: string) => {
+    // Updated to use the dedicated edit page
     navigate(`/teacher/edit-exam/${examId}`);
   };
 
