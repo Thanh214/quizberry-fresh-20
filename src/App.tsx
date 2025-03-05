@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { QuizProvider } from "@/context/QuizContext";
 import { ExamProvider } from "@/context/ExamContext";
+import { AnimatePresence } from "framer-motion";
 
 import NotFound from "./pages/NotFound";
 import SplashScreen from "./pages/SplashScreen";
@@ -42,35 +43,37 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<SplashScreen />} />
-                <Route path="/role-selection" element={<RoleSelection />} />
-                
-                {/* Admin routes */}
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/register" element={<TeacherRegister />} />
-                <Route path="/admin/questions" element={<AdminQuestions />} />
-                <Route path="/admin/questions/new" element={<EditQuestion />} />
-                <Route path="/admin/questions/edit/:id" element={<EditQuestion />} />
-                <Route path="/admin/results" element={<AdminResults />} />
-                <Route path="/admin/classes" element={<AdminClasses />} />
-                <Route path="/admin/requests" element={<ManageRequests />} />
-                
-                {/* Teacher routes */}
-                <Route path="/teacher/exams" element={<TeacherExams />} />
-                <Route path="/teacher/create-exam" element={<CreateExam />} />
-                <Route path="/teacher/edit-exam/:id" element={<CreateExam />} />
-                
-                {/* Student routes */}
-                <Route path="/student/register" element={<StudentRegister />} />
-                <Route path="/student/waiting" element={<StudentWaiting />} />
-                <Route path="/student/quiz" element={<StudentQuiz />} />
-                <Route path="/student/results" element={<StudentResults />} />
-                
-                {/* Catch-all */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <AnimatePresence mode="wait">
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<SplashScreen />} />
+                  <Route path="/role-selection" element={<RoleSelection />} />
+                  
+                  {/* Admin routes */}
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin/register" element={<TeacherRegister />} />
+                  <Route path="/admin/questions" element={<AdminQuestions />} />
+                  <Route path="/admin/questions/new" element={<EditQuestion />} />
+                  <Route path="/admin/questions/edit/:id" element={<EditQuestion />} />
+                  <Route path="/admin/results" element={<AdminResults />} />
+                  <Route path="/admin/classes" element={<AdminClasses />} />
+                  <Route path="/admin/requests" element={<ManageRequests />} />
+                  
+                  {/* Teacher routes */}
+                  <Route path="/teacher/exams" element={<TeacherExams />} />
+                  <Route path="/teacher/create-exam" element={<CreateExam />} />
+                  <Route path="/teacher/edit-exam/:id" element={<CreateExam />} />
+                  
+                  {/* Student routes */}
+                  <Route path="/student/register" element={<StudentRegister />} />
+                  <Route path="/student/waiting" element={<StudentWaiting />} />
+                  <Route path="/student/quiz" element={<StudentQuiz />} />
+                  <Route path="/student/results" element={<StudentResults />} />
+                  
+                  {/* Catch-all */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AnimatePresence>
             </BrowserRouter>
           </TooltipProvider>
         </ExamProvider>

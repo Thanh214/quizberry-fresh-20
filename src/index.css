@@ -73,18 +73,18 @@
   }
 
   body {
-    @apply bg-background text-foreground bg-festival-gradient;
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 @layer utilities {
   .glass-effect {
-    @apply bg-white/70 backdrop-blur-xl shadow-glass border border-white/20;
+    @apply bg-white/70 backdrop-blur-xl shadow-glass border border-white/20 transition-all duration-500;
   }
   
   .glass-effect-dark {
-    @apply bg-black/40 backdrop-blur-xl shadow-glass border border-white/10;
+    @apply bg-black/40 backdrop-blur-xl shadow-glass border border-white/10 transition-all duration-500;
   }
   
   .glass-card {
@@ -96,15 +96,15 @@
   }
 
   .festival-card {
-    @apply rounded-xl bg-card-gradient border border-festival-red/20 shadow-festival p-4;
+    @apply rounded-xl bg-card-gradient border border-festival-red/20 shadow-festival p-4 transition-all duration-500 hover:shadow-lg;
   }
 
   .festival-card-red {
-    @apply rounded-xl bg-card-red-gradient border-2 border-festival-red/30 shadow-festival p-4;
+    @apply rounded-xl bg-card-red-gradient border-2 border-festival-red/30 shadow-festival p-4 transition-all duration-500 hover:shadow-lg hover:border-festival-red/50;
   }
   
   .festival-card-gold {
-    @apply rounded-xl bg-card-gold-gradient border-2 border-festival-gold/30 shadow-festival p-4;
+    @apply rounded-xl bg-card-gold-gradient border-2 border-festival-gold/30 shadow-festival p-4 transition-all duration-500 hover:shadow-lg hover:border-festival-gold/50;
   }
 
   .festival-button {
@@ -113,6 +113,55 @@
 
   .festival-circle {
     @apply rounded-full flex items-center justify-center;
+  }
+  
+  /* Animation for shine effect */
+  .animate-shine {
+    animation: shine 1.5s infinite;
+  }
+  
+  /* Animation for falling particles (snow, leaves) */
+  .animate-fall {
+    animation: fall 20s linear infinite;
+  }
+  
+  .animate-fall-slow {
+    animation: fall 30s linear infinite;
+  }
+  
+  .animate-fall-rotate {
+    animation: fallRotate 15s linear infinite;
+  }
+  
+  .animate-fall-slow-rotate {
+    animation: fallRotate 25s linear infinite;
+  }
+  
+  .animate-float-pulse {
+    animation: floatPulse 8s ease-in-out infinite;
+  }
+  
+  /* Page transition animations */
+  .page-enter {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  
+  .page-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms, transform 300ms;
+  }
+  
+  .page-exit {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .page-exit-active {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 300ms, transform 300ms;
   }
 }
 
@@ -144,4 +193,64 @@
 
 button, a {
   @apply transition-all duration-300;
+}
+
+/* Define keyframe animations */
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(100vh) rotate(0deg);
+  }
+}
+
+@keyframes fallRotate {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+  }
+}
+
+@keyframes floatPulse {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-15px) scale(0.8);
+    opacity: 0.7;
+  }
+}
+
+/* Shimmer effect */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
