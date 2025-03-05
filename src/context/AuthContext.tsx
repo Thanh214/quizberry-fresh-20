@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Teacher } from "@/types/models";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +11,7 @@ type AuthContextType = {
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
   loginAsStudent: (name: string, className: string, studentId: string, examCode: string) => Promise<void>;
-  registerTeacher: (name: string, faculty: string, username: string, password: string) => Promise<void>;
+  registerTeacher: (name: string, faculty: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   teachers: Teacher[]; // Danh sách giáo viên để quản lý
 };
@@ -101,16 +100,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(loading);
   }, [session, loading]);
 
-  // Đăng ký tài khoản giáo viên mới
-  const registerTeacher = async (name: string, faculty: string, username: string, password: string) => {
+  const registerTeacher = async (name: string, faculty: string, email: string, password: string) => {
     try {
       setIsLoading(true);
       
       // Đăng ký tài khoản mới với Supabase Auth
-      const result = await signUp(username, password, {
-        name,
-        faculty,
-        role: 'teacher'
+      const result = await signUp(email, password, {
+        data: {
+          name,
+          faculty,
+          role: 'teacher'
+        }
       });
       
       if (result.error) throw result.error;
@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: result.data.user.id,
           name,
           faculty,
-          username,
+          username: email.split('@')[0],
           role: 'teacher',
           created_at: new Date().toISOString()
         });

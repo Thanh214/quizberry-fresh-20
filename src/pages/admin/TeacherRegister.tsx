@@ -14,25 +14,43 @@ const TeacherRegister: React.FC = () => {
   
   const [name, setName] = useState("");
   const [faculty, setFaculty] = useState("");
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Kiểm tra mật khẩu xác nhận
+    if (!validateEmail(email)) {
+      toast.error("Vui lòng nhập một địa chỉ email hợp lệ");
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error("Mật khẩu xác nhận không khớp");
       return;
     }
+
+    if (password.length < 6) {
+      toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
     
     try {
-      await registerTeacher(name, faculty, username, password);
+      await registerTeacher(name, faculty, email, password);
       toast.success("Đăng ký tài khoản thành công");
       navigate("/admin/login");
-    } catch (error) {
-      toast.error((error as Error).message || "Đăng ký thất bại");
+    } catch (error: any) {
+      if (error.message.includes("already registered")) {
+        toast.error("Email này đã được đăng ký");
+      } else {
+        toast.error(error.message || "Đăng ký thất bại");
+      }
     }
   };
 
@@ -83,16 +101,17 @@ const TeacherRegister: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none" htmlFor="username">
-                    Tên đăng nhập
+                  <label className="text-sm font-medium leading-none" htmlFor="email">
+                    Email
                   </label>
                   <input
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    id="username"
-                    placeholder="teacher123"
+                    id="email"
+                    type="email"
+                    placeholder="teacher@example.com"
                     required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 
