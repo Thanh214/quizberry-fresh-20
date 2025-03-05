@@ -35,11 +35,26 @@ export function useSupabaseAuth() {
   const signIn = async (email: string, password: string): Promise<AuthResult> => {
     try {
       setLoading(true);
+      
+      // Check if this is an email (contains @)
+      if (!email.includes('@')) {
+        toast.error('Vui lòng nhập địa chỉ email hợp lệ');
+        throw new Error('Email không hợp lệ');
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) throw error;
+      
+      if (error) {
+        // Better error handling for common cases
+        if (error.message.includes('not confirmed')) {
+          throw new Error('Email not confirmed. Please check your inbox for verification email.');
+        }
+        throw error;
+      }
+      
       return { data, error: null };
     } catch (err: any) {
       setError(err);
@@ -54,15 +69,34 @@ export function useSupabaseAuth() {
   const signUp = async (email: string, password: string, metadata?: any): Promise<AuthResult> => {
     try {
       setLoading(true);
+      
+      // Check if email is valid
+      if (!email.includes('@')) {
+        toast.error('Vui lòng nhập địa chỉ email hợp lệ');
+        throw new Error('Email không hợp lệ');
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: metadata?.data,
+          emailRedirectTo: window.location.origin + '/auth/callback'
         },
       });
+      
       if (error) throw error;
-      toast.success("Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực.");
+      
+      // Check if the email needs confirmation
+      if (data?.user && data.user.identities && data.user.identities.length === 0) {
+        toast.error('Email đã được đăng ký trước đó, vui lòng đăng nhập');
+        throw new Error('Email đã được đăng ký');
+      } else if (data?.user && !data.session) {
+        toast.success("Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực.");
+      } else {
+        toast.success("Đăng ký thành công!");
+      }
+      
       return { data, error: null };
     } catch (err: any) {
       setError(err);
@@ -88,6 +122,32 @@ export function useSupabaseAuth() {
     }
   };
 
+  // New method to resend verification email
+  const resendVerificationEmail = async (email: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: window.location.origin + '/auth/callback'
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư đến của bạn.");
+      return true;
+    } catch (err: any) {
+      setError(err);
+      toast.error(`Lỗi gửi lại email: ${err.message}`);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     session,
     loading,
@@ -95,5 +155,6 @@ export function useSupabaseAuth() {
     signIn,
     signUp,
     signOut,
+    resendVerificationEmail
   };
 }

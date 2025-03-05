@@ -1,17 +1,18 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Teacher } from "@/types/models";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/supabase/use-supabase-auth";
 import { toast } from "sonner";
-import { Session } from "@supabase/supabase-js";
 
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   loginAsStudent: (name: string, className: string, studentId: string, examCode: string) => Promise<void>;
   registerTeacher: (name: string, faculty: string, email: string, password: string) => Promise<void>;
+  resendVerificationEmail: (email: string) => Promise<boolean>;
   logout: () => void;
   teachers: Teacher[]; // Danh sách giáo viên để quản lý
 };
@@ -22,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const { signIn, signOut, signUp, session, loading } = useSupabaseAuth();
+  const { signIn, signOut, signUp, session, loading, resendVerificationEmail } = useSupabaseAuth();
 
   useEffect(() => {
     // Kiểm tra phiên đăng nhập từ Supabase
@@ -48,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userData: User = {
             id: session.user.id,
             username: data.username || session.user.email || '',
+            email: session.user.email,
             role: role,
             name: data.name,
             faculty: data.faculty,
@@ -89,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: teacher.name || '',
           faculty: teacher.faculty || '',
           username: teacher.username || '',
+          email: teacher.username ? `${teacher.username}@example.com` : '',
           password: '', // Không lưu mật khẩu
           createdAt: teacher.created_at
         }));
@@ -117,11 +120,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Lưu thông tin bổ sung vào bảng profiles
       if (result.data?.user) {
+        const username = email.split('@')[0];
+        
         const { error: profileError } = await supabase.from('profiles').upsert({
           id: result.data.user.id,
           name,
           faculty,
-          username: email.split('@')[0],
+          username,
+          email: email,
           role: 'teacher',
           created_at: new Date().toISOString()
         });
@@ -141,15 +147,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
       
       // Kiểm tra nếu là tài khoản admin đặc biệt
-      if (username === "admin" && password === "password") {
+      if (email === "admin@eputest.com" && password === "admin123") {
         const adminUser: User = {
           id: "admin",
-          username,
+          username: "admin",
+          email: "admin@eputest.com",
           role: "admin",
         };
         
@@ -159,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Sử dụng Supabase Auth để đăng nhập
-      const result = await signIn(username, password);
+      const result = await signIn(email, password);
       
       if (result.error) {
         throw result.error;
@@ -180,6 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const studentUser: User = {
         id: Date.now().toString(),
         username: name.toLowerCase().replace(/\s/g, '.'),
+        email: `${studentId.toLowerCase()}@eputest.com`,
         role: "student",
         name,
         className,
@@ -218,6 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         loginAsStudent,
         registerTeacher,
+        resendVerificationEmail,
         logout,
         teachers
       }}

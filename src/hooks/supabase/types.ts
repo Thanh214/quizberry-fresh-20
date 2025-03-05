@@ -36,6 +36,18 @@ export interface SupabaseExam {
   share_link?: string | null;
 }
 
+export interface SupabaseProfile {
+  id: string;
+  username?: string | null;
+  name?: string | null;
+  faculty?: string | null;
+  student_id?: string | null;
+  class_name?: string | null;
+  role: string;
+  email?: string | null;
+  created_at: string;
+}
+
 // Simple base type for all Supabase data responses
 export type SupabaseData = Record<string, any>;
 
