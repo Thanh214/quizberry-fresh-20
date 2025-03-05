@@ -2,12 +2,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Session, AuthError } from "@supabase/supabase-js";
+import { Tables } from "@/integrations/supabase/types";
+
+// Định nghĩa các bảng supabase được phép truy cập
+type TableNames = keyof Tables<"public">;
 
 /**
  * Custom hook để lấy dữ liệu từ Supabase
  */
 export function useSupabaseQuery<T>(
-  tableName: string,
+  tableName: TableNames,
   options?: {
     columns?: string;
     eq?: [string, any][];
@@ -66,7 +71,7 @@ export function useSupabaseQuery<T>(
 /**
  * Hook để thêm/cập nhật/xóa dữ liệu trong Supabase
  */
-export function useSupabaseMutation(tableName: string) {
+export function useSupabaseMutation(tableName: TableNames) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -135,11 +140,21 @@ export function useSupabaseMutation(tableName: string) {
  * Hook để quản lý xác thực người dùng
  */
 export function useSupabaseAuth() {
-  const [session, setSession] = useState(supabase.auth.getSession());
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Lấy phiên hiện tại
+    const getInitialSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setLoading(false);
+    };
+    
+    getInitialSession();
+
+    // Theo dõi thay đổi trạng thái xác thực
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setLoading(false);

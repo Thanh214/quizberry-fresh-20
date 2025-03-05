@@ -37,7 +37,7 @@ export const useExamForm = ({ initialData, onSubmit, teacherId }: UseExamFormPro
           
           // Kiểm tra xem mã đã tồn tại chưa
           const { data } = await supabase
-            .from('exams')
+            .from("exams")
             .select('code')
             .eq('code', result)
             .single();
