@@ -8,6 +8,7 @@ interface SeasonalEffectsProps {
   intensity?: "low" | "medium" | "high";
   interactive?: boolean;
   onSeasonChange?: (season: Season) => void;
+  className?: string;
 }
 
 const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
@@ -15,36 +16,30 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
   intensity = "medium",
   interactive = true,
   onSeasonChange,
+  className = "",
 }) => {
-  // Determine season based on current month if not provided
   const [season, setSeason] = useState<Season>(initialSeason || getCurrentSeason());
   const [isHovering, setIsHovering] = useState(false);
-  const [animKey, setAnimKey] = useState(0); // For forcing re-animation
-  
-  // Background transition animation
+  const [animKey, setAnimKey] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  // Keep track of original season to detect changes
   const prevSeasonRef = useRef(season);
-  
+
   useEffect(() => {
     if (initialSeason !== prevSeasonRef.current) {
       setSeason(initialSeason || getCurrentSeason());
       prevSeasonRef.current = initialSeason || getCurrentSeason();
-      // Force particle animation refresh
       setAnimKey(prev => prev + 1);
     }
   }, [initialSeason]);
-  
+
   function getCurrentSeason(): Season {
-    const month = new Date().getMonth(); // 0-11
+    const month = new Date().getMonth();
     if (month >= 2 && month <= 4) return "spring";
     if (month >= 5 && month <= 7) return "summer";
     if (month >= 8 && month <= 10) return "autumn";
     return "winter";
   }
 
-  // Number of particles based on intensity
   const getParticleCount = () => {
     switch (intensity) {
       case "low": return 10;
@@ -55,18 +50,16 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
   };
 
   const particleCount = getParticleCount();
-  
-  // Create particles array for animation with memoization to prevent rerenders
+
   const particles = React.useMemo(() => Array.from({ length: particleCount }).map((_, i) => ({
     id: i,
-    x: Math.random() * 100, // random position
-    y: -10 - Math.random() * 10, // start above the viewport
+    x: Math.random() * 100,
+    y: -10 - Math.random() * 10,
     size: 5 + Math.random() * 15,
     duration: 10 + Math.random() * 20,
     delay: Math.random() * 10
   })), [particleCount, animKey]);
 
-  // Provide seasonal styles and animations
   const getSeasonalStyles = () => {
     switch (season) {
       case "spring":
@@ -125,8 +118,7 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
   };
 
   const seasonalStyles = getSeasonalStyles();
-  
-  // Get season name in Vietnamese
+
   const getSeasonName = (season: Season): string => {
     switch (season) {
       case "spring": return "Mùa Xuân";
@@ -136,7 +128,6 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
     }
   };
 
-  // Get season icon
   const getSeasonIcon = (season: Season): string => {
     switch (season) {
       case "spring": return "🌸";
@@ -146,7 +137,6 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
     }
   };
 
-  // Change season and propagate to parent if callback provided
   const cycleSeason = () => {
     if (isTransitioning) return;
     
@@ -157,7 +147,6 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
     const nextIndex = (currentIndex + 1) % seasons.length;
     const nextSeason = seasons[nextIndex];
     
-    // Update particles animation key to trigger refresh
     setAnimKey(prev => prev + 1);
     
     setTimeout(() => {
@@ -174,7 +163,6 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
     }, 400);
   };
 
-  // Seasonal background elements (more complex and tailored to each season)
   const renderSeasonalBackground = () => {
     switch (season) {
       case "spring":
@@ -287,8 +275,7 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {/* Seasonal background gradient with transition */}
+    <div className={`fixed inset-0 pointer-events-none overflow-hidden z-0 ${className}`}>
       <AnimatePresence mode="wait">
         <motion.div 
           key={`gradient-${season}`}
@@ -300,12 +287,10 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
         />
       </AnimatePresence>
 
-      {/* Enhanced season-specific background elements */}
       <AnimatePresence mode="wait">
         {renderSeasonalBackground()}
       </AnimatePresence>
 
-      {/* Additional seasonal overlays for more distinct visuals */}
       <AnimatePresence mode="wait">
         <motion.div 
           key={`overlay-${season}`}
@@ -315,7 +300,6 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
         >
-          {/* Season-specific decorative elements */}
           {season === 'spring' && (
             <motion.div 
               className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-pink-100/40 to-transparent"
@@ -359,7 +343,6 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
         </motion.div>
       </AnimatePresence>
 
-      {/* Falling particles with improved animation */}
       <div className="absolute inset-0">
         <AnimatePresence mode="sync">
           {particles.map((particle) => (
@@ -401,10 +384,9 @@ const SeasonalEffects: React.FC<SeasonalEffectsProps> = ({
         </AnimatePresence>
       </div>
 
-      {/* Interactive season selector button with enhanced transition and style */}
       {interactive && (
         <motion.div 
-          className="fixed bottom-4 right-4 z-50 pointer-events-auto"
+          className="fixed bottom-6 right-4 z-50 pointer-events-auto"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}

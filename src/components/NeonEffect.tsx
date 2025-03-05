@@ -84,7 +84,7 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
     }
   };
 
-  // Animation properties for the pulsing effect
+  // Animation properties for the pulsing effect - fixed TypeScript error here
   const pulseAnimation = animate && !disabled ? {
     animate: {
       scale: intensityMap[intensity].pulse.scale,

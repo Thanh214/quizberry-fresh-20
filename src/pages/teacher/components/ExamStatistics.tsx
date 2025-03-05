@@ -21,7 +21,7 @@ const ExamStatistics: React.FC<ExamStatisticsProps> = ({
   totalParticipants 
 }) => {
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 mt-4 mb-4">
       <div className="flex items-center gap-2 text-sm">
         <Clock className="h-4 w-4 text-blue-500 flex-shrink-0" />
         <span>{exam.duration} phút</span>

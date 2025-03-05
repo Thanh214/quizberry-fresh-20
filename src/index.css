@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -115,12 +114,10 @@
     @apply rounded-full flex items-center justify-center;
   }
   
-  /* Animation for shine effect */
   .animate-shine {
     animation: shine 1.5s infinite;
   }
   
-  /* Animation for falling particles (snow, leaves) */
   .animate-fall {
     animation: fall 20s linear infinite;
   }
@@ -141,7 +138,6 @@
     animation: floatPulse 8s ease-in-out infinite;
   }
   
-  /* Page transition animations */
   .page-enter {
     opacity: 0;
     transform: scale(0.9);
@@ -164,21 +160,29 @@
     transition: opacity 300ms, transform 300ms;
   }
 
-  /* Mobile-specific utilities */
   .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
+    padding-bottom: env(safe-area-inset-bottom, 1.5rem);
+  }
+
+  .pb-safe {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 1.5rem));
+  }
+  
+  .mb-safe {
+    margin-bottom: calc(4rem + env(safe-area-inset-bottom, 1.5rem));
+  }
+  
+  .fixed-safe-bottom {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0));
   }
 }
 
-/* Font imports for Vietnamese language support */
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
 
-/* Apply the font to all elements */
 * {
   font-family: 'Be Vietnam Pro', sans-serif;
 }
 
-/* Custom animation durations */
 .duration-300 {
   transition-duration: 300ms;
 }
@@ -191,7 +195,6 @@
   transition-duration: 700ms;
 }
 
-/* Beautiful focus states for accessibility */
 :focus-visible {
   @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
 }
@@ -200,7 +203,6 @@ button, a {
   @apply transition-all duration-300;
 }
 
-/* Define keyframe animations */
 @keyframes shine {
   0% {
     transform: translateX(-100%);
@@ -239,7 +241,6 @@ button, a {
   }
 }
 
-/* Shimmer effect */
 .shimmer {
   background: linear-gradient(
     90deg,
@@ -260,13 +261,40 @@ button, a {
   }
 }
 
-/* Add some extra padding at the bottom of the page on mobile to prevent buttons from being obscured */
 @media (max-width: 640px) {
   .pb-safe {
-    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0));
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 1.5rem));
   }
   
   .mb-safe {
-    margin-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0));
+    margin-bottom: calc(5rem + env(safe-area-inset-bottom, 1.5rem));
+  }
+  
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: calc(2rem + env(safe-area-inset-bottom, 1rem));
+  }
+  
+  .button-container-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: calc(2rem + env(safe-area-inset-bottom, 1rem));
+  }
+  
+  .stacked-buttons > * {
+    margin-top: 0.75rem;
+  }
+  
+  .page-bottom-spacer {
+    height: calc(5rem + env(safe-area-inset-bottom, 1.5rem));
+  }
+}
+
+@media (max-width: 480px) {
+  .button-container-horizontal > * {
+    flex: 1 1 100%;
   }
 }
