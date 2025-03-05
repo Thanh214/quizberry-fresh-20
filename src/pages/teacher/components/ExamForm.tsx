@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Exam } from "@/types/models";
 import NeonEffect from "@/components/NeonEffect";
+import { motion } from "framer-motion";
+import { SaveIcon, ArrowLeft, FilePlus2 } from "lucide-react";
 
 interface ExamFormProps {
   onSubmit: (examData: Omit<Exam, "id" | "createdAt" | "updatedAt">) => Promise<void>;
@@ -26,6 +28,8 @@ const ExamForm: React.FC<ExamFormProps> = ({
   const [description, setDescription] = useState(initialData?.description || "");
   const [code, setCode] = useState(initialData?.code || "");
   const [duration, setDuration] = useState(initialData?.duration || 30); // Default 30 minutes
+
+  const isEditMode = !!initialData?.id;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,15 +57,56 @@ const ExamForm: React.FC<ExamFormProps> = ({
       code: code.toUpperCase(),
       duration,
       teacherId,
-      isActive: false,
+      isActive: initialData?.isActive || false,
       questionIds: initialData?.questionIds || [],
-      hasStarted: false,
+      hasStarted: initialData?.hasStarted || false,
     });
   };
 
+  const formVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 }
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
+    <motion.form 
+      onSubmit={handleSubmit} 
+      className="space-y-5"
+      variants={formVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={itemVariants}>
+        <h2 className="text-2xl font-bold mb-6 flex items-center">
+          {isEditMode ? (
+            <>
+              <span className="text-blue-600 mr-2">✏️</span>
+              Chỉnh sửa bài thi
+            </>
+          ) : (
+            <>
+              <span className="text-purple-600 mr-2">✨</span>
+              Tạo bài thi mới
+            </>
+          )}
+        </h2>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
         <label className="text-sm font-medium" htmlFor="exam-title">
           Tiêu đề bài thi
         </label>
@@ -73,9 +118,9 @@ const ExamForm: React.FC<ExamFormProps> = ({
           required
           className="transition-all duration-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
         />
-      </div>
+      </motion.div>
       
-      <div>
+      <motion.div variants={itemVariants}>
         <label className="text-sm font-medium" htmlFor="exam-code">
           Mã bài thi
         </label>
@@ -90,9 +135,9 @@ const ExamForm: React.FC<ExamFormProps> = ({
         <p className="text-xs text-muted-foreground mt-1">
           Mã bài thi là mã duy nhất để sinh viên nhập vào khi tham gia thi
         </p>
-      </div>
+      </motion.div>
       
-      <div>
+      <motion.div variants={itemVariants}>
         <label className="text-sm font-medium" htmlFor="exam-description">
           Mô tả bài thi
         </label>
@@ -105,9 +150,9 @@ const ExamForm: React.FC<ExamFormProps> = ({
           neon
           neonColor="purple"
         />
-      </div>
+      </motion.div>
       
-      <div>
+      <motion.div variants={itemVariants}>
         <label className="text-sm font-medium" htmlFor="exam-duration">
           Thời gian làm bài (phút)
         </label>
@@ -120,27 +165,58 @@ const ExamForm: React.FC<ExamFormProps> = ({
           required
           className="transition-all duration-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
         />
-      </div>
+      </motion.div>
       
-      <div className="flex justify-end space-x-2">
+      <motion.div variants={itemVariants} className="flex justify-between space-x-3 pt-4">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
+          className="border-slate-300 transition-all duration-300 hover:bg-slate-100"
         >
-          Hủy
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Quay lại
         </Button>
-        <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
+        
+        <NeonEffect 
+          color={isEditMode ? "blue" : "purple"} 
+          padding="p-0" 
+          className="rounded-md overflow-hidden"
+        >
           <Button
             type="submit"
             disabled={isLoading}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none w-full"
+            className={`
+              border-none w-full relative overflow-hidden group
+              ${isEditMode 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
+                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'}
+            `}
           >
-            {isLoading ? "Đang xử lý..." : initialData ? "Cập nhật bài thi" : "Tạo bài thi"}
+            {/* Shine effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
+            
+            {isLoading ? (
+              "Đang xử lý..."
+            ) : (
+              <>
+                {isEditMode ? (
+                  <>
+                    <SaveIcon className="mr-2 h-4 w-4" />
+                    Lưu thay đổi
+                  </>
+                ) : (
+                  <>
+                    <FilePlus2 className="mr-2 h-4 w-4" />
+                    Tạo bài thi
+                  </>
+                )}
+              </>
+            )}
           </Button>
         </NeonEffect>
-      </div>
-    </form>
+      </motion.div>
+    </motion.form>
   );
 };
 

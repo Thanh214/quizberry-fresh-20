@@ -100,12 +100,6 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
     }
   };
 
-  // Fix: Separate the pulse animation to use correctly with AnimatePresence
-  const pulseAnimation = {
-    scale: [1, 1.05, 1],
-    opacity: [1, 0.8, 1]
-  };
-
   return (
     <motion.div 
       className="mt-4 flex justify-end"
@@ -143,11 +137,14 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
             <motion.span 
               className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs flex items-center"
               variants={studentCountVariants}
-              animate={waitingCount > 5 ? pulseAnimation : undefined}
-              transition={waitingCount > 5 ? { 
-                duration: 2, 
-                repeat: Infinity, 
-                repeatType: "reverse" 
+              animate={waitingCount > 5 ? {
+                scale: [1, 1.05, 1],
+                opacity: [1, 0.8, 1],
+                transition: { 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  repeatType: "reverse" as const
+                }
               } : undefined}
             >
               {waitingCount} học sinh đang chờ

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import SeasonalEffects from "./SeasonalEffects";
@@ -34,62 +34,84 @@ const Layout: React.FC<LayoutProps> = ({
   // When season changes, save to localStorage
   useEffect(() => {
     localStorage.setItem('preferred-season', season);
+    
+    // Force a CSS variable update to refresh the UI
+    document.documentElement.style.setProperty('--season-current', season);
+    
+    // Add a custom data attribute for season to the body element
+    // This allows for global CSS targeting with [data-season="spring"] etc.
+    document.body.dataset.season = season;
   }, [season]);
   
   // Handle season change from SeasonalEffects component
-  const handleSeasonChange = (newSeason: Season) => {
+  const handleSeasonChange = useCallback((newSeason: Season) => {
     if (season !== newSeason) {
       setTransitioning(true);
       setTimeout(() => {
         setSeason(newSeason);
         setTimeout(() => {
           setTransitioning(false);
-        }, 500);
-      }, 300);
+        }, 600);
+      }, 400);
     }
-  };
+  }, [season]);
   
-  // Get season-specific container classes
+  // Get season-specific container classes with more distinct colors
   const getSeasonClasses = (): string => {
     switch (season) {
-      case "spring": return "bg-gradient-to-b from-pink-50/40 to-blue-50/40";
-      case "summer": return "bg-gradient-to-b from-amber-50/40 to-yellow-50/40";
-      case "autumn": return "bg-gradient-to-b from-orange-50/40 to-amber-50/40";
-      case "winter": return "bg-gradient-to-b from-blue-50/40 to-indigo-50/40";
+      case "spring": 
+        return "bg-gradient-to-b from-pink-50/80 to-blue-50/80 dark:from-pink-950/40 dark:to-blue-950/40";
+      case "summer": 
+        return "bg-gradient-to-b from-amber-50/80 to-yellow-50/80 dark:from-amber-950/40 dark:to-yellow-950/40";
+      case "autumn": 
+        return "bg-gradient-to-b from-orange-50/80 to-amber-50/80 dark:from-orange-950/40 dark:to-amber-950/40";
+      case "winter": 
+        return "bg-gradient-to-b from-blue-50/80 to-indigo-50/80 dark:from-blue-950/40 dark:to-indigo-950/40";
     }
   };
   
-  // Get season-specific text accent color
+  // Get season-specific text accent color with more vivid colors
   const getSeasonAccentTextColor = (): string => {
     switch (season) {
-      case "spring": return "text-pink-700";
-      case "summer": return "text-amber-700";
-      case "autumn": return "text-orange-700";
-      case "winter": return "text-blue-700";
+      case "spring": return "text-pink-600";
+      case "summer": return "text-amber-600";
+      case "autumn": return "text-orange-600";
+      case "winter": return "text-blue-600";
     }
   };
   
-  // Get season-specific border accent color
+  // Get season-specific border accent color with more distinct colors
   const getSeasonAccentBorderColor = (): string => {
     switch (season) {
-      case "spring": return "border-pink-200";
-      case "summer": return "border-amber-200";
-      case "autumn": return "border-orange-200";
-      case "winter": return "border-blue-200";
+      case "spring": return "border-pink-300";
+      case "summer": return "border-amber-300";
+      case "autumn": return "border-orange-300";
+      case "winter": return "border-blue-300";
+    }
+  };
+
+  // Define season-specific button and accent colors
+  const getSeasonAccentBgColor = (): string => {
+    switch (season) {
+      case "spring": return "bg-pink-500/10";
+      case "summer": return "bg-amber-500/10";
+      case "autumn": return "bg-orange-500/10";
+      case "winter": return "bg-blue-500/10";
     }
   };
 
   return (
     <div 
       className={cn(
-        "min-h-screen px-4 py-6 md:px-6 md:py-10 transition-colors duration-700", 
+        "min-h-screen px-4 py-6 md:px-6 md:py-10 transition-colors duration-1000", 
         getSeasonClasses(),
         transitioning ? "animate-pulse" : "",
         className
       )}
       style={{
         "--season-text-accent": getSeasonAccentTextColor(),
-        "--season-border-accent": getSeasonAccentBorderColor()
+        "--season-border-accent": getSeasonAccentBorderColor(),
+        "--season-bg-accent": getSeasonAccentBgColor(),
       } as React.CSSProperties}
     >
       {showSeasonalEffects && (
@@ -102,7 +124,7 @@ const Layout: React.FC<LayoutProps> = ({
       
       <AnimatePresence mode="wait">
         <motion.div
-          key={season}
+          key={`content-${season}`}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}

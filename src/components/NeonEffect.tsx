@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface NeonEffectProps {
   children: React.ReactNode;
@@ -84,13 +84,16 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
     }
   };
 
-  // Separate pulse animation for AnimatePresence compatibility
+  // Define pulse animation with proper typing for framer-motion
   const pulseAnimation = {
-    ...intensityMap[intensity].pulse,
-    transition: {
-      duration: 2,
-      repeat: Infinity,
-      repeatType: "reverse"
+    animate: {
+      scale: intensityMap[intensity].pulse.scale,
+      opacity: intensityMap[intensity].pulse.opacity,
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "reverse" as const // Type casting to valid repeatType
+      }
     }
   };
 
@@ -110,9 +113,7 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
       animate={disabled ? "disabled" : "animate"}
       whileHover={disabled ? undefined : "hover"}
       whileTap={disabled ? undefined : "tap"}
-      {...(animate && !disabled ? { 
-        animate: pulseAnimation
-      } : {})}
+      {...(animate && !disabled ? pulseAnimation : {})}
     >
       <div className="relative z-10">
         {children}

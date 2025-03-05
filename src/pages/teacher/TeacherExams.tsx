@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { useExam } from "@/context/ExamContext";
 import { Button } from "@/components/ui/button";
-import { SearchX, PlusCircle } from "lucide-react";
+import { SearchX, PlusCircle, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ExamList from "./components/ExamList";
 import NeonEffect from "@/components/NeonEffect";
@@ -65,6 +65,25 @@ const TeacherExams: React.FC = () => {
     startExam(examId);
   };
 
+  // Button animation variants
+  const buttonVariants = {
+    initial: { scale: 0.95, opacity: 0 },
+    animate: { 
+      scale: 1, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 400, damping: 10 }
+    },
+    hover: { 
+      scale: 1.05,
+      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+      transition: { type: "spring", stiffness: 400, damping: 15 }
+    },
+    tap: { 
+      scale: 0.95, 
+      transition: { type: "spring", stiffness: 400, damping: 10 }
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-8">
@@ -77,15 +96,34 @@ const TeacherExams: React.FC = () => {
               </p>
             </div>
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              variants={buttonVariants}
+              initial="initial"
+              animate="animate"
+              whileHover="hover"
+              whileTap="tap"
             >
               <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
                 <Button
                   onClick={handleCreateExam}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none relative group overflow-hidden"
                 >
-                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
+                  
+                  <motion.span 
+                    className="mr-2"
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.2, 1]
+                    }}
+                    transition={{ 
+                      duration: 5,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </motion.span>
                   Tạo bài thi mới
                 </Button>
               </NeonEffect>

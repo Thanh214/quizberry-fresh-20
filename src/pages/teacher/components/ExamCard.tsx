@@ -50,8 +50,19 @@ const ExamCard: React.FC<ExamCardProps> = ({
   const totalParticipants = waitingCount + inProgressCount + completedCount;
   const [showParticipants, setShowParticipants] = useState(false);
   
-  // Determine if we should show the start button based on active state and waiting students
-  const showStartButton = exam.isActive && !exam.hasStarted && waitingCount > 0;
+  // Get border color based on exam status
+  const getBorderColor = () => {
+    if (exam.hasStarted) return '#ef4444'; // red for started exams
+    if (exam.isActive) return '#22c55e'; // green for active exams
+    return '#cbd5e1'; // gray for inactive exams
+  };
+  
+  // Get background gradient based on exam status
+  const getBackgroundGradient = () => {
+    if (exam.hasStarted) return 'from-red-600/10 to-transparent';
+    if (exam.isActive) return 'from-green-600/10 to-transparent';
+    return 'from-slate-400/5 to-transparent';
+  };
   
   return (
     <motion.div
@@ -59,16 +70,17 @@ const ExamCard: React.FC<ExamCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="p-5 hover:shadow-lg transition-shadow duration-300 border-l-4 relative overflow-hidden group" style={{ borderLeftColor: exam.isActive ? '#22c55e' : '#cbd5e1' }}>
-        {/* Background glow for active exams */}
-        {exam.isActive && (
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-r from-green-600/10 to-transparent"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          />
-        )}
+      <Card 
+        className="p-5 hover:shadow-lg transition-shadow duration-300 border-l-4 relative overflow-hidden group" 
+        style={{ borderLeftColor: getBorderColor() }}
+      >
+        {/* Background glow for active/started exams */}
+        <motion.div 
+          className={`absolute inset-0 bg-gradient-to-r ${getBackgroundGradient()}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        />
         
         {/* Content */}
         <div className="relative z-10">
@@ -81,7 +93,10 @@ const ExamCard: React.FC<ExamCardProps> = ({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
                 >
-                  <Badge variant={exam.isActive ? "success" : "secondary"} className="text-xs">
+                  <Badge 
+                    variant={exam.isActive ? "success" : "secondary"} 
+                    className={`text-xs ${exam.isActive ? 'animate-pulse' : ''}`}
+                  >
                     {exam.isActive ? "Đang mở" : "Đã đóng"}
                   </Badge>
                 </motion.div>
@@ -91,7 +106,7 @@ const ExamCard: React.FC<ExamCardProps> = ({
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3, delay: 0.2 }}
                   >
-                    <Badge variant="destructive" className="text-xs">
+                    <Badge variant="destructive" className="text-xs animate-pulse">
                       Đã bắt đầu
                     </Badge>
                   </motion.div>
@@ -109,12 +124,14 @@ const ExamCard: React.FC<ExamCardProps> = ({
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3, delay: 0.2 }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     <NeonEffect color="green" padding="p-0" className="rounded-full overflow-hidden">
                       <Button
                         variant="outline"
                         size="icon"
-                        className="text-green-500 border-green-200 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:border-green-800"
+                        className="text-green-500 border-green-200 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:border-green-800 transition-all duration-300"
                         onClick={() => setConfirmStart(exam.id)}
                       >
                         <PlayCircle className="h-4 w-4" />
@@ -127,11 +144,13 @@ const ExamCard: React.FC<ExamCardProps> = ({
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.3 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Button 
                     variant="outline" 
                     size="icon"
-                    className="text-blue-500 border-blue-200 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:border-blue-800"
+                    className="text-blue-500 border-blue-200 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:border-blue-800 transition-all duration-300"
                     onClick={() => onEdit(exam.id)}
                   >
                     <Edit className="h-4 w-4" />
@@ -142,11 +161,19 @@ const ExamCard: React.FC<ExamCardProps> = ({
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.4 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Button
                     variant="outline"
                     size="icon"
-                    className="text-amber-500 border-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/20 dark:border-amber-800"
+                    className={`
+                      transition-all duration-300
+                      ${exam.isActive 
+                        ? 'text-amber-500 border-amber-200 bg-amber-50 hover:bg-amber-100' 
+                        : 'text-gray-500 border-gray-200 bg-gray-50 hover:bg-gray-100'}
+                      ${exam.hasStarted ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
                     onClick={() => setConfirmToggle(exam.id)}
                     disabled={exam.hasStarted}
                     title={exam.hasStarted ? "Không thể đóng bài thi đang diễn ra" : ""}
@@ -163,11 +190,17 @@ const ExamCard: React.FC<ExamCardProps> = ({
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.5 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Button 
                     variant="outline" 
                     size="icon"
-                    className="text-red-500 border-red-200 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:border-red-800"
+                    className={`
+                      text-red-500 border-red-200 bg-red-50 hover:bg-red-100 
+                      transition-all duration-300
+                      ${exam.hasStarted ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
                     onClick={() => setConfirmDelete(exam.id)}
                     disabled={exam.hasStarted}
                     title={exam.hasStarted ? "Không thể xóa bài thi đang diễn ra" : ""}
@@ -203,7 +236,7 @@ const ExamCard: React.FC<ExamCardProps> = ({
           />
           
           {/* Action buttons for waiting students */}
-          {showStartButton && (
+          {!exam.hasStarted && exam.isActive && waitingCount > 0 && (
             <StartExamButton 
               examId={exam.id}
               isActive={exam.isActive}

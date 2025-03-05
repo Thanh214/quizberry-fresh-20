@@ -4,7 +4,7 @@ import { Question } from "@/types/models";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import Card from "@/components/Card";
-import { Edit2, Trash2, CheckCircle2 } from "lucide-react";
+import { Edit2, Trash2, CheckCircle2, CheckSquare } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface QuestionListProps {
@@ -13,6 +13,8 @@ interface QuestionListProps {
   onToggleQuestion: (questionId: string) => void;
   onEditQuestion: (questionId: string) => void;
   onDeleteQuestion: (questionId: string) => void;
+  onSelectAll?: () => void;
+  onDeselectAll?: () => void;
 }
 
 const QuestionList: React.FC<QuestionListProps> = ({
@@ -21,7 +23,11 @@ const QuestionList: React.FC<QuestionListProps> = ({
   onToggleQuestion,
   onEditQuestion,
   onDeleteQuestion,
+  onSelectAll = () => {},
+  onDeselectAll = () => {},
 }) => {
+  const allSelected = questions.length > 0 && selectedQuestions.length === questions.length;
+  
   if (questions.length === 0) {
     return (
       <div className="text-center py-8">
@@ -32,6 +38,25 @@ const QuestionList: React.FC<QuestionListProps> = ({
 
   return (
     <div className="space-y-3">
+      {/* Select All Section */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="select-all"
+            checked={allSelected}
+            onCheckedChange={() => allSelected ? onDeselectAll() : onSelectAll()}
+            className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+          />
+          <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+            {allSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+          </label>
+        </div>
+        
+        <div className="text-sm text-muted-foreground">
+          Đã chọn {selectedQuestions.length}/{questions.length} câu hỏi
+        </div>
+      </div>
+      
       {questions.map((question, idx) => (
         <motion.div
           key={question.id}
@@ -51,7 +76,7 @@ const QuestionList: React.FC<QuestionListProps> = ({
                 id={`question-${question.id}`}
                 checked={selectedQuestions.includes(question.id)}
                 onCheckedChange={() => onToggleQuestion(question.id)}
-                className="mt-1"
+                className="mt-1 transition-all duration-300 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
               />
               <div className="flex-1">
                 <div className="font-medium">{question.content}</div>
@@ -78,7 +103,7 @@ const QuestionList: React.FC<QuestionListProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => onEditQuestion(question.id)}
-                  className="h-8 w-8 rounded-full hover:bg-blue-50 hover:text-blue-600"
+                  className="h-8 w-8 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
                 >
                   <Edit2 className="h-4 w-4" />
                 </Button>
@@ -86,7 +111,7 @@ const QuestionList: React.FC<QuestionListProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => onDeleteQuestion(question.id)}
-                  className="h-8 w-8 rounded-full hover:bg-red-50 hover:text-red-600"
+                  className="h-8 w-8 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors duration-300"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
