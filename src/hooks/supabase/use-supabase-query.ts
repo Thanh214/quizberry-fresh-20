@@ -43,8 +43,9 @@ export function useSupabaseQuery<T>(
 
         if (error) throw error;
         
-        // Use explicit type assertion to avoid deep instantiation
-        setData((result || []) as T[]);
+        // Use a simple type assertion that doesn't cause deep recursion
+        const safeResult = result || [];
+        setData(safeResult as unknown as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);

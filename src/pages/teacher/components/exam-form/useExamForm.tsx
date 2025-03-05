@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Exam } from "@/types/models";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseMutation } from "@/hooks/use-supabase";
 
 interface UseExamFormProps {
   initialData?: Partial<Exam>;
@@ -16,7 +15,6 @@ export const useExamForm = ({ initialData, onSubmit, teacherId }: UseExamFormPro
   const [description, setDescription] = useState(initialData?.description || "");
   const [code, setCode] = useState(initialData?.code || "");
   const [duration, setDuration] = useState(initialData?.duration || 30); // Default 30 minutes
-  const { add: addExam, update: updateExam } = useSupabaseMutation("exams");
 
   const isEditMode = !!initialData?.id;
 
@@ -55,7 +53,7 @@ export const useExamForm = ({ initialData, onSubmit, teacherId }: UseExamFormPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Add this to prevent event bubbling
+    e.stopPropagation(); // Prevent event bubbling
     
     // Validate form
     if (!title.trim()) {
@@ -77,19 +75,20 @@ export const useExamForm = ({ initialData, onSubmit, teacherId }: UseExamFormPro
       // Tạo đường dẫn chia sẻ
       const shareLink = `${window.location.origin}/student/register?code=${code.toUpperCase()}`;
       
-      // Submit exam data
-      const examData = {
+      // Submit exam data with expected format for Supabase
+      const examData: any = {
         title,
         description,
         code: code.toUpperCase(),
         duration,
-        teacher_id: teacherId,
-        is_active: initialData?.isActive || false,
-        has_started: initialData?.hasStarted || false,
-        share_link: shareLink
+        teacherId,
+        isActive: initialData?.isActive || false,
+        hasStarted: initialData?.hasStarted || false,
+        shareLink,
+        questionIds: initialData?.questionIds || [] // Will be stringified in addExam
       };
       
-      await onSubmit(examData as any);
+      await onSubmit(examData);
       
     } catch (error: any) {
       toast.error(`Lỗi: ${error.message}`);

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect } from "react";
 import { useQuestionState } from "./quiz/questionContext";
 import { useClassState } from "./quiz/classContext";
@@ -6,7 +5,7 @@ import { useRequestState } from "./quiz/requestContext";
 import { useExamState } from "./quiz/examContext";
 import { useSessionState } from "./quiz/sessionContext";
 import { Question, QuizSession, QuizResult, QuizRequest, Class, Exam } from "@/types/models";
-import { useSupabaseQuery } from "@/hooks/use-supabase";
+import { useSupabaseQuery } from "@/hooks/supabase";
 import { supabase } from "@/integrations/supabase/client";
 
 // Type for the context
@@ -83,7 +82,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasStarted: e.has_started,
         createdAt: e.created_at,
         updatedAt: e.updated_at,
-        questionIds: e.question_ids || [],
+        questionIds: e.question_ids ? JSON.parse(e.question_ids) : [], // Parse the JSON string
         shareLink: e.share_link
       }));
       
@@ -121,7 +120,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       fetchOptionsForQuestions();
     }
-  }, [supabaseExams, examsLoading, supabaseQuestions, questionsLoading]);
+  }, [supabaseExams, examsLoading, supabaseQuestions, questionsLoading, examState, questionState]);
   
   // Set up realtime listeners for changes
   useEffect(() => {
@@ -142,11 +141,12 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hasStarted: newExam.has_started,
             createdAt: newExam.created_at,
             updatedAt: newExam.updated_at,
-            questionIds: newExam.question_ids || [],
+            questionIds: newExam.question_ids ? JSON.parse(newExam.question_ids) : [], // Parse the JSON string
             shareLink: newExam.share_link
           };
           examState.addExamToState(exam);
         } else if (payload.eventType === 'UPDATE') {
+          
           const updatedExam = payload.new as any;
           // Transform to our model format
           const exam: Exam = {
@@ -160,7 +160,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hasStarted: updatedExam.has_started,
             createdAt: updatedExam.created_at,
             updatedAt: updatedExam.updated_at,
-            questionIds: updatedExam.question_ids || [],
+            questionIds: updatedExam.question_ids ? JSON.parse(updatedExam.question_ids) : [], // Parse the JSON string
             shareLink: updatedExam.share_link
           };
           examState.updateExamInState(updatedExam.id, exam);
@@ -231,7 +231,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       supabase.removeChannel(examChannel);
       supabase.removeChannel(questionChannel);
     };
-  }, []);
+  }, [examState, questionState]);
 
   // Combine all state and functions into a single context value
   const contextValue: QuizContextType = {

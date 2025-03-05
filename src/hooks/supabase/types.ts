@@ -1,70 +1,33 @@
 
-import { Session, AuthError, User } from "@supabase/supabase-js";
+// Table names in your Supabase database
+export type TableNames = 'profiles' | 'exams' | 'questions' | 'options' | 'quiz_results' | 'quiz_sessions' | 'exam_participants';
 
-// Define table names
-export type TableNames = "exams" | "profiles" | "questions" | "quiz_results" | "options" | "exam_participants" | "question_answers" | "quiz_sessions";
-
-// Define interfaces for Supabase table data
-export interface SupabaseExamParticipant {
-  id: string;
-  exam_id: string;
-  student_name: string;
-  student_id: string;
-  class_name: string;
-  status: string;
-  start_time: string;
-  end_time?: string | null;
-  join_link?: string | null;
-  exit_count?: number | null;
-  last_exit_time?: string | null;
-  score?: number | null;
-  user_id?: string | null;
+// Generic query options
+export interface QueryOptions {
+  select?: string;
+  eq?: [string, any][];
+  order?: [string, "asc" | "desc"];
+  limit?: number;
 }
 
+// Generic data type for Supabase operations
+export type SupabaseData = Record<string, any>;
+
+// Supabase exam structure (snake_case)
 export interface SupabaseExam {
   id: string;
   code: string;
   title: string;
-  description?: string | null;
+  description?: string;
   duration: number;
-  teacher_id?: string | null;
+  teacher_id?: string;
   is_active: boolean;
   has_started: boolean;
   created_at: string;
   updated_at: string;
-  question_ids?: string[] | null;
-  share_link?: string | null;
+  question_ids?: string; // JSON string of question IDs
+  share_link?: string;
 }
 
-export interface SupabaseProfile {
-  id: string;
-  username?: string | null;
-  name?: string | null;
-  faculty?: string | null;
-  student_id?: string | null;
-  class_name?: string | null;
-  role: string;
-  email?: string | null;
-  created_at: string;
-}
-
-// Simple base type for all Supabase data responses
-export type SupabaseData = Record<string, any>;
-
-// Options for querying Supabase
-export interface QueryOptions {
-  columns?: string;
-  eq?: [string, any][];
-  order?: [string, "asc" | "desc"];
-  limit?: number;
-  select?: string;
-}
-
-// Define type for auth result
-export interface AuthResult {
-  data: {
-    user: User | null;
-    session: Session | null;
-  };
-  error: AuthError | null;
-}
+// Export all types from this module
+export * from './types';
