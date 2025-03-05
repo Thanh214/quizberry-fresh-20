@@ -11,7 +11,7 @@ import { SearchX, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ExamList from "./components/ExamList";
 import NeonEffect from "@/components/NeonEffect";
-import ConfirmationDialog from "@/components/ConfirmationDialog";
+import { motion } from "framer-motion";
 
 const TeacherExams: React.FC = () => {
   const navigate = useNavigate();
@@ -21,10 +21,6 @@ const TeacherExams: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredExams, setFilteredExams] = useState(exams);
-  const [confirmAction, setConfirmAction] = useState<{
-    type: "delete" | "activate" | "start";
-    id: string;
-  } | null>(null);
 
   useEffect(() => {
     // Redirect if not teacher
@@ -80,15 +76,20 @@ const TeacherExams: React.FC = () => {
                 Tạo và quản lý các bài thi của bạn
               </p>
             </div>
-            <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
-              <Button
-                onClick={handleCreateExam}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Tạo bài thi mới
-              </Button>
-            </NeonEffect>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
+                <Button
+                  onClick={handleCreateExam}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Tạo bài thi mới
+                </Button>
+              </NeonEffect>
+            </motion.div>
           </div>
         </TransitionWrapper>
 
@@ -129,8 +130,6 @@ const TeacherExams: React.FC = () => {
             />
           )}
         </TransitionWrapper>
-
-        {/* Confirmation dialogs handled by ExamList component now */}
       </div>
     </Layout>
   );

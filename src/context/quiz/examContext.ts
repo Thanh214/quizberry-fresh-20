@@ -103,6 +103,14 @@ export const useExamState = () => {
       
       const updatedExams = [...exams];
       const currentActive = updatedExams[examIndex].isActive;
+      const hasStarted = updatedExams[examIndex].hasStarted;
+      
+      // If the exam has already started and trying to deactivate, show warning
+      if (hasStarted && currentActive) {
+        toast.warning("Bài thi đã bắt đầu và không thể đóng. Hãy chờ đến khi bài thi kết thúc.");
+        setIsLoading(false);
+        return;
+      }
       
       updatedExams[examIndex] = {
         ...updatedExams[examIndex],
@@ -132,6 +140,22 @@ export const useExamState = () => {
       }
       
       const updatedExams = [...exams];
+      const isActive = updatedExams[examIndex].isActive;
+      const hasStarted = updatedExams[examIndex].hasStarted;
+      
+      // Check if the exam is active
+      if (!isActive) {
+        toast.error("Không thể bắt đầu bài thi đã đóng. Hãy mở bài thi trước.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Check if the exam has already started
+      if (hasStarted) {
+        toast.info("Bài thi đã bắt đầu.");
+        setIsLoading(false);
+        return;
+      }
       
       updatedExams[examIndex] = {
         ...updatedExams[examIndex],

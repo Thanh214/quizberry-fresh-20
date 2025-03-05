@@ -16,6 +16,7 @@ import ExamStatistics from "./ExamStatistics";
 import ParticipantsList from "./ParticipantsList";
 import ExamShareLink from "./ExamShareLink";
 import StartExamButton from "./StartExamButton";
+import { motion } from "framer-motion";
 
 interface ExamCardProps {
   exam: Exam;
@@ -49,126 +50,182 @@ const ExamCard: React.FC<ExamCardProps> = ({
   const totalParticipants = waitingCount + inProgressCount + completedCount;
   const [showParticipants, setShowParticipants] = useState(false);
   
+  // Determine if we should show the start button based on active state and waiting students
+  const showStartButton = exam.isActive && !exam.hasStarted && waitingCount > 0;
+  
   return (
-    <Card className="p-5 hover:shadow-lg transition-shadow duration-300 border-l-4 relative overflow-hidden group" style={{ borderLeftColor: exam.isActive ? '#22c55e' : '#cbd5e1' }}>
-      {/* Background glow for active exams */}
-      {exam.isActive && (
-        <div className="absolute inset-0 bg-gradient-to-r from-green-600/10 to-transparent"></div>
-      )}
-      
-      {/* Content */}
-      <div className="relative z-10">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold">{exam.title}</h3>
-              <Badge variant={exam.isActive ? "success" : "secondary"} className="text-xs">
-                {exam.isActive ? "Đang mở" : "Đã đóng"}
-              </Badge>
-              {exam.hasStarted && (
-                <Badge variant="destructive" className="text-xs">
-                  Đã bắt đầu
-                </Badge>
-              )}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="p-5 hover:shadow-lg transition-shadow duration-300 border-l-4 relative overflow-hidden group" style={{ borderLeftColor: exam.isActive ? '#22c55e' : '#cbd5e1' }}>
+        {/* Background glow for active exams */}
+        {exam.isActive && (
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-r from-green-600/10 to-transparent"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        )}
+        
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xl font-bold">{exam.title}</h3>
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  <Badge variant={exam.isActive ? "success" : "secondary"} className="text-xs">
+                    {exam.isActive ? "Đang mở" : "Đã đóng"}
+                  </Badge>
+                </motion.div>
+                {exam.hasStarted && (
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <Badge variant="destructive" className="text-xs">
+                      Đã bắt đầu
+                    </Badge>
+                  </motion.div>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">
+                Mã bài thi: <span className="font-mono font-medium">{exam.code}</span>
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground mt-1">
-              Mã bài thi: <span className="font-mono font-medium">{exam.code}</span>
-            </div>
-          </div>
-          
-          {isTeacher && (
-            <div className="flex items-center gap-2">
-              {!exam.hasStarted && exam.isActive && (
-                <NeonEffect color="green" padding="p-0" className="rounded-full overflow-hidden">
+            
+            {isTeacher && (
+              <div className="flex items-center gap-2">
+                {!exam.hasStarted && exam.isActive && waitingCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <NeonEffect color="green" padding="p-0" className="rounded-full overflow-hidden">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="text-green-500 border-green-200 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:border-green-800"
+                        onClick={() => setConfirmStart(exam.id)}
+                      >
+                        <PlayCircle className="h-4 w-4" />
+                      </Button>
+                    </NeonEffect>
+                  </motion.div>
+                )}
+                
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                >
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    className="text-blue-500 border-blue-200 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:border-blue-800"
+                    onClick={() => onEdit(exam.id)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.4 }}
+                >
                   <Button
                     variant="outline"
                     size="icon"
-                    className="text-green-500 border-green-200 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:border-green-800"
-                    onClick={() => setConfirmStart(exam.id)}
+                    className="text-amber-500 border-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/20 dark:border-amber-800"
+                    onClick={() => setConfirmToggle(exam.id)}
+                    disabled={exam.hasStarted}
+                    title={exam.hasStarted ? "Không thể đóng bài thi đang diễn ra" : ""}
                   >
-                    <PlayCircle className="h-4 w-4" />
+                    {exam.isActive ? (
+                      <ToggleRight className="h-4 w-4" />
+                    ) : (
+                      <ToggleLeft className="h-4 w-4" />
+                    )}
                   </Button>
-                </NeonEffect>
-              )}
-              
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="text-blue-500 border-blue-200 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:border-blue-800"
-                onClick={() => onEdit(exam.id)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                className="text-amber-500 border-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/20 dark:border-amber-800"
-                onClick={() => setConfirmToggle(exam.id)}
-              >
-                {exam.isActive ? (
-                  <ToggleRight className="h-4 w-4" />
-                ) : (
-                  <ToggleLeft className="h-4 w-4" />
-                )}
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="text-red-500 border-red-200 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:border-red-800"
-                onClick={() => setConfirmDelete(exam.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.5 }}
+                >
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    className="text-red-500 border-red-200 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:border-red-800"
+                    onClick={() => setConfirmDelete(exam.id)}
+                    disabled={exam.hasStarted}
+                    title={exam.hasStarted ? "Không thể xóa bài thi đang diễn ra" : ""}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </motion.div>
+              </div>
+            )}
+          </div>
+          
+          {/* Description */}
+          {exam.description && (
+            <div className="mt-3 text-sm text-muted-foreground">
+              {exam.description}
             </div>
           )}
-        </div>
-        
-        {/* Description */}
-        {exam.description && (
-          <div className="mt-3 text-sm text-muted-foreground">
-            {exam.description}
-          </div>
-        )}
-        
-        {/* Statistics */}
-        <ExamStatistics 
-          exam={exam}
-          waitingCount={waitingCount}
-          inProgressCount={inProgressCount}
-          completedCount={completedCount}
-          totalParticipants={totalParticipants}
-        />
-        
-        {/* Share link for active exams */}
-        <ExamShareLink 
-          exam={exam} 
-          isActive={exam.isActive} 
-          isTeacher={isTeacher} 
-        />
-        
-        {/* Action buttons for waiting students */}
-        <StartExamButton 
-          examId={exam.id}
-          isActive={exam.isActive}
-          hasStarted={exam.hasStarted}
-          waitingCount={waitingCount}
-          onStart={() => setConfirmStart(exam.id)}
-        />
-
-        {/* Student participants section - only shown for teachers */}
-        {isTeacher && (
-          <ParticipantsList
-            examId={exam.id}
-            participants={participants}
-            showParticipants={showParticipants}
-            setShowParticipants={setShowParticipants}
+          
+          {/* Statistics */}
+          <ExamStatistics 
+            exam={exam}
+            waitingCount={waitingCount}
+            inProgressCount={inProgressCount}
+            completedCount={completedCount}
             totalParticipants={totalParticipants}
           />
-        )}
-      </div>
-    </Card>
+          
+          {/* Share link for active exams */}
+          <ExamShareLink 
+            exam={exam} 
+            isActive={exam.isActive} 
+            isTeacher={isTeacher} 
+          />
+          
+          {/* Action buttons for waiting students */}
+          {showStartButton && (
+            <StartExamButton 
+              examId={exam.id}
+              isActive={exam.isActive}
+              hasStarted={exam.hasStarted}
+              waitingCount={waitingCount}
+              onStart={() => setConfirmStart(exam.id)}
+            />
+          )}
+
+          {/* Student participants section - only shown for teachers */}
+          {isTeacher && (
+            <ParticipantsList
+              examId={exam.id}
+              participants={participants}
+              showParticipants={showParticipants}
+              setShowParticipants={setShowParticipants}
+              totalParticipants={totalParticipants}
+            />
+          )}
+        </div>
+      </Card>
+    </motion.div>
   );
 };
 

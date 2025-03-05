@@ -63,23 +63,34 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
     },
     hover: {
       scale: 1.02,
+      boxShadow: "0px 15px 25px rgba(0, 0, 0, 0.1)",
       transition: {
-        duration: 0.2,
+        duration: 0.3,
         type: "spring",
-        stiffness: 400,
-        damping: 10
+        stiffness: 500,
+        damping: 15
       }
     },
     tap: {
-      scale: 0.98,
+      scale: 0.97,
+      boxShadow: "0px 5px 10px rgba(0, 0, 0, 0.1)",
       transition: {
         duration: 0.1,
       }
     },
-    pulse: intensityMap[intensity].pulse,
     disabled: {
       opacity: 0.5,
       scale: 0.98,
+    }
+  };
+
+  // Separate pulse animation for AnimatePresence compatibility
+  const pulseAnimation = {
+    ...intensityMap[intensity].pulse,
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      repeatType: "reverse"
     }
   };
 
@@ -89,6 +100,7 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
         `relative rounded-lg bg-gradient-to-br ${colorMap[color]} 
         ${intensityMap[intensity].glow} transition-all duration-300 
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        overflow-hidden
         ${padding}`,
         className
       )}
@@ -99,14 +111,7 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
       whileHover={disabled ? undefined : "hover"}
       whileTap={disabled ? undefined : "tap"}
       {...(animate && !disabled ? { 
-        animate: ["animate", "pulse"],
-        transition: {
-          pulse: {
-            duration: 2,
-            repeat: Infinity,
-            repeatType: "reverse"
-          }
-        }
+        animate: pulseAnimation
       } : {})}
     >
       <div className="relative z-10">
@@ -131,6 +136,26 @@ const NeonEffect: React.FC<NeonEffectProps> = ({
           duration: 2,
           repeat: Infinity,
           repeatType: "reverse"
+        }}
+      />
+      
+      {/* Enhanced shine effect */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+        style={{
+          opacity: 0,
+          backgroundSize: "200% 100%",
+          backgroundPosition: "100% 0",
+          backgroundRepeat: "no-repeat",
+        }}
+        animate={{
+          opacity: [0, 0.5, 0],
+          backgroundPosition: ["100% 0", "-100% 0", "-100% 0"]
+        }}
+        transition={{
+          duration: 3,
+          repeatDelay: 5,
+          repeat: Infinity,
         }}
       />
     </motion.div>

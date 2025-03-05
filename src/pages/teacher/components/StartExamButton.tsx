@@ -49,6 +49,7 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
     cleanup();
   };
 
+  // Only show the button when the exam is active, not started yet, and has waiting students
   if (!isActive || hasStarted || waitingCount <= 0) {
     return null;
   }
@@ -96,16 +97,13 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
         damping: 20,
         delay: 0.2 
       }
-    },
-    pulse: {
-      scale: [1, 1.05, 1],
-      opacity: [1, 0.8, 1],
-      transition: { 
-        duration: 2,
-        repeat: Infinity,
-        repeatType: "reverse" 
-      }
     }
+  };
+
+  // Fix: Separate the pulse animation to use correctly with AnimatePresence
+  const pulseAnimation = {
+    scale: [1, 1.05, 1],
+    opacity: [1, 0.8, 1]
   };
 
   return (
@@ -145,10 +143,12 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
             <motion.span 
               className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs flex items-center"
               variants={studentCountVariants}
-              animate={[
-                "animate", 
-                waitingCount > 5 ? "pulse" : ""
-              ]}
+              animate={waitingCount > 5 ? pulseAnimation : undefined}
+              transition={waitingCount > 5 ? { 
+                duration: 2, 
+                repeat: Infinity, 
+                repeatType: "reverse" 
+              } : undefined}
             >
               {waitingCount} học sinh đang chờ
             </motion.span>

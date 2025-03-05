@@ -7,7 +7,10 @@ import { Question, Option } from "@/types/models";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react";
+import { Trash2, ArrowLeft, Save, Plus, AlertTriangle } from "lucide-react";
+import NeonEffect from "@/components/NeonEffect";
+import { motion } from "framer-motion";
+import Card from "@/components/Card";
 
 const EditQuestion: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -167,9 +170,19 @@ const EditQuestion: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto py-8">
-        <h1 className="text-2xl font-bold mb-6">Chỉnh sửa câu hỏi</h1>
+        <header className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Chỉnh sửa câu hỏi</h1>
+          <Button 
+            onClick={() => navigate("/admin/questions")}
+            variant="outline"
+            className="gap-1"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Quay lại
+          </Button>
+        </header>
         
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <Card className="p-6 mb-6">
           <div className="mb-4">
             <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
               Nội dung câu hỏi
@@ -178,38 +191,48 @@ const EditQuestion: React.FC = () => {
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full"
+              className="w-full transition-all focus:ring-2 focus:ring-primary/50"
               placeholder="Nhập nội dung câu hỏi"
             />
           </div>
           
           <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-medium">Đáp án</h3>
               <Button 
                 type="button" 
                 variant="outline" 
                 size="sm"
                 onClick={handleAddOption}
+                className="gap-1"
               >
+                <Plus className="h-3.5 w-3.5" />
                 Thêm đáp án
               </Button>
             </div>
             
             <div className="space-y-3">
               {options.map((option, index) => (
-                <div key={option.id} className="flex items-center space-x-3">
-                  <input
-                    type="radio"
-                    id={`correct-${option.id}`}
-                    checked={option.isCorrect}
-                    onChange={() => handleOptionCorrectChange(index)}
-                    className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
-                  />
+                <motion.div 
+                  key={option.id} 
+                  className="flex items-center space-x-3"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={option.isCorrect}
+                      onChange={() => handleOptionCorrectChange(index)}
+                      className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                    />
+                    <span className="text-sm font-medium">{String.fromCharCode(65 + index)}</span>
+                  </label>
                   <Input
                     value={option.content}
                     onChange={(e) => handleOptionContentChange(index, e.target.value)}
-                    className="flex-1"
+                    className="flex-1 transition-all focus:ring-2 focus:ring-primary/50"
                     placeholder={`Đáp án ${index + 1}`}
                   />
                   <Button
@@ -217,12 +240,20 @@ const EditQuestion: React.FC = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveOption(index)}
+                    className="rounded-full hover:bg-red-50 hover:text-red-600"
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                </div>
+                </motion.div>
               ))}
             </div>
+            
+            {options.length < 3 && (
+              <div className="mt-3 flex items-center text-amber-600 text-sm gap-1.5">
+                <AlertTriangle className="h-4 w-4" />
+                <span>Nên có ít nhất 3 đáp án cho mỗi câu hỏi</span>
+              </div>
+            )}
           </div>
           
           <div className="flex justify-between">
@@ -231,7 +262,9 @@ const EditQuestion: React.FC = () => {
               variant="destructive"
               onClick={handleDelete}
               disabled={isLoading}
+              className="gap-1"
             >
+              <Trash2 className="h-4 w-4" />
               Xóa câu hỏi
             </Button>
             
@@ -244,16 +277,20 @@ const EditQuestion: React.FC = () => {
               >
                 Hủy
               </Button>
-              <Button
-                type="button"
-                onClick={handleSave}
-                disabled={isLoading}
-              >
-                {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
-              </Button>
+              <NeonEffect color="blue" padding="p-0" className="rounded-md overflow-hidden inline-block">
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="gap-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 border-none"
+                >
+                  <Save className="h-4 w-4" />
+                  {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
+                </Button>
+              </NeonEffect>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </Layout>
   );
