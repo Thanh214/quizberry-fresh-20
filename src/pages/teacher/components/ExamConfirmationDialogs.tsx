@@ -93,7 +93,6 @@ const ExamConfirmationDialogs: React.FC<ExamConfirmationDialogsProps> = ({
           confirmText="Kết thúc bài thi"
           cancelText="Hủy"
           variant="destructive"
-          icon={<StopCircle className="h-6 w-6 text-destructive" />}
         />
       )}
     </>
