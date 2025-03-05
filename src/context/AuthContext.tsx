@@ -4,6 +4,7 @@ import { User, Teacher } from "@/types/models";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/use-supabase";
 import { toast } from "sonner";
+import { Session } from "@supabase/supabase-js";
 
 type AuthContextType = {
   user: User | null;
@@ -41,11 +42,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (data) {
+          // Ensure role is one of the valid values
+          const role = data.role as "admin" | "student" | "teacher";
+          
           // Tạo đối tượng người dùng từ dữ liệu profile
           const userData: User = {
             id: session.user.id,
             username: data.username || session.user.email || '',
-            role: data.role,
+            role: role,
             name: data.name,
             faculty: data.faculty,
             className: data.class_name,
@@ -103,18 +107,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       // Đăng ký tài khoản mới với Supabase Auth
-      const { data, error } = await signUp(username, password, {
+      const result = await signUp(username, password, {
         name,
         faculty,
         role: 'teacher'
       });
       
-      if (error) throw error;
+      if (result.error) throw result.error;
       
       // Lưu thông tin bổ sung vào bảng profiles
-      if (data.user) {
+      if (result.data?.user) {
         await supabase.from('profiles').upsert({
-          id: data.user.id,
+          id: result.data.user.id,
           name,
           faculty,
           username,
@@ -151,7 +155,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Sử dụng Supabase Auth để đăng nhập
-      await signIn(username, password);
+      const result = await signIn(username, password);
+      
+      if (result.error) {
+        throw result.error;
+      }
       
     } catch (error: any) {
       toast.error(`Đăng nhập thất bại: ${error.message}`);

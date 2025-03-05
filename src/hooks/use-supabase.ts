@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Session, AuthError } from "@supabase/supabase-js";
+import { Session, AuthError, User } from "@supabase/supabase-js";
 
 // Định nghĩa các bảng supabase được phép truy cập
 type TableNames = "exams" | "profiles" | "questions" | "quiz_results" | "options" | "exam_participants" | "question_answers" | "quiz_sessions";
@@ -51,7 +51,10 @@ export function useSupabaseQuery<T>(
         const { data: result, error } = await query;
 
         if (error) throw error;
-        setData(result as T[]);
+        
+        // Cast to T[] - this assumes that the data returned from Supabase
+        // can be safely converted to type T[]
+        setData(result as unknown as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);
@@ -77,7 +80,9 @@ export function useSupabaseMutation(tableName: TableNames) {
   const add = async <T extends Record<string, any>>(data: T) => {
     try {
       setLoading(true);
-      const { data: result, error } = await supabase.from(tableName).insert(data).select();
+      // Use as any to avoid type constraints - we know what we're doing here
+      // since we're passing valid table names as TableNames
+      const { data: result, error } = await supabase.from(tableName).insert(data as any).select();
       if (error) throw error;
       return result[0];
     } catch (err: any) {
@@ -93,9 +98,10 @@ export function useSupabaseMutation(tableName: TableNames) {
   const update = async <T extends Record<string, any>>(id: string, data: Partial<T>) => {
     try {
       setLoading(true);
+      // Use as any to avoid type constraints
       const { data: result, error } = await supabase
         .from(tableName)
-        .update(data)
+        .update(data as any)
         .eq("id", id)
         .select();
       if (error) throw error;
@@ -135,6 +141,14 @@ export function useSupabaseMutation(tableName: TableNames) {
   };
 }
 
+interface AuthResult {
+  data: {
+    user: User | null;
+    session: Session | null;
+  };
+  error: AuthError | null;
+}
+
 /**
  * Hook để quản lý xác thực người dùng
  */
@@ -162,7 +176,7 @@ export function useSupabaseAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<AuthResult> => {
     try {
       setLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -170,17 +184,17 @@ export function useSupabaseAuth() {
         password,
       });
       if (error) throw error;
-      return data;
+      return { data, error: null };
     } catch (err: any) {
       setError(err);
       toast.error(`Lỗi đăng nhập: ${err.message}`);
-      throw err;
+      return { data: { user: null, session: null }, error: err };
     } finally {
       setLoading(false);
     }
   };
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, metadata?: any): Promise<AuthResult> => {
     try {
       setLoading(true);
       const { data, error } = await supabase.auth.signUp({
@@ -192,17 +206,17 @@ export function useSupabaseAuth() {
       });
       if (error) throw error;
       toast.success("Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực.");
-      return data;
+      return { data, error: null };
     } catch (err: any) {
       setError(err);
       toast.error(`Lỗi đăng ký: ${err.message}`);
-      throw err;
+      return { data: { user: null, session: null }, error: err };
     } finally {
       setLoading(false);
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signOut();

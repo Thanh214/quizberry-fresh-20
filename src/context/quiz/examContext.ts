@@ -37,7 +37,9 @@ export const useExamState = () => {
       const newExam = {
         ...exam,
         created_at: now,
-        updated_at: now
+        updated_at: now,
+        // Handle the questionIds fields
+        question_ids: exam.questionIds || []
       };
 
       // Thêm exam vào Supabase
@@ -49,7 +51,21 @@ export const useExamState = () => {
 
       if (error) throw error;
       
-      const addedExam = data as unknown as Exam;
+      // Transform the snake_case data to camelCase for our model
+      const addedExam: Exam = {
+        id: data.id,
+        code: data.code,
+        title: data.title,
+        description: data.description,
+        duration: data.duration,
+        teacherId: data.teacher_id,
+        isActive: data.is_active,
+        hasStarted: data.has_started,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        questionIds: data.question_ids || [],
+        shareLink: data.share_link
+      };
       
       // Cập nhật state
       addExamToState(addedExam);
@@ -70,21 +86,66 @@ export const useExamState = () => {
     try {
       setIsLoading(true);
       
+      // Transform camelCase to snake_case for Supabase
+      const dbData: any = {
+        ...examData,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Handle specific field transformations
+      if (examData.hasStarted !== undefined) {
+        dbData.has_started = examData.hasStarted;
+        delete dbData.hasStarted;
+      }
+      
+      if (examData.isActive !== undefined) {
+        dbData.is_active = examData.isActive;
+        delete dbData.isActive;
+      }
+      
+      if (examData.teacherId !== undefined) {
+        dbData.teacher_id = examData.teacherId;
+        delete dbData.teacherId;
+      }
+      
+      if (examData.questionIds !== undefined) {
+        dbData.question_ids = examData.questionIds;
+        delete dbData.questionIds;
+      }
+      
+      if (examData.shareLink !== undefined) {
+        dbData.share_link = examData.shareLink;
+        delete dbData.shareLink;
+      }
+      
       // Cập nhật dữ liệu trong Supabase
       const { data, error } = await supabase
         .from('exams')
-        .update({
-          ...examData,
-          updated_at: new Date().toISOString()
-        })
+        .update(dbData)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
       
+      // Transform the snake_case data to camelCase for our model
+      const updatedExam: Exam = {
+        id: data.id,
+        code: data.code,
+        title: data.title,
+        description: data.description,
+        duration: data.duration,
+        teacherId: data.teacher_id,
+        isActive: data.is_active,
+        hasStarted: data.has_started,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        questionIds: data.question_ids || [],
+        shareLink: data.share_link
+      };
+      
       // Cập nhật state
-      updateExamInState(id, data as unknown as Exam);
+      updateExamInState(id, updatedExam);
       
       setIsLoading(false);
       toast.success("Cập nhật bài thi thành công");

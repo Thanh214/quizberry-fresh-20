@@ -5,7 +5,7 @@ import { useClassState } from "./quiz/classContext";
 import { useRequestState } from "./quiz/requestContext";
 import { useExamState } from "./quiz/examContext";
 import { useSessionState } from "./quiz/sessionContext";
-import { Question, Option, QuizSession, QuizResult, QuizRequest, Class, Exam } from "@/types/models";
+import { Question, QuizSession, QuizResult, QuizRequest, Class, Exam } from "@/types/models";
 import { useSupabaseQuery } from "@/hooks/use-supabase";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -63,19 +63,63 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sessionState = useSessionState(() => questionState.questions);
   
   // Fetch exams from Supabase
-  const { data: supabaseExams, loading: examsLoading } = useSupabaseQuery<Exam>('exams');
+  const { data: supabaseExams, loading: examsLoading } = useSupabaseQuery<any>('exams');
   
   // Fetch questions from Supabase
-  const { data: supabaseQuestions, loading: questionsLoading } = useSupabaseQuery<Question>('questions');
+  const { data: supabaseQuestions, loading: questionsLoading } = useSupabaseQuery<any>('questions');
   
   // Synchronize Supabase data with local state
   useEffect(() => {
     if (!examsLoading && supabaseExams && supabaseExams.length > 0) {
-      examState.setExams(supabaseExams);
+      // Transform to our model format
+      const transformedExams: Exam[] = supabaseExams.map((e: any) => ({
+        id: e.id,
+        code: e.code,
+        title: e.title,
+        description: e.description,
+        duration: e.duration,
+        teacherId: e.teacher_id,
+        isActive: e.is_active,
+        hasStarted: e.has_started,
+        createdAt: e.created_at,
+        updatedAt: e.updated_at,
+        questionIds: e.question_ids || [],
+        shareLink: e.share_link
+      }));
+      
+      examState.setExams(transformedExams);
     }
     
     if (!questionsLoading && supabaseQuestions && supabaseQuestions.length > 0) {
-      questionState.setQuestions(supabaseQuestions);
+      // We need to fetch options for each question
+      const fetchOptionsForQuestions = async () => {
+        const questionsWithOptions = await Promise.all(
+          supabaseQuestions.map(async (q: any) => {
+            const { data: options } = await supabase
+              .from('options')
+              .select('*')
+              .eq('question_id', q.id);
+              
+            // Transform to our model format
+            return {
+              id: q.id,
+              content: q.content,
+              createdAt: q.created_at,
+              updatedAt: q.updated_at,
+              examId: q.exam_id,
+              options: options ? options.map((o: any) => ({
+                id: o.id,
+                content: o.content,
+                isCorrect: o.is_correct
+              })) : []
+            };
+          })
+        );
+        
+        questionState.setQuestions(questionsWithOptions);
+      };
+      
+      fetchOptionsForQuestions();
     }
   }, [supabaseExams, examsLoading, supabaseQuestions, questionsLoading]);
   
@@ -85,9 +129,41 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .channel('public:exams')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'exams' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          examState.addExamToState(payload.new as Exam);
+          const newExam = payload.new as any;
+          // Transform to our model format
+          const exam: Exam = {
+            id: newExam.id,
+            code: newExam.code,
+            title: newExam.title,
+            description: newExam.description,
+            duration: newExam.duration,
+            teacherId: newExam.teacher_id,
+            isActive: newExam.is_active,
+            hasStarted: newExam.has_started,
+            createdAt: newExam.created_at,
+            updatedAt: newExam.updated_at,
+            questionIds: newExam.question_ids || [],
+            shareLink: newExam.share_link
+          };
+          examState.addExamToState(exam);
         } else if (payload.eventType === 'UPDATE') {
-          examState.updateExamInState(payload.new.id, payload.new as Exam);
+          const updatedExam = payload.new as any;
+          // Transform to our model format
+          const exam: Exam = {
+            id: updatedExam.id,
+            code: updatedExam.code,
+            title: updatedExam.title,
+            description: updatedExam.description,
+            duration: updatedExam.duration,
+            teacherId: updatedExam.teacher_id,
+            isActive: updatedExam.is_active,
+            hasStarted: updatedExam.has_started,
+            createdAt: updatedExam.created_at,
+            updatedAt: updatedExam.updated_at,
+            questionIds: updatedExam.question_ids || [],
+            shareLink: updatedExam.share_link
+          };
+          examState.updateExamInState(updatedExam.id, exam);
         } else if (payload.eventType === 'DELETE') {
           examState.removeExamFromState(payload.old.id);
         }
@@ -96,11 +172,55 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
     const questionChannel = supabase
       .channel('public:questions')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, async (payload) => {
         if (payload.eventType === 'INSERT') {
-          questionState.addQuestionToState(payload.new as Question);
+          const newQuestion = payload.new as any;
+          
+          // Fetch options for this question
+          const { data: options } = await supabase
+            .from('options')
+            .select('*')
+            .eq('question_id', newQuestion.id);
+            
+          // Transform to our model format
+          const question: Question = {
+            id: newQuestion.id,
+            content: newQuestion.content,
+            createdAt: newQuestion.created_at,
+            updatedAt: newQuestion.updated_at,
+            examId: newQuestion.exam_id,
+            options: options ? options.map((o: any) => ({
+              id: o.id,
+              content: o.content,
+              isCorrect: o.is_correct
+            })) : []
+          };
+          
+          questionState.addQuestionToState(question);
         } else if (payload.eventType === 'UPDATE') {
-          questionState.updateQuestionInState(payload.new.id, payload.new as Question);
+          const updatedQuestion = payload.new as any;
+          
+          // Fetch options for this question
+          const { data: options } = await supabase
+            .from('options')
+            .select('*')
+            .eq('question_id', updatedQuestion.id);
+            
+          // Transform to our model format
+          const question: Question = {
+            id: updatedQuestion.id,
+            content: updatedQuestion.content,
+            createdAt: updatedQuestion.created_at,
+            updatedAt: updatedQuestion.updated_at,
+            examId: updatedQuestion.exam_id,
+            options: options ? options.map((o: any) => ({
+              id: o.id,
+              content: o.content,
+              isCorrect: o.is_correct
+            })) : []
+          };
+          
+          questionState.updateQuestionInState(updatedQuestion.id, question);
         } else if (payload.eventType === 'DELETE') {
           questionState.removeQuestionFromState(payload.old.id);
         }

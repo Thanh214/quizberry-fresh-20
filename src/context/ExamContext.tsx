@@ -33,7 +33,23 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Cập nhật participants từ Supabase khi dữ liệu thay đổi
   useEffect(() => {
     if (!participantsLoading && participantsData) {
-      setParticipants(participantsData);
+      // Transform data from snake_case to camelCase for our data model
+      const transformedParticipants: ExamParticipant[] = participantsData.map(p => ({
+        id: p.id,
+        examId: p.exam_id,
+        studentName: p.student_name,
+        studentId: p.student_id,
+        className: p.class_name,
+        status: p.status as "waiting" | "in_progress" | "completed",
+        startTime: p.start_time,
+        endTime: p.end_time || undefined,
+        joinLink: p.join_link || undefined,
+        exitCount: p.exit_count || 0,
+        lastExitTime: p.last_exit_time || undefined,
+        score: p.score || undefined
+      }));
+      
+      setParticipants(transformedParticipants);
     }
   }, [participantsData, participantsLoading]);
 
@@ -48,10 +64,42 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }, (payload) => {
         // Cập nhật danh sách participants khi có thay đổi
         if (payload.eventType === 'INSERT') {
-          setParticipants(prev => [...prev, payload.new as ExamParticipant]);
+          const newParticipant = payload.new as any;
+          // Transform to our model format
+          const transformedParticipant: ExamParticipant = {
+            id: newParticipant.id,
+            examId: newParticipant.exam_id,
+            studentName: newParticipant.student_name,
+            studentId: newParticipant.student_id,
+            className: newParticipant.class_name,
+            status: newParticipant.status as "waiting" | "in_progress" | "completed",
+            startTime: newParticipant.start_time,
+            endTime: newParticipant.end_time || undefined,
+            joinLink: newParticipant.join_link || undefined,
+            exitCount: newParticipant.exit_count || 0,
+            lastExitTime: newParticipant.last_exit_time || undefined,
+            score: newParticipant.score || undefined
+          };
+          setParticipants(prev => [...prev, transformedParticipant]);
         } else if (payload.eventType === 'UPDATE') {
+          const updatedParticipant = payload.new as any;
+          // Transform to our model format
+          const transformedParticipant: ExamParticipant = {
+            id: updatedParticipant.id,
+            examId: updatedParticipant.exam_id,
+            studentName: updatedParticipant.student_name,
+            studentId: updatedParticipant.student_id,
+            className: updatedParticipant.class_name,
+            status: updatedParticipant.status as "waiting" | "in_progress" | "completed",
+            startTime: updatedParticipant.start_time,
+            endTime: updatedParticipant.end_time || undefined,
+            joinLink: updatedParticipant.join_link || undefined,
+            exitCount: updatedParticipant.exit_count || 0,
+            lastExitTime: updatedParticipant.last_exit_time || undefined,
+            score: updatedParticipant.score || undefined
+          };
           setParticipants(prev => 
-            prev.map(p => p.id === payload.new.id ? (payload.new as ExamParticipant) : p)
+            prev.map(p => p.id === transformedParticipant.id ? transformedParticipant : p)
           );
         } else if (payload.eventType === 'DELETE') {
           setParticipants(prev => prev.filter(p => p.id !== payload.old.id));
@@ -90,21 +138,35 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const joinLink = `${window.location.origin}/student/waiting?examId=${examId}&studentId=${studentId}`;
       
       // Tạo participant mới trong Supabase
-      const newParticipant: Omit<ExamParticipant, "id"> = {
-        examId,
-        studentName,
-        studentId,
-        className,
-        status: "waiting",
-        startTime: new Date().toISOString(),
-        joinLink,
-        exitCount: 0,
-        user_id: user?.id
+      const newParticipantData = {
+        exam_id: examId,
+        student_name: studentName,
+        student_id: studentId,
+        class_name: className,
+        status: "waiting" as const,
+        start_time: new Date().toISOString(),
+        join_link: joinLink,
+        exit_count: 0,
+        user_id: user?.id || null
       };
       
-      const result = await addParticipantMutation(newParticipant);
+      const result = await addParticipantMutation(newParticipantData);
       
-      return result as ExamParticipant;
+      // Transform to our model format
+      const transformedParticipant: ExamParticipant = {
+        id: result.id,
+        examId: result.exam_id,
+        studentName: result.student_name,
+        studentId: result.student_id,
+        className: result.class_name,
+        status: result.status as "waiting" | "in_progress" | "completed",
+        startTime: result.start_time,
+        joinLink: result.join_link,
+        exitCount: result.exit_count,
+        score: result.score
+      };
+      
+      return transformedParticipant;
     } catch (error: any) {
       toast.error(error.message || "Không thể thêm học sinh");
       throw error;
@@ -116,9 +178,9 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     status: ExamParticipant['status']
   ): Promise<void> => {
     try {
-      const updateData: Partial<ExamParticipant> = { 
+      const updateData: any = { 
         status,
-        ...(status === "completed" ? { endTime: new Date().toISOString() } : {})
+        ...(status === "completed" ? { end_time: new Date().toISOString() } : {})
       };
       
       await updateParticipantMutation(participantId, updateData);
@@ -127,7 +189,7 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setParticipants(prev => 
         prev.map(p => 
           p.id === participantId 
-            ? { ...p, ...updateData } 
+            ? { ...p, status, ...(status === "completed" ? { endTime: new Date().toISOString() } : {}) } 
             : p
         )
       );
@@ -149,8 +211,8 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Cập nhật trong Supabase
       await updateParticipantMutation(participantId, {
-        exitCount,
-        lastExitTime
+        exit_count: exitCount,
+        last_exit_time: lastExitTime
       });
       
       // Thông báo cho giáo viên
