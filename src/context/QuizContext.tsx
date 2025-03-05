@@ -6,6 +6,8 @@ import { useRequestState } from "./quiz/requestContext";
 import { useExamState } from "./quiz/examContext";
 import { useSessionState } from "./quiz/sessionContext";
 import { Question, Option, QuizSession, QuizResult, QuizRequest, Class, Exam } from "@/types/models";
+import { useSupabaseQuery } from "@/hooks/use-supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 // Type for the context
 type QuizContextType = {
@@ -59,67 +61,56 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const requestState = useRequestState();
   const examState = useExamState();
   const sessionState = useSessionState(() => questionState.questions);
-
-  // Add demo data for testing if no data exists
+  
+  // Fetch exams from Supabase
+  const { data: supabaseExams, loading: examsLoading } = useSupabaseQuery<Exam>('exams');
+  
+  // Fetch questions from Supabase
+  const { data: supabaseQuestions, loading: questionsLoading } = useSupabaseQuery<Question>('questions');
+  
+  // Synchronize Supabase data with local state
   useEffect(() => {
-    const addDemoData = async () => {
-      // Check if there are already questions
-      if (questionState.questions.length === 0) {
-        // Add sample questions
-        const demoQuestions = [
-          {
-            content: "Thủ đô của Việt Nam là gì?",
-            options: [
-              { id: "opt1", content: "Hà Nội", isCorrect: true },
-              { id: "opt2", content: "Hồ Chí Minh", isCorrect: false },
-              { id: "opt3", content: "Đà Nẵng", isCorrect: false },
-              { id: "opt4", content: "Huế", isCorrect: false },
-            ]
-          },
-          {
-            content: "1 + 1 = ?",
-            options: [
-              { id: "opt5", content: "1", isCorrect: false },
-              { id: "opt6", content: "2", isCorrect: true },
-              { id: "opt7", content: "3", isCorrect: false },
-              { id: "opt8", content: "4", isCorrect: false },
-            ]
-          },
-          {
-            content: "HTML là viết tắt của?",
-            options: [
-              { id: "opt9", content: "Hyper Text Markup Language", isCorrect: true },
-              { id: "opt10", content: "Hyper Transfer Markup Language", isCorrect: false },
-              { id: "opt11", content: "High Tech Markup Language", isCorrect: false },
-              { id: "opt12", content: "Home Tool Markup Language", isCorrect: false },
-            ]
-          }
-        ];
-
-        for (const q of demoQuestions) {
-          await questionState.addQuestion(q);
+    if (!examsLoading && supabaseExams && supabaseExams.length > 0) {
+      examState.setExams(supabaseExams);
+    }
+    
+    if (!questionsLoading && supabaseQuestions && supabaseQuestions.length > 0) {
+      questionState.setQuestions(supabaseQuestions);
+    }
+  }, [supabaseExams, examsLoading, supabaseQuestions, questionsLoading]);
+  
+  // Set up realtime listeners for changes
+  useEffect(() => {
+    const examChannel = supabase
+      .channel('public:exams')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'exams' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          examState.addExamToState(payload.new as Exam);
+        } else if (payload.eventType === 'UPDATE') {
+          examState.updateExamInState(payload.new.id, payload.new as Exam);
+        } else if (payload.eventType === 'DELETE') {
+          examState.removeExamFromState(payload.old.id);
         }
-      }
-
-      // Check if there are already exams
-      if (examState.exams.length === 0) {
-        // Add a sample exam
-        const demoExam = {
-          title: "Bài kiểm tra mẫu",
-          description: "Đây là bài kiểm tra mẫu để thử nghiệm hệ thống",
-          code: "DEMO123",
-          duration: 30,
-          teacherId: "teacher1",
-          isActive: true,
-          questionIds: questionState.questions.map(q => q.id),
-          hasStarted: false,
-        };
-
-        await examState.addExam(demoExam);
-      }
+      })
+      .subscribe();
+      
+    const questionChannel = supabase
+      .channel('public:questions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          questionState.addQuestionToState(payload.new as Question);
+        } else if (payload.eventType === 'UPDATE') {
+          questionState.updateQuestionInState(payload.new.id, payload.new as Question);
+        } else if (payload.eventType === 'DELETE') {
+          questionState.removeQuestionFromState(payload.old.id);
+        }
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(examChannel);
+      supabase.removeChannel(questionChannel);
     };
-
-    addDemoData();
   }, []);
 
   // Combine all state and functions into a single context value

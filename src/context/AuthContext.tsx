@@ -1,6 +1,9 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Teacher } from "@/types/models";
+import { supabase } from "@/integrations/supabase/client";
+import { useSupabaseAuth } from "@/hooks/use-supabase";
+import { toast } from "sonner";
 
 type AuthContextType = {
   user: User | null;
@@ -19,53 +22,111 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const { signIn, signOut, signUp, session, loading } = useSupabaseAuth();
 
   useEffect(() => {
-    // Kiểm tra phiên đăng nhập khi khởi động
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Kiểm tra phiên đăng nhập từ Supabase
+    if (session) {
+      // Lấy thông tin hồ sơ người dùng từ profiles
+      const fetchUserProfile = async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error) {
+          console.error("Lỗi khi lấy hồ sơ người dùng:", error);
+          return;
+        }
+
+        if (data) {
+          // Tạo đối tượng người dùng từ dữ liệu profile
+          const userData: User = {
+            id: session.user.id,
+            username: data.username || session.user.email || '',
+            role: data.role,
+            name: data.name,
+            faculty: data.faculty,
+            className: data.class_name,
+            studentId: data.student_id
+          };
+
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+        }
+      };
+
+      fetchUserProfile();
+    } else {
+      // Kiểm tra có user lưu trong localStorage không (cho học sinh tạm thời)
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        setUser(null);
+      }
     }
-    
-    // Lấy danh sách giáo viên từ localStorage
-    const storedTeachers = localStorage.getItem("teachers");
-    if (storedTeachers) {
-      setTeachers(JSON.parse(storedTeachers));
-    }
-    
-    setIsLoading(false);
-  }, []);
+
+    // Lấy danh sách giáo viên từ Supabase
+    const fetchTeachers = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'teacher');
+
+      if (error) {
+        console.error("Lỗi khi lấy danh sách giáo viên:", error);
+        return;
+      }
+
+      if (data) {
+        const teachersList: Teacher[] = data.map(teacher => ({
+          id: teacher.id,
+          name: teacher.name || '',
+          faculty: teacher.faculty || '',
+          username: teacher.username || '',
+          password: '', // Không lưu mật khẩu
+          createdAt: teacher.created_at
+        }));
+        setTeachers(teachersList);
+      }
+    };
+
+    fetchTeachers();
+    setIsLoading(loading);
+  }, [session, loading]);
 
   // Đăng ký tài khoản giáo viên mới
   const registerTeacher = async (name: string, faculty: string, username: string, password: string) => {
     try {
       setIsLoading(true);
       
-      // Kiểm tra username đã tồn tại chưa
-      const existingTeacher = teachers.find(teacher => teacher.username === username);
-      if (existingTeacher) {
-        throw new Error("Tên đăng nhập đã tồn tại");
-      }
-      
-      // Tạo giáo viên mới
-      const newTeacher: Teacher = {
-        id: Date.now().toString(),
+      // Đăng ký tài khoản mới với Supabase Auth
+      const { data, error } = await signUp(username, password, {
         name,
         faculty,
-        username,
-        password, // Lưu ý: Trong thực tế nên băm mật khẩu
-        createdAt: new Date().toISOString(),
-      };
+        role: 'teacher'
+      });
       
-      // Cập nhật danh sách giáo viên
-      const updatedTeachers = [...teachers, newTeacher];
-      setTeachers(updatedTeachers);
+      if (error) throw error;
       
-      // Lưu vào localStorage
-      localStorage.setItem("teachers", JSON.stringify(updatedTeachers));
+      // Lưu thông tin bổ sung vào bảng profiles
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          name,
+          faculty,
+          username,
+          role: 'teacher',
+          created_at: new Date().toISOString()
+        });
+      }
       
+      toast.success('Đăng ký tài khoản giáo viên thành công!');
       return;
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`Đăng ký thất bại: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -76,10 +137,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // Kiểm tra nếu là tài khoản admin
+      // Kiểm tra nếu là tài khoản admin đặc biệt
       if (username === "admin" && password === "password") {
         const adminUser: User = {
-          id: "1",
+          id: "admin",
           username,
           role: "admin",
         };
@@ -89,27 +150,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Kiểm tra tài khoản giáo viên
-      const teacher = teachers.find(
-        t => t.username === username && t.password === password
-      );
+      // Sử dụng Supabase Auth để đăng nhập
+      await signIn(username, password);
       
-      if (teacher) {
-        const teacherUser: User = {
-          id: teacher.id,
-          username: teacher.username,
-          role: "teacher",
-          name: teacher.name,
-          faculty: teacher.faculty
-        };
-        
-        localStorage.setItem("user", JSON.stringify(teacherUser));
-        setUser(teacherUser);
-        return;
-      }
-      
-      throw new Error("Tên đăng nhập hoặc mật khẩu không đúng");
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`Đăng nhập thất bại: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -132,7 +177,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("user", JSON.stringify(studentUser));
       localStorage.setItem("examCode", examCode); // Lưu mã bài thi
       setUser(studentUser);
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`Đăng nhập thất bại: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -140,6 +186,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    // Đăng xuất khỏi Supabase nếu đang đăng nhập
+    if (session) {
+      signOut();
+    }
+    
+    // Xóa dữ liệu local
     localStorage.removeItem("user");
     localStorage.removeItem("examCode");
     setUser(null);

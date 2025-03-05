@@ -3,10 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Session, AuthError } from "@supabase/supabase-js";
-import { Tables } from "@/integrations/supabase/types";
 
 // Định nghĩa các bảng supabase được phép truy cập
-type TableNames = keyof Tables<"public">;
+type TableNames = "exams" | "profiles" | "questions" | "quiz_results" | "options" | "exam_participants" | "question_answers" | "quiz_sessions";
 
 /**
  * Custom hook để lấy dữ liệu từ Supabase
@@ -75,7 +74,7 @@ export function useSupabaseMutation(tableName: TableNames) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const add = async <T>(data: T) => {
+  const add = async <T extends Record<string, any>>(data: T) => {
     try {
       setLoading(true);
       const { data: result, error } = await supabase.from(tableName).insert(data).select();
@@ -91,7 +90,7 @@ export function useSupabaseMutation(tableName: TableNames) {
     }
   };
 
-  const update = async <T>(id: string, data: Partial<T>) => {
+  const update = async <T extends Record<string, any>>(id: string, data: Partial<T>) => {
     try {
       setLoading(true);
       const { data: result, error } = await supabase
