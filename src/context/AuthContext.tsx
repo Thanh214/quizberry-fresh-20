@@ -117,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Lưu thông tin bổ sung vào bảng profiles
       if (result.data?.user) {
-        await supabase.from('profiles').upsert({
+        const { error: profileError } = await supabase.from('profiles').upsert({
           id: result.data.user.id,
           name,
           faculty,
@@ -125,9 +125,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: 'teacher',
           created_at: new Date().toISOString()
         });
+
+        if (profileError) {
+          console.error("Lỗi khi tạo hồ sơ giáo viên:", profileError);
+          // Không throw lỗi ở đây vì đăng ký đã thành công, hồ sơ có thể được cập nhật sau
+        }
       }
       
-      toast.success('Đăng ký tài khoản giáo viên thành công!');
       return;
     } catch (error: any) {
       toast.error(`Đăng ký thất bại: ${error.message}`);
@@ -162,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
     } catch (error: any) {
-      toast.error(`Đăng nhập thất bại: ${error.message}`);
+      // Trả về lỗi nguyên gốc để UI xử lý
       throw error;
     } finally {
       setIsLoading(false);
@@ -204,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("examCode");
     setUser(null);
   };
-
+  
   return (
     <AuthContext.Provider
       value={{

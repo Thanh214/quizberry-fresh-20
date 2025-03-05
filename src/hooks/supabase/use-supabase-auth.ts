@@ -43,7 +43,8 @@ export function useSupabaseAuth() {
       return { data, error: null };
     } catch (err: any) {
       setError(err);
-      toast.error(`Lỗi đăng nhập: ${err.message}`);
+      console.error("Login error:", err.message);
+      // Pass the error back with the original message intact
       return { data: { user: null, session: null }, error: err };
     } finally {
       setLoading(false);
@@ -57,7 +58,7 @@ export function useSupabaseAuth() {
         email,
         password,
         options: {
-          data: metadata,
+          data: metadata?.data,
         },
       });
       if (error) throw error;
