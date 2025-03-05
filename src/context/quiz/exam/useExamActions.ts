@@ -63,7 +63,8 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        questionIds: supabaseExam.question_ids || [], // It's already parsed from JSONB
+        // Fix the type issue - ensure we have a string array
+        questionIds: Array.isArray(supabaseExam.question_ids) ? supabaseExam.question_ids : [],
         shareLink: supabaseExam.share_link || ""
       };
       
@@ -142,7 +143,8 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        questionIds: supabaseExam.question_ids || [], // It's already parsed from JSONB
+        // Fix the type issue - ensure we have a string array
+        questionIds: Array.isArray(supabaseExam.question_ids) ? supabaseExam.question_ids : [],
         shareLink: supabaseExam.share_link || ""
       };
       
