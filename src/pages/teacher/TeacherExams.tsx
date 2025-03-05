@@ -16,11 +16,12 @@ import { motion } from "framer-motion";
 const TeacherExams: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { exams, deleteExam, activateExam, startExam } = useQuiz();
+  const { exams, deleteExam, activateExam, startExam, updateExam } = useQuiz();
   const { participants } = useExam();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredExams, setFilteredExams] = useState(exams);
+  const [confirmEnd, setConfirmEnd] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect if not teacher
@@ -64,6 +65,14 @@ const TeacherExams: React.FC = () => {
 
   const handleStartExam = (examId: string) => {
     startExam(examId);
+  };
+
+  const handleEndExam = (examId: string) => {
+    // Mark the exam as ended (not active, not started)
+    updateExam(examId, {
+      hasStarted: false,
+      isActive: false
+    });
   };
 
   // Button animation variants
@@ -166,6 +175,8 @@ const TeacherExams: React.FC = () => {
               onDelete={handleDeleteExam}
               onActivate={handleActivateExam}
               onStart={handleStartExam}
+              onEnd={handleEndExam}
+              setConfirmEnd={setConfirmEnd}
             />
           )}
         </TransitionWrapper>

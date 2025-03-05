@@ -1,6 +1,9 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Teacher } from "@/types/models";
+import { supabase } from "@/integrations/supabase/client";
+import { useSupabaseAuth } from "@/hooks/supabase/use-supabase-auth";
+import { toast } from "sonner";
+import { Session } from "@supabase/supabase-js";
 
 type AuthContextType = {
   user: User | null;
@@ -8,7 +11,7 @@ type AuthContextType = {
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
   loginAsStudent: (name: string, className: string, studentId: string, examCode: string) => Promise<void>;
-  registerTeacher: (name: string, faculty: string, username: string, password: string) => Promise<void>;
+  registerTeacher: (name: string, faculty: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   teachers: Teacher[]; // Danh sách giáo viên để quản lý
 };
@@ -19,53 +22,119 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const { signIn, signOut, signUp, session, loading } = useSupabaseAuth();
 
   useEffect(() => {
-    // Kiểm tra phiên đăng nhập khi khởi động
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    
-    // Lấy danh sách giáo viên từ localStorage
-    const storedTeachers = localStorage.getItem("teachers");
-    if (storedTeachers) {
-      setTeachers(JSON.parse(storedTeachers));
-    }
-    
-    setIsLoading(false);
-  }, []);
+    // Kiểm tra phiên đăng nhập từ Supabase
+    if (session) {
+      // Lấy thông tin hồ sơ người dùng từ profiles
+      const fetchUserProfile = async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-  // Đăng ký tài khoản giáo viên mới
-  const registerTeacher = async (name: string, faculty: string, username: string, password: string) => {
+        if (error) {
+          console.error("Lỗi khi lấy hồ sơ người dùng:", error);
+          return;
+        }
+
+        if (data) {
+          // Ensure role is one of the valid values
+          const role = data.role as "admin" | "student" | "teacher";
+          
+          // Tạo đối tượng người dùng từ dữ liệu profile
+          const userData: User = {
+            id: session.user.id,
+            username: data.username || session.user.email || '',
+            role: role,
+            name: data.name,
+            faculty: data.faculty,
+            className: data.class_name,
+            studentId: data.student_id
+          };
+
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+        }
+      };
+
+      fetchUserProfile();
+    } else {
+      // Kiểm tra có user lưu trong localStorage không (cho học sinh tạm thời)
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        setUser(null);
+      }
+    }
+
+    // Lấy danh sách giáo viên từ Supabase
+    const fetchTeachers = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'teacher');
+
+      if (error) {
+        console.error("Lỗi khi lấy danh sách giáo viên:", error);
+        return;
+      }
+
+      if (data) {
+        const teachersList: Teacher[] = data.map(teacher => ({
+          id: teacher.id,
+          name: teacher.name || '',
+          faculty: teacher.faculty || '',
+          username: teacher.username || '',
+          password: '', // Không lưu mật khẩu
+          createdAt: teacher.created_at
+        }));
+        setTeachers(teachersList);
+      }
+    };
+
+    fetchTeachers();
+    setIsLoading(loading);
+  }, [session, loading]);
+
+  const registerTeacher = async (name: string, faculty: string, email: string, password: string) => {
     try {
       setIsLoading(true);
       
-      // Kiểm tra username đã tồn tại chưa
-      const existingTeacher = teachers.find(teacher => teacher.username === username);
-      if (existingTeacher) {
-        throw new Error("Tên đăng nhập đã tồn tại");
+      // Đăng ký tài khoản mới với Supabase Auth
+      const result = await signUp(email, password, {
+        data: {
+          name,
+          faculty,
+          role: 'teacher'
+        }
+      });
+      
+      if (result.error) throw result.error;
+      
+      // Lưu thông tin bổ sung vào bảng profiles
+      if (result.data?.user) {
+        const { error: profileError } = await supabase.from('profiles').upsert({
+          id: result.data.user.id,
+          name,
+          faculty,
+          username: email.split('@')[0],
+          role: 'teacher',
+          created_at: new Date().toISOString()
+        });
+
+        if (profileError) {
+          console.error("Lỗi khi tạo hồ sơ giáo viên:", profileError);
+          // Không throw lỗi ở đây vì đăng ký đã thành công, hồ sơ có thể được cập nhật sau
+        }
       }
       
-      // Tạo giáo viên mới
-      const newTeacher: Teacher = {
-        id: Date.now().toString(),
-        name,
-        faculty,
-        username,
-        password, // Lưu ý: Trong thực tế nên băm mật khẩu
-        createdAt: new Date().toISOString(),
-      };
-      
-      // Cập nhật danh sách giáo viên
-      const updatedTeachers = [...teachers, newTeacher];
-      setTeachers(updatedTeachers);
-      
-      // Lưu vào localStorage
-      localStorage.setItem("teachers", JSON.stringify(updatedTeachers));
-      
       return;
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`Đăng ký thất bại: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -76,10 +145,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // Kiểm tra nếu là tài khoản admin
+      // Kiểm tra nếu là tài khoản admin đặc biệt
       if (username === "admin" && password === "password") {
         const adminUser: User = {
-          id: "1",
+          id: "admin",
           username,
           role: "admin",
         };
@@ -89,27 +158,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Kiểm tra tài khoản giáo viên
-      const teacher = teachers.find(
-        t => t.username === username && t.password === password
-      );
+      // Sử dụng Supabase Auth để đăng nhập
+      const result = await signIn(username, password);
       
-      if (teacher) {
-        const teacherUser: User = {
-          id: teacher.id,
-          username: teacher.username,
-          role: "teacher",
-          name: teacher.name,
-          faculty: teacher.faculty
-        };
-        
-        localStorage.setItem("user", JSON.stringify(teacherUser));
-        setUser(teacherUser);
-        return;
+      if (result.error) {
+        throw result.error;
       }
       
-      throw new Error("Tên đăng nhập hoặc mật khẩu không đúng");
-    } catch (error) {
+    } catch (error: any) {
+      // Trả về lỗi nguyên gốc để UI xử lý
       throw error;
     } finally {
       setIsLoading(false);
@@ -132,7 +189,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("user", JSON.stringify(studentUser));
       localStorage.setItem("examCode", examCode); // Lưu mã bài thi
       setUser(studentUser);
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`Đăng nhập thất bại: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -140,11 +198,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    // Đăng xuất khỏi Supabase nếu đang đăng nhập
+    if (session) {
+      signOut();
+    }
+    
+    // Xóa dữ liệu local
     localStorage.removeItem("user");
     localStorage.removeItem("examCode");
     setUser(null);
   };
-
+  
   return (
     <AuthContext.Provider
       value={{

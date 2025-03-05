@@ -124,4 +124,7 @@ export interface ExamParticipant {
   startTime: string;
   endTime?: string;
   joinLink?: string; // Đường link để tham gia
+  exitCount?: number; // Số lần thoát khỏi màn hình
+  lastExitTime?: string; // Thời gian thoát gần nhất
 }
+

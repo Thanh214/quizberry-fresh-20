@@ -19,6 +19,7 @@ const StudentQuiz: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { startQuiz, submitAnswer, finishQuiz, currentSession, exams } = useQuiz();
+  const { recordExamExit } = useExam(); // Thêm hàm recordExamExit
   
   const [session, setSession] = useState<QuizSession | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<ShuffledQuestion | null>(null);
@@ -28,6 +29,7 @@ const StudentQuiz: React.FC = () => {
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [participantId, setParticipantId] = useState<string | null>(null);
   
   // Refs to track current question index and progress
   const currentIndexRef = useRef(0);
@@ -97,13 +99,52 @@ const StudentQuiz: React.FC = () => {
       }
     }
 
-    // Clean up timer on unmount
+    // Tìm participantId dựa trên studentId và examId
+    const getParticipantId = async () => {
+      try {
+        // Sửa lỗi: Không truy cập participants trực tiếp từ import
+        // mà lấy từ useExam hook
+        const { participants } = useExam(); // Lấy participants từ context
+        if (user.studentId && exam) {
+          const participant = participants.find(
+            p => p.studentId === user.studentId && p.examId === exam.id
+          );
+          if (participant) {
+            setParticipantId(participant.id);
+          }
+        }
+      } catch (error) {
+        console.error("Không thể lấy thông tin thí sinh", error);
+      }
+    };
+    
+    getParticipantId();
+
+    // Thêm event listeners để kiểm soát khi học sinh rời khỏi trang
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && participantId) {
+        recordExamExit(participantId);
+      }
+    };
+    
+    const handleBeforeUnload = () => {
+      if (participantId) {
+        recordExamExit(participantId);
+      }
+    };
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Clean up
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [currentSession, navigate, startQuiz, user, exams]);
+  }, [currentSession, navigate, startQuiz, user, exams, participantId, recordExamExit]);
 
   const handleOptionSelect = (optionId: string) => {
     setSelectedOption(optionId);

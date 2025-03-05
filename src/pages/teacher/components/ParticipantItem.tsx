@@ -2,7 +2,9 @@
 import React from "react";
 import { ExamParticipant } from "@/types/models";
 import { Badge } from "@/components/ui/badge";
-import { User } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
+import { TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ParticipantItemProps {
   participant: ExamParticipant;
@@ -31,6 +33,15 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({ participant, status, 
     return "";
   };
 
+  // Format thời gian thoát gần nhất
+  const formatLastExitTime = (timestamp?: string) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+  };
+
+  const hasExitRecord = participant.exitCount && participant.exitCount > 0;
+
   return (
     <div className="px-3 py-2 text-sm flex items-center justify-between hover:bg-muted/50 rounded-md transition-colors group">
       <div className="flex items-center gap-2">
@@ -38,10 +49,34 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({ participant, status, 
           {participant.studentName.charAt(0).toUpperCase()}
         </div>
         <div>
-          <div className="font-medium group-hover:text-festival-red transition-colors">{participant.studentName}</div>
+          <div className="font-medium group-hover:text-festival-red transition-colors">
+            {participant.studentName}
+            {hasExitRecord && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block ml-2">
+                      <AlertCircle className="h-4 w-4 text-red-500 inline" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Thoát khỏi màn hình: {participant.exitCount} lần</p>
+                    {participant.lastExitTime && (
+                      <p>Lần cuối: {formatLastExitTime(participant.lastExitTime)}</p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
           <div className="text-xs text-muted-foreground flex gap-3">
             <span>MSSV: {participant.studentId}</span>
             <span>Lớp: {participant.className}</span>
+            {hasExitRecord && (
+              <span className="text-red-500 font-medium">
+                Thoát: {participant.exitCount} lần
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -67,3 +102,4 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({ participant, status, 
 };
 
 export default ParticipantItem;
+
