@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -101,7 +102,9 @@ const StudentQuiz: React.FC = () => {
     // Tìm participantId dựa trên studentId và examId
     const getParticipantId = async () => {
       try {
-        const { participants } = await import('@/context/ExamContext');
+        // Sửa lỗi: Không truy cập participants trực tiếp từ import
+        // mà lấy từ useExam hook
+        const { participants } = useExam(); // Lấy participants từ context
         if (user.studentId && exam) {
           const participant = participants.find(
             p => p.studentId === user.studentId && p.examId === exam.id
