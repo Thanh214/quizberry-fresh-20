@@ -32,10 +32,10 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
 
   return (
     <div className="mt-4 flex justify-end">
-      <NeonEffect color="green" padding="p-0" className="rounded-md overflow-hidden">
+      <NeonEffect color="green" padding="p-0" className="rounded-full overflow-hidden">
         <Button
           size="sm"
-          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-none"
+          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-none rounded-full"
           onClick={() => handleStartExam(examId)}
         >
           <PlayCircle className="h-4 w-4 mr-2" />

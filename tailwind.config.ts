@@ -53,6 +53,24 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Màu mới lấy cảm hứng từ hình ảnh
+				festival: {
+					red: '#e63946',
+					gold: '#f1c40f',
+					pink: '#ff758f',
+					orange: '#ff7043',
+					peach: '#ffab91',
+					yellow: '#ffe082',
+				},
+			},
+			backgroundImage: {
+				'festival-gradient': 'linear-gradient(to bottom, #fff5f5 0%, #fff0ea 100%)',
+				'red-gradient': 'linear-gradient(to bottom, #e63946 0%, #d62828 100%)',
+				'gold-gradient': 'linear-gradient(135deg, #f9d923 0%, #f1c40f 100%)',
+				'card-gradient': 'linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,240,234,0.9) 100%)',
+				'card-red-gradient': 'linear-gradient(to bottom, #ffe5e5 30%, #e63946 100%)',
+				'card-gold-gradient': 'linear-gradient(to bottom, #fffde7 30%, #f9d923 100%)',
+				'card-gradient-horizontal': 'linear-gradient(90deg, #fff5f5 0%, #fff0ea 100%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -95,7 +113,11 @@ export default {
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-10px)' }
-				}
+				},
+				'floating': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-8px)' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -106,11 +128,13 @@ export default {
 				'slide-in': 'slide-in 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
 				'zoom-in': 'zoom-in 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
 				'pulse-light': 'pulse-light 2s ease-in-out infinite',
-				'float': 'float 6s ease-in-out infinite'
+				'float': 'float 6s ease-in-out infinite',
+				'floating': 'floating 3s ease-in-out infinite',
 			},
 			boxShadow: {
 				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
-				'glass-hover': '0 8px 32px rgba(0, 0, 0, 0.15)'
+				'glass-hover': '0 8px 32px rgba(0, 0, 0, 0.15)',
+				'festival': '0 4px 15px rgba(230, 57, 70, 0.2)',
 			}
 		}
 	},

@@ -11,12 +11,34 @@ interface ParticipantItemProps {
 }
 
 const ParticipantItem: React.FC<ParticipantItemProps> = ({ participant, status, score }) => {
+  // Badge color mapping based on status
+  const getBadgeVariant = () => {
+    if (status === "waiting") return "info";
+    if (status === "in_progress") return "warning";
+    if (status === "completed") {
+      if (typeof score !== 'undefined') {
+        return score >= 5 ? "success" : "destructive";
+      }
+      return "secondary";
+    }
+    return "secondary";
+  };
+
+  const getStatusText = () => {
+    if (status === "waiting") return "Đang chờ";
+    if (status === "in_progress") return "Đang làm bài";
+    if (status === "completed") return "Đã hoàn thành";
+    return "";
+  };
+
   return (
-    <div className="px-3 py-2 text-sm flex items-center justify-between">
+    <div className="px-3 py-2 text-sm flex items-center justify-between hover:bg-muted/50 rounded-md transition-colors group">
       <div className="flex items-center gap-2">
-        <User className="h-4 w-4 text-gray-500" />
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-festival-pink to-festival-orange text-white flex items-center justify-center text-xs font-medium overflow-hidden">
+          {participant.studentName.charAt(0).toUpperCase()}
+        </div>
         <div>
-          <div className="font-medium">{participant.studentName}</div>
+          <div className="font-medium group-hover:text-festival-red transition-colors">{participant.studentName}</div>
           <div className="text-xs text-muted-foreground flex gap-3">
             <span>MSSV: {participant.studentId}</span>
             <span>Lớp: {participant.className}</span>
@@ -24,11 +46,22 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({ participant, status, 
         </div>
       </div>
       
-      {status === "completed" && typeof score !== 'undefined' && (
-        <Badge variant={score >= 5 ? "success" : "destructive"} className="ml-2">
-          {score}/10
+      <div className="flex items-center gap-2">
+        <Badge variant={getBadgeVariant()} className="text-xs" neon neonColor={status === "completed" ? (score && score >= 5 ? "green" : "red") : "blue"}>
+          {getStatusText()}
         </Badge>
-      )}
+        
+        {status === "completed" && typeof score !== 'undefined' && (
+          <Badge 
+            variant={score >= 5 ? "success" : "destructive"} 
+            className="ml-1 bg-opacity-90"
+            neon 
+            neonColor={score >= 5 ? "green" : "red"}
+          >
+            {score}/10
+          </Badge>
+        )}
+      </div>
     </div>
   );
 };
