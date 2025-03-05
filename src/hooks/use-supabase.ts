@@ -39,7 +39,7 @@ export interface SupabaseExam {
   share_link?: string | null;
 }
 
-// Base type for all Supabase data responses
+// Simple base type for all Supabase data responses
 export type SupabaseData = Record<string, any>;
 
 // Options for querying Supabase
@@ -90,7 +90,7 @@ export function useSupabaseQuery<T extends Record<string, any>>(
 
         if (error) throw error;
         
-        // Use type assertion to avoid deep instantiation issues
+        // Use double type assertion with unknown as intermediate step to avoid deep instantiation error
         setData(result as unknown as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
@@ -117,7 +117,7 @@ export function useSupabaseMutation(tableName: TableNames) {
   const add = async <T extends SupabaseData>(data: T): Promise<Record<string, any>> => {
     try {
       setLoading(true);
-      // Use type assertion to avoid compatibility issues
+      // Use explicit type assertion to avoid compatibility issues
       const { data: result, error } = await supabase
         .from(tableName)
         .insert(data as any)
