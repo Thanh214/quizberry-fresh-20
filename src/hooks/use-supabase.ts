@@ -90,8 +90,8 @@ export function useSupabaseQuery<T extends Record<string, any>>(
 
         if (error) throw error;
         
-        // Directly cast as T[] to avoid deep type recursion
-        setData(result as T[]);
+        // Use type assertion to avoid deep instantiation issues
+        setData(result as unknown as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);
@@ -114,10 +114,15 @@ export function useSupabaseMutation(tableName: TableNames) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const add = async <T extends Record<string, any>>(data: T) => {
+  const add = async <T extends SupabaseData>(data: T): Promise<Record<string, any>> => {
     try {
       setLoading(true);
-      const { data: result, error } = await supabase.from(tableName).insert(data).select();
+      // Use type assertion to avoid compatibility issues
+      const { data: result, error } = await supabase
+        .from(tableName)
+        .insert(data as any)
+        .select();
+      
       if (error) throw error;
       return result[0] as Record<string, any>;
     } catch (err: any) {
@@ -130,14 +135,15 @@ export function useSupabaseMutation(tableName: TableNames) {
     }
   };
 
-  const update = async <T extends Record<string, any>>(id: string, data: Partial<T>) => {
+  const update = async <T extends SupabaseData>(id: string, data: Partial<T>): Promise<Record<string, any>> => {
     try {
       setLoading(true);
       const { data: result, error } = await supabase
         .from(tableName)
-        .update(data)
+        .update(data as any)
         .eq("id", id)
         .select();
+      
       if (error) throw error;
       return result[0] as Record<string, any>;
     } catch (err: any) {
@@ -150,7 +156,7 @@ export function useSupabaseMutation(tableName: TableNames) {
     }
   };
 
-  const remove = async (id: string) => {
+  const remove = async (id: string): Promise<boolean> => {
     try {
       setLoading(true);
       const { error } = await supabase.from(tableName).delete().eq("id", id);
