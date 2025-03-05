@@ -29,5 +29,28 @@ export interface SupabaseExam {
   share_link?: string;
 }
 
-// Export all types from this module
-export * from './types';
+// Supabase exam participant structure (snake_case)
+export interface SupabaseExamParticipant {
+  id: string;
+  exam_id: string;
+  student_name: string;
+  student_id: string;
+  class_name: string;
+  status: string;
+  start_time: string;
+  end_time?: string;
+  join_link?: string;
+  exit_count?: number;
+  last_exit_time?: string;
+  score?: number;
+  user_id?: string;
+}
+
+// Auth result type for authentication operations
+export interface AuthResult {
+  data: {
+    user: any | null;
+    session: any | null;
+  };
+  error: Error | null;
+}
