@@ -191,6 +191,37 @@ export const useExamState = () => {
       throw error;
     }
   };
+
+  const endExam = async (id: string) => {
+    try {
+      setIsLoading(true);
+      
+      const examIndex = exams.findIndex(e => e.id === id);
+      if (examIndex === -1) {
+        throw new Error("Exam not found");
+      }
+      
+      const updatedExams = [...exams];
+      
+      // Set the exam as not active and not started
+      updatedExams[examIndex] = {
+        ...updatedExams[examIndex],
+        hasStarted: false,
+        isActive: false,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      setExams(updatedExams);
+      localStorage.setItem("quizExams", JSON.stringify(updatedExams));
+      
+      setIsLoading(false);
+      toast.success("Bài thi đã kết thúc sớm");
+    } catch (error) {
+      setError("Failed to end exam");
+      setIsLoading(false);
+      throw error;
+    }
+  };
   
   const getExamByCode = (code: string) => {
     return exams.find(e => e.code === code);
@@ -207,6 +238,7 @@ export const useExamState = () => {
     deleteExam,
     activateExam,
     startExam,
+    endExam,
     getExamByCode,
     getExamById,
     isLoading,

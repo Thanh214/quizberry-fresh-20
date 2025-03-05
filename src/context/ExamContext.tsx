@@ -13,12 +13,13 @@ type ExamContextType = {
   getExamById: (id: string) => Exam | undefined;
   exams: Exam[];
   startExam: (examId: string) => Promise<void>;
+  endExam: (examId: string) => Promise<void>;
 };
 
 const ExamContext = createContext<ExamContextType | undefined>(undefined);
 
 export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { exams, getExamByCode, getExamById, startExam } = useQuiz();
+  const { exams, getExamByCode, getExamById, startExam, endExam } = useQuiz();
   const [participants, setParticipants] = useState<ExamParticipant[]>(() => {
     const stored = localStorage.getItem("examParticipants");
     return stored ? JSON.parse(stored) : [];
@@ -110,7 +111,8 @@ export const ExamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         getExamByCode,
         getExamById,
         exams,
-        startExam
+        startExam,
+        endExam
       }}
     >
       {children}

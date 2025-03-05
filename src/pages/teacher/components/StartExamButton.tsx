@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, Sparkles } from "lucide-react";
+import { PlayCircle, Sparkles, StopCircle, Timer } from "lucide-react";
 import NeonEffect from "@/components/NeonEffect";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -12,6 +12,7 @@ interface StartExamButtonProps {
   hasStarted: boolean;
   waitingCount: number;
   onStart: (examId: string) => void;
+  onEnd?: (examId: string) => void;
 }
 
 const StartExamButton: React.FC<StartExamButtonProps> = ({
@@ -20,6 +21,7 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
   hasStarted,
   waitingCount,
   onStart,
+  onEnd,
 }) => {
   // This function handles the direct start of the exam without confirmation
   const handleStartExam = () => {
@@ -49,8 +51,20 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
     cleanup();
   };
 
-  // Only show the button when the exam is active, not started yet, and has waiting students
-  if (!isActive || hasStarted || waitingCount <= 0) {
+  // This function handles ending the exam early
+  const handleEndExam = () => {
+    if (onEnd) {
+      onEnd(examId);
+      
+      toast.success("Bài thi đã kết thúc", {
+        description: "Tất cả học sinh phải nộp bài",
+        icon: <StopCircle className="h-4 w-4 text-red-400" />,
+      });
+    }
+  };
+
+  // Only show the button when the exam is active
+  if (!isActive) {
     return null;
   }
 
@@ -107,7 +121,7 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
       initial="initial"
       animate="animate"
     >
-      <NeonEffect color="green" padding="p-0" className="rounded-full overflow-hidden group">
+      <NeonEffect color={hasStarted ? "red" : "green"} padding="p-0" className="rounded-full overflow-hidden group">
         <motion.div
           variants={buttonVariants}
           whileHover="hover"
@@ -115,11 +129,14 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
         >
           <Button
             size="sm"
-            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-none rounded-full relative overflow-hidden group transition-all duration-300"
-            onClick={handleStartExam}
+            className={`${hasStarted 
+              ? "bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600" 
+              : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            } border-none rounded-full relative overflow-hidden group transition-all duration-300`}
+            onClick={hasStarted ? handleEndExam : handleStartExam}
           >
             {/* Shine effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-300/30 to-green-400/0 opacity-0 group-hover:opacity-100 animate-shine" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
             
             {/* Icon with animation */}
             <motion.div
@@ -128,27 +145,39 @@ const StartExamButton: React.FC<StartExamButtonProps> = ({
               transition={{ duration: 0.8, ease: "easeInOut" }}
               className="mr-2"
             >
-              <PlayCircle className="h-4 w-4" />
+              {hasStarted ? <StopCircle className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
             </motion.div>
             
-            <span>Bắt đầu bài thi</span>
+            <span>{hasStarted ? "Kết thúc bài thi" : "Bắt đầu bài thi"}</span>
             
-            {/* Student count with animation */}
-            <motion.span 
-              className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs flex items-center"
-              variants={studentCountVariants}
-              animate={waitingCount > 5 ? {
-                scale: [1, 1.05, 1],
-                opacity: [1, 0.8, 1],
-                transition: { 
-                  duration: 2, 
-                  repeat: Infinity, 
-                  repeatType: "reverse" as const
-                }
-              } : undefined}
-            >
-              {waitingCount} học sinh đang chờ
-            </motion.span>
+            {/* Student count or timer with animation */}
+            {!hasStarted && waitingCount > 0 && (
+              <motion.span 
+                className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs flex items-center"
+                variants={studentCountVariants}
+                animate={waitingCount > 5 ? {
+                  scale: [1, 1.05, 1],
+                  opacity: [1, 0.8, 1],
+                  transition: { 
+                    duration: 2, 
+                    repeat: Infinity, 
+                    repeatType: "reverse" as const
+                  }
+                } : undefined}
+              >
+                {waitingCount} học sinh đang chờ
+              </motion.span>
+            )}
+            
+            {hasStarted && (
+              <motion.span 
+                className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs flex items-center"
+                variants={studentCountVariants}
+              >
+                <Timer className="h-3 w-3 mr-1" />
+                Kết thúc sớm
+              </motion.span>
+            )}
           </Button>
         </motion.div>
       </NeonEffect>

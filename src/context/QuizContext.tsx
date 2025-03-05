@@ -45,6 +45,7 @@ type QuizContextType = {
   deleteExam: (id: string) => Promise<void>;
   activateExam: (id: string) => Promise<void>;
   startExam: (id: string) => Promise<void>;
+  endExam: (id: string) => Promise<void>;
   getExamByCode: (code: string) => Exam | undefined;
   getExamById: (id: string) => Exam | undefined;
 };

@@ -16,6 +16,7 @@ import ExamStatistics from "./ExamStatistics";
 import ParticipantsList from "./ParticipantsList";
 import ExamShareLink from "./ExamShareLink";
 import StartExamButton from "./StartExamButton";
+import ExamTimer from "./ExamTimer";
 import { motion } from "framer-motion";
 
 interface ExamCardProps {
@@ -28,8 +29,10 @@ interface ExamCardProps {
   onDelete: (examId: string) => void;
   onActivate: (examId: string) => void;
   onStart: (examId: string) => void;
+  onEnd?: (examId: string) => void;
   setConfirmDelete: (examId: string | null) => void;
   setConfirmStart: (examId: string | null) => void;
+  setConfirmEnd?: (examId: string | null) => void;
   setConfirmToggle: (examId: string | null) => void;
   participants: ExamParticipant[];
 }
@@ -42,8 +45,11 @@ const ExamCard: React.FC<ExamCardProps> = ({
   isTeacher,
   onEdit,
   onActivate,
+  onStart,
+  onEnd,
   setConfirmDelete,
   setConfirmStart,
+  setConfirmEnd,
   setConfirmToggle,
   participants
 }) => {
@@ -119,7 +125,7 @@ const ExamCard: React.FC<ExamCardProps> = ({
             
             {isTeacher && (
               <div className="flex items-center gap-2 flex-wrap mt-2 sm:mt-0">
-                {!exam.hasStarted && exam.isActive && waitingCount > 0 && (
+                {exam.isActive && (
                   <motion.div
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -133,6 +139,7 @@ const ExamCard: React.FC<ExamCardProps> = ({
                         size="icon"
                         className="text-green-500 border-green-200 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:border-green-800 transition-all duration-300"
                         onClick={() => setConfirmStart(exam.id)}
+                        disabled={exam.hasStarted}
                       >
                         <PlayCircle className="h-4 w-4" />
                       </Button>
@@ -219,6 +226,13 @@ const ExamCard: React.FC<ExamCardProps> = ({
             </div>
           )}
           
+          {/* Exam timer for active exams */}
+          {exam.hasStarted && (
+            <div className="mt-3">
+              <ExamTimer exam={exam} />
+            </div>
+          )}
+          
           {/* Statistics */}
           <ExamStatistics 
             exam={exam}
@@ -235,16 +249,15 @@ const ExamCard: React.FC<ExamCardProps> = ({
             isTeacher={isTeacher} 
           />
           
-          {/* Action buttons for waiting students */}
-          {!exam.hasStarted && exam.isActive && waitingCount > 0 && (
-            <StartExamButton 
-              examId={exam.id}
-              isActive={exam.isActive}
-              hasStarted={exam.hasStarted}
-              waitingCount={waitingCount}
-              onStart={() => setConfirmStart(exam.id)}
-            />
-          )}
+          {/* Action buttons for controlling the exam */}
+          <StartExamButton 
+            examId={exam.id}
+            isActive={exam.isActive}
+            hasStarted={exam.hasStarted}
+            waitingCount={waitingCount}
+            onStart={onStart}
+            onEnd={onEnd}
+          />
 
           {/* Student participants section - only shown for teachers */}
           {isTeacher && (
