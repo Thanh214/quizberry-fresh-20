@@ -12,6 +12,23 @@ export const useExamState = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Generate a unique exam code
+  const generateUniqueCode = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const codeLength = 6;
+    let result = '';
+    
+    do {
+      result = 'EPU';
+      for (let i = 0; i < codeLength; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      // Check if this code already exists
+    } while (exams.some(e => e.code === result));
+    
+    return result;
+  };
+
   // Exam management functions
   const addExam = async (exam: Omit<Exam, "id" | "createdAt" | "updatedAt">): Promise<Exam> => {
     try {
@@ -20,7 +37,7 @@ export const useExamState = () => {
       const now = new Date().toISOString();
       const newExam: Exam = {
         id: Date.now().toString(),
-        code: exam.code,
+        code: exam.code || generateUniqueCode(),
         title: exam.title,
         description: exam.description,
         duration: exam.duration,
@@ -30,7 +47,7 @@ export const useExamState = () => {
         updatedAt: now,
         questionIds: exam.questionIds,
         hasStarted: false, // Initialize as not started
-        shareLink: `${window.location.origin}/student/register?code=${exam.code}`
+        shareLink: `${window.location.origin}/student/register?code=${exam.code || generateUniqueCode()}`
       };
       
       const updatedExams = [...exams, newExam];

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Exam } from "@/types/models";
 import NeonEffect from "@/components/NeonEffect";
 import { motion } from "framer-motion";
-import { SaveIcon, ArrowLeft, FilePlus2 } from "lucide-react";
+import { SaveIcon, ArrowLeft, FilePlus2, CheckCircle } from "lucide-react";
 
 interface ExamFormProps {
   onSubmit: (examData: Omit<Exam, "id" | "createdAt" | "updatedAt">) => Promise<void>;
@@ -30,6 +30,26 @@ const ExamForm: React.FC<ExamFormProps> = ({
   const [duration, setDuration] = useState(initialData?.duration || 30); // Default 30 minutes
 
   const isEditMode = !!initialData?.id;
+
+  // Generate a unique code for new exams
+  useEffect(() => {
+    if (!isEditMode && !code) {
+      // Generate a random alphanumeric code of 6 characters
+      const generateUniqueCode = () => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const codeLength = 6;
+        let result = '';
+        
+        for (let i = 0; i < codeLength; i++) {
+          result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        
+        return `EPU${result}`;
+      };
+      
+      setCode(generateUniqueCode());
+    }
+  }, [isEditMode, code]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,22 +140,24 @@ const ExamForm: React.FC<ExamFormProps> = ({
         />
       </motion.div>
       
-      <motion.div variants={itemVariants}>
-        <label className="text-sm font-medium" htmlFor="exam-code">
-          Mã bài thi
-        </label>
-        <Input
-          id="exam-code"
-          placeholder="Nhập mã bài thi (VD: EPU001)"
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          required
-          className="transition-all duration-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          Mã bài thi là mã duy nhất để sinh viên nhập vào khi tham gia thi
-        </p>
-      </motion.div>
+      {!isEditMode && (
+        <motion.div variants={itemVariants}>
+          <label className="text-sm font-medium" htmlFor="exam-code">
+            Mã bài thi
+          </label>
+          <Input
+            id="exam-code"
+            placeholder="Mã bài thi sẽ được tạo tự động"
+            value={code}
+            readOnly
+            disabled
+            className="bg-gray-100 transition-all duration-300"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Mã bài thi được tạo tự động để tránh trùng lặp
+          </p>
+        </motion.div>
+      )}
       
       <motion.div variants={itemVariants}>
         <label className="text-sm font-medium" htmlFor="exam-description">
@@ -202,8 +224,8 @@ const ExamForm: React.FC<ExamFormProps> = ({
               <>
                 {isEditMode ? (
                   <>
-                    <SaveIcon className="mr-2 h-4 w-4" />
-                    Lưu thay đổi
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Xác nhận thay đổi
                   </>
                 ) : (
                   <>

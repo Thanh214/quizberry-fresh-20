@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Exam } from "@/types/models";
-import { Clock, Users, Eye } from "lucide-react";
+import { Clock, Users, Eye, Hash } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -23,6 +23,11 @@ const ExamStatistics: React.FC<ExamStatisticsProps> = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 mb-4">
       <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
+        <Hash className="h-4 w-4 text-amber-500 flex-shrink-0" />
+        <span className="font-medium">{exam.code}</span>
+      </div>
+      
+      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
         <Clock className="h-4 w-4 text-blue-500 flex-shrink-0" />
         <span>{exam.duration} phút</span>
       </div>
@@ -39,16 +44,6 @@ const ExamStatistics: React.FC<ExamStatisticsProps> = ({
           {waitingCount > 0 && (
             <span className="text-amber-500">({waitingCount} đang chờ)</span>
           )}
-        </span>
-      </div>
-      
-      <div className="flex items-center gap-2 text-sm bg-white/30 dark:bg-gray-800/30 p-2 rounded-md">
-        <Clock className="h-4 w-4 text-gray-500 flex-shrink-0" />
-        <span>
-          {formatDistanceToNow(new Date(exam.createdAt), {
-            addSuffix: true,
-            locale: vi
-          })}
         </span>
       </div>
     </div>
