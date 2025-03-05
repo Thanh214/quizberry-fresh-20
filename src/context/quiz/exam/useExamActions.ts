@@ -26,12 +26,19 @@ export const useExamActions = (
       setIsLoading(true);
       
       const now = new Date().toISOString();
+      // Include all required fields for Supabase
       const newExam = {
-        ...exam,
+        code: exam.code,
+        title: exam.title,
+        description: exam.description || "",
+        duration: exam.duration,
+        teacher_id: exam.teacherId,
+        is_active: exam.isActive,
+        has_started: exam.hasStarted,
         created_at: now,
         updated_at: now,
-        // Convert from camelCase to snake_case for Supabase
-        question_ids: exam.questionIds || []
+        question_ids: exam.questionIds || [],
+        share_link: exam.shareLink || ""
       };
 
       // Add exam to Supabase
