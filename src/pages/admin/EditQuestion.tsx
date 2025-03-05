@@ -31,7 +31,9 @@ const EditQuestion: React.FC = () => {
         setContent(foundQuestion.content);
         setOptions([...foundQuestion.options]);
       } else {
-        toast.error("Câu hỏi không tồn tại");
+        toast.error("Câu hỏi không tồn tại", {
+          id: "question-not-found" // Add ID to prevent duplicate toasts
+        });
         navigate("/admin/questions");
       }
     }
@@ -53,7 +55,9 @@ const EditQuestion: React.FC = () => {
   
   const handleAddOption = () => {
     if (options.length >= 6) {
-      toast.error("Số lượng đáp án tối đa là 6");
+      toast.error("Số lượng đáp án tối đa là 6", {
+        id: "max-options-reached" // Add ID to prevent duplicate toasts
+      });
       return;
     }
     
@@ -68,7 +72,9 @@ const EditQuestion: React.FC = () => {
   
   const handleRemoveOption = (index: number) => {
     if (options.length <= 2) {
-      toast.error("Cần ít nhất 2 đáp án");
+      toast.error("Cần ít nhất 2 đáp án", {
+        id: "min-options-required" // Add ID to prevent duplicate toasts
+      });
       return;
     }
     
@@ -89,22 +95,30 @@ const EditQuestion: React.FC = () => {
     
     // Validations
     if (!content.trim()) {
-      toast.error("Vui lòng nhập nội dung câu hỏi");
+      toast.error("Vui lòng nhập nội dung câu hỏi", {
+        id: "missing-question-content" // Add ID to prevent duplicate toasts
+      });
       return;
     }
     
     if (options.length < 2) {
-      toast.error("Cần ít nhất 2 đáp án");
+      toast.error("Cần ít nhất 2 đáp án", {
+        id: "not-enough-options" // Add ID to prevent duplicate toasts
+      });
       return;
     }
     
     if (!options.some(opt => opt.isCorrect)) {
-      toast.error("Cần chọn ít nhất 1 đáp án đúng");
+      toast.error("Cần chọn ít nhất 1 đáp án đúng", {
+        id: "no-correct-option" // Add ID to prevent duplicate toasts
+      });
       return;
     }
     
     if (options.some(opt => !opt.content.trim())) {
-      toast.error("Vui lòng nhập nội dung cho tất cả các đáp án");
+      toast.error("Vui lòng nhập nội dung cho tất cả các đáp án", {
+        id: "empty-option-content" // Add ID to prevent duplicate toasts
+      });
       return;
     }
     
@@ -117,10 +131,14 @@ const EditQuestion: React.FC = () => {
         options,
       });
       
-      toast.success("Cập nhật câu hỏi thành công");
+      toast.success("Cập nhật câu hỏi thành công", {
+        id: "update-question-success" // Add ID to prevent duplicate toasts
+      });
       navigate("/admin/questions");
     } catch (error) {
-      toast.error("Không thể cập nhật câu hỏi");
+      toast.error("Không thể cập nhật câu hỏi", {
+        id: "update-question-error" // Add ID to prevent duplicate toasts
+      });
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -134,10 +152,14 @@ const EditQuestion: React.FC = () => {
       try {
         setIsLoading(true);
         await deleteQuestion(id);
-        toast.success("Xóa câu hỏi thành công");
+        toast.success("Xóa câu hỏi thành công", {
+          id: "delete-question-success" // Add ID to prevent duplicate toasts
+        });
         navigate("/admin/questions");
       } catch (error) {
-        toast.error("Không thể xóa câu hỏi");
+        toast.error("Không thể xóa câu hỏi", {
+          id: "delete-question-error" // Add ID to prevent duplicate toasts
+        });
         console.error(error);
       } finally {
         setIsLoading(false);

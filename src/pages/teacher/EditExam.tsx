@@ -7,30 +7,24 @@ import { useQuiz } from "@/context/QuizContext";
 import { useAuth } from "@/context/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import NeonEffect from "@/components/NeonEffect";
-import { motion } from "framer-motion";
-import { CheckCircle, ArrowLeft, XCircle, Clock, Hash, FilePlus } from "lucide-react";
+import { ArrowLeft, XCircle, FilePlus } from "lucide-react";
 import Card from "@/components/Card";
-import { Exam, Question } from "@/types/models";
-import QuestionList from "./components/QuestionList";
-import QuestionForm from "./components/QuestionForm";
+import { Question } from "@/types/models";
+import ExamQuestionManager from "./components/ExamQuestionManager";
 import ExamStatistics from "./components/ExamStatistics";
+import EditExamDetails from "./components/EditExamDetails";
 
 const EditExam: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { 
-    exams, 
     updateExam, 
     getExamById, 
     questions, 
     addQuestion, 
-    deleteQuestion,
-    updateQuestion 
+    deleteQuestion
   } = useQuiz();
   const { user } = useAuth();
   
@@ -38,9 +32,8 @@ const EditExam: React.FC = () => {
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
-  const [exam, setExam] = useState<Exam | null>(null);
+  const [exam, setExam] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("details");
-  const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [examQuestions, setExamQuestions] = useState<Question[]>([]);
 
@@ -69,7 +62,9 @@ const EditExam: React.FC = () => {
         );
         setExamQuestions(filteredQuestions);
       } else {
-        toast.error("Không tìm thấy bài thi");
+        toast.error("Không tìm thấy bài thi", {
+          id: "exam-not-found" // Add ID to prevent duplicate toasts
+        });
         navigate("/teacher/exams");
       }
     }
@@ -82,12 +77,16 @@ const EditExam: React.FC = () => {
     
     // Validate form
     if (!title.trim()) {
-      toast.error("Vui lòng nhập tiêu đề bài thi");
+      toast.error("Vui lòng nhập tiêu đề bài thi", {
+        id: "missing-title" // Add ID to prevent duplicate toasts
+      });
       return;
     }
     
     if (duration <= 0) {
-      toast.error("Thời gian làm bài phải lớn hơn 0");
+      toast.error("Thời gian làm bài phải lớn hơn 0", {
+        id: "invalid-duration" // Add ID to prevent duplicate toasts
+      });
       return;
     }
     
@@ -102,10 +101,14 @@ const EditExam: React.FC = () => {
         questionIds: selectedQuestions,
       });
       
-      toast.success("Cập nhật bài thi thành công");
+      toast.success("Cập nhật bài thi thành công", {
+        id: "update-exam-success" // Add ID to prevent duplicate toasts
+      });
       navigate("/teacher/exams");
     } catch (error) {
-      toast.error("Lỗi khi cập nhật bài thi");
+      toast.error("Lỗi khi cập nhật bài thi", {
+        id: "update-exam-error" // Add ID to prevent duplicate toasts
+      });
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -137,79 +140,52 @@ const EditExam: React.FC = () => {
         });
       }
       
-      setShowQuestionForm(false);
-      toast.success("Thêm câu hỏi thành công");
+      toast.success("Thêm câu hỏi thành công", {
+        id: "add-question-success" // Add ID to prevent duplicate toasts
+      });
+      return newQuestion;
     } catch (error) {
-      toast.error("Không thể thêm câu hỏi");
+      toast.error("Không thể thêm câu hỏi", {
+        id: "add-question-error" // Add ID to prevent duplicate toasts
+      });
       console.error(error);
+      throw error;
     }
   };
 
-  const handleToggleQuestion = (questionId: string) => {
-    setSelectedQuestions(prev => 
-      prev.includes(questionId)
-        ? prev.filter(id => id !== questionId)
-        : [...prev, questionId]
-    );
+  const handleDeleteQuestion = async (questionId: string) => {
+    try {
+      await deleteQuestion(questionId);
+      
+      // Remove from selected questions
+      setSelectedQuestions(prev => prev.filter(id => id !== questionId));
+      
+      // Remove from exam questions
+      setExamQuestions(prev => prev.filter(q => q.id !== questionId));
+      
+      // Update the exam's question list
+      if (exam) {
+        const updatedQuestionIds = selectedQuestions.filter(id => id !== questionId);
+        await updateExam(exam.id, {
+          questionIds: updatedQuestionIds,
+        });
+      }
+      
+      toast.success("Xóa câu hỏi thành công", {
+        id: "delete-question-success" // Add ID to prevent duplicate toasts
+      });
+      return true;
+    } catch (error) {
+      toast.error("Không thể xóa câu hỏi", {
+        id: "delete-question-error" // Add ID to prevent duplicate toasts
+      });
+      console.error(error);
+      throw error;
+    }
   };
 
   const handleEditQuestion = (questionId: string) => {
     navigate(`/admin/questions/edit/${questionId}`);
-  };
-
-  const handleDeleteQuestion = async (questionId: string) => {
-    if (window.confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
-      try {
-        await deleteQuestion(questionId);
-        
-        // Remove from selected questions
-        setSelectedQuestions(prev => prev.filter(id => id !== questionId));
-        
-        // Remove from exam questions
-        setExamQuestions(prev => prev.filter(q => q.id !== questionId));
-        
-        // Update the exam's question list
-        if (exam) {
-          const updatedQuestionIds = selectedQuestions.filter(id => id !== questionId);
-          await updateExam(exam.id, {
-            questionIds: updatedQuestionIds,
-          });
-        }
-        
-        toast.success("Xóa câu hỏi thành công");
-      } catch (error) {
-        toast.error("Không thể xóa câu hỏi");
-        console.error(error);
-      }
-    }
-  };
-
-  const handleSelectAll = () => {
-    setSelectedQuestions(questions.map(q => q.id));
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedQuestions([]);
-  };
-
-  // Form animation variants
-  const formVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
-    }
   };
 
   // Calculate statistics for display
@@ -294,109 +270,18 @@ const EditExam: React.FC = () => {
             
             <TabsContent value="details">
               <Card className="p-6">
-                <motion.form 
-                  onSubmit={handleSubmit} 
-                  className="space-y-5"
-                  variants={formVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <motion.div variants={itemVariants}>
-                    <label className="text-sm font-medium" htmlFor="exam-title">
-                      Tiêu đề bài thi
-                    </label>
-                    <Input
-                      id="exam-title"
-                      placeholder="Nhập tiêu đề bài thi"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
-                      className="transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
-                    />
-                  </motion.div>
-                  
-                  <motion.div variants={itemVariants}>
-                    <label className="text-sm font-medium" htmlFor="exam-code">
-                      Mã bài thi
-                    </label>
-                    <Input
-                      id="exam-code"
-                      value={exam.code}
-                      readOnly
-                      disabled
-                      className="bg-gray-100 transition-all duration-300"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Mã bài thi không thể thay đổi sau khi đã tạo
-                    </p>
-                  </motion.div>
-                  
-                  <motion.div variants={itemVariants}>
-                    <label className="text-sm font-medium" htmlFor="exam-description">
-                      Mô tả bài thi
-                    </label>
-                    <Textarea
-                      id="exam-description"
-                      placeholder="Nhập mô tả bài thi"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={3}
-                      neon
-                      neonColor="blue"
-                    />
-                  </motion.div>
-                  
-                  <motion.div variants={itemVariants}>
-                    <label className="text-sm font-medium" htmlFor="exam-duration">
-                      Thời gian làm bài (phút)
-                    </label>
-                    <Input
-                      id="exam-duration"
-                      type="number"
-                      min={1}
-                      value={duration}
-                      onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
-                      required
-                      className="transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
-                    />
-                  </motion.div>
-                  
-                  <motion.div variants={itemVariants} className="flex justify-between space-x-3 pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleCancel}
-                      className="border-slate-300 transition-all duration-300 hover:bg-slate-100"
-                    >
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Hủy thay đổi
-                    </Button>
-                    
-                    <NeonEffect 
-                      color="blue" 
-                      padding="p-0" 
-                      className="rounded-md overflow-hidden"
-                    >
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="border-none w-full relative overflow-hidden group bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                      >
-                        {/* Shine effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
-                        
-                        {isLoading ? (
-                          "Đang xử lý..."
-                        ) : (
-                          <>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Xác nhận thay đổi
-                          </>
-                        )}
-                      </Button>
-                    </NeonEffect>
-                  </motion.div>
-                </motion.form>
+                <EditExamDetails
+                  title={title}
+                  setTitle={setTitle}
+                  description={description}
+                  setDescription={setDescription}
+                  duration={duration}
+                  setDuration={setDuration}
+                  examCode={exam.code}
+                  handleSubmit={handleSubmit}
+                  handleCancel={handleCancel}
+                  isLoading={isLoading}
+                />
               </Card>
             </TabsContent>
             
@@ -410,7 +295,7 @@ const EditExam: React.FC = () => {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => setShowQuestionForm(true)}
+                    onClick={() => setActiveTab("add-question")}
                     className="bg-primary text-white hover:bg-primary/90"
                   >
                     <FilePlus className="mr-2 h-4 w-4" />
@@ -418,23 +303,15 @@ const EditExam: React.FC = () => {
                   </Button>
                 </div>
                 
-                {showQuestionForm ? (
-                  <QuestionForm 
-                    onSubmit={handleAddQuestion}
-                    onCancel={() => setShowQuestionForm(false)}
-                    isLoading={isLoading}
-                  />
-                ) : (
-                  <QuestionList 
-                    questions={examQuestions}
-                    selectedQuestions={selectedQuestions}
-                    onToggleQuestion={handleToggleQuestion}
-                    onEditQuestion={handleEditQuestion}
-                    onDeleteQuestion={handleDeleteQuestion}
-                    onSelectAll={handleSelectAll}
-                    onDeselectAll={handleDeselectAll}
-                  />
-                )}
+                <ExamQuestionManager
+                  questions={examQuestions}
+                  selectedQuestions={selectedQuestions}
+                  setSelectedQuestions={setSelectedQuestions}
+                  addQuestion={handleAddQuestion}
+                  deleteQuestion={handleDeleteQuestion}
+                  isLoading={isLoading}
+                  onEditQuestion={handleEditQuestion}
+                />
               </Card>
             </TabsContent>
           </Tabs>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,8 +50,9 @@ const ExamForm: React.FC<ExamFormProps> = ({
     }
   }, [isEditMode, code]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.Event) => {
     e.preventDefault();
+    e.stopPropagation(); // Add this to prevent event bubbling
     
     // Validate form
     if (!title.trim()) {
@@ -189,15 +189,23 @@ const ExamForm: React.FC<ExamFormProps> = ({
         />
       </motion.div>
       
-      <motion.div variants={itemVariants} className="flex justify-between space-x-3 pt-4">
+      <motion.div 
+        variants={itemVariants} 
+        className="flex justify-between space-x-3 pt-4"
+        onClick={(e) => e.stopPropagation()} // Stop click propagation
+      >
         <Button
           type="button"
           variant="outline"
-          onClick={onCancel}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel();
+          }}
           className="border-slate-300 transition-all duration-300 hover:bg-slate-100"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Quay lại
+          {isEditMode ? "Hủy" : "Quay lại"}
         </Button>
         
         <NeonEffect 
@@ -208,6 +216,7 @@ const ExamForm: React.FC<ExamFormProps> = ({
           <Button
             type="submit"
             disabled={isLoading}
+            onClick={(e) => e.stopPropagation()} // Stop click propagation
             className={`
               border-none w-full relative overflow-hidden group
               ${isEditMode 
@@ -225,7 +234,7 @@ const ExamForm: React.FC<ExamFormProps> = ({
                 {isEditMode ? (
                   <>
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Xác nhận thay đổi
+                    Lưu thay đổi
                   </>
                 ) : (
                   <>
