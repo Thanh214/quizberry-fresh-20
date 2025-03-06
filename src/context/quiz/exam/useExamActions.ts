@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { SupabaseExam } from "@/hooks/supabase";
 import { Exam } from "@/types/models";
 import { ExamActions } from "./types";
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Hook for exam CRUD operations
@@ -27,20 +26,6 @@ export const useExamActions = (
       setIsLoading(true);
       
       const now = new Date().toISOString();
-      
-      // Ensure all questionIds are valid UUIDs
-      const validQuestionIds = Array.isArray(exam.questionIds) 
-        ? exam.questionIds.filter(id => {
-            try {
-              // Test if it's a valid UUID format
-              return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-            } catch (e) {
-              console.error("Invalid question ID:", id, e);
-              return false;
-            }
-          })
-        : [];
-      
       // Include all required fields for Supabase
       const newExam = {
         code: exam.code,
@@ -52,7 +37,7 @@ export const useExamActions = (
         has_started: exam.hasStarted,
         created_at: now,
         updated_at: now,
-        question_ids: validQuestionIds,
+        question_ids: exam.questionIds || [],
         share_link: exam.shareLink || ""
       };
 
@@ -133,21 +118,8 @@ export const useExamActions = (
         dbData.teacher_id = examData.teacherId;
       }
       
-      // Validate questionIds to ensure they are all valid UUIDs
       if (examData.questionIds !== undefined) {
-        const validQuestionIds = Array.isArray(examData.questionIds) 
-          ? examData.questionIds.filter(id => {
-              try {
-                // Test if it's a valid UUID format
-                return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-              } catch (e) {
-                console.error("Invalid question ID:", id, e);
-                return false;
-              }
-            })
-          : [];
-        
-        dbData.question_ids = validQuestionIds;
+        dbData.question_ids = examData.questionIds; 
       }
       
       if (examData.shareLink !== undefined) {
