@@ -26,11 +26,6 @@ export const useQuestionState = () => {
     setQuestions(prev => prev.filter(q => q.id !== id));
   };
 
-  // Validate if a string is a valid UUID
-  const isValidUUID = (id: string) => {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-  };
-
   // Question management functions
   const fetchQuestions = async () => {
     try {
@@ -47,20 +42,7 @@ export const useQuestionState = () => {
       if (error) throw error;
       
       if (data) {
-        const formattedQuestions = data.map((q: any) => ({
-          id: q.id,
-          content: q.content,
-          createdAt: q.created_at,
-          updatedAt: q.updated_at,
-          examId: q.exam_id,
-          options: Array.isArray(q.options) ? q.options.map((o: any) => ({
-            id: o.id,
-            content: o.content,
-            isCorrect: o.is_correct
-          })) : []
-        }));
-        
-        setQuestions(formattedQuestions);
+        setQuestions(data as unknown as Question[]);
       }
       
       setIsLoading(false);
@@ -78,11 +60,11 @@ export const useQuestionState = () => {
     try {
       setIsLoading(true);
       
-      // Create a new question in Supabase
+      // Tạo câu hỏi mới trong Supabase
       const now = new Date().toISOString();
       const newQuestionData = {
         content: question.content,
-        exam_id: question.examId && isValidUUID(question.examId) ? question.examId : null,
+        exam_id: question.examId,
         created_at: now,
         updated_at: now
       };
@@ -95,7 +77,7 @@ export const useQuestionState = () => {
         
       if (questionError) throw questionError;
       
-      // Add options to the question
+      // Thêm các lựa chọn cho câu hỏi
       const options = question.options || [];
       if (options.length > 0) {
         const optionsData = options.map(option => ({
@@ -111,7 +93,7 @@ export const useQuestionState = () => {
         if (optionsError) throw optionsError;
       }
       
-      // Fetch the question with options to get the complete data
+      // Fetch lại câu hỏi với options để có dữ liệu đầy đủ
       const { data: fullQuestion, error: fetchError } = await supabase
         .from('questions')
         .select(`
@@ -124,19 +106,15 @@ export const useQuestionState = () => {
       if (fetchError) throw fetchError;
       
       const newQuestion = {
-        id: fullQuestion.id,
-        content: fullQuestion.content,
-        createdAt: fullQuestion.created_at,
-        updatedAt: fullQuestion.updated_at,
-        examId: fullQuestion.exam_id,
-        options: Array.isArray(fullQuestion.options) ? fullQuestion.options.map((opt: any) => ({
+        ...fullQuestion,
+        options: fullQuestion.options.map((opt: any) => ({
           id: opt.id,
           content: opt.content,
           isCorrect: opt.is_correct
-        })) : []
-      } as Question;
+        }))
+      } as unknown as Question;
       
-      // Update state
+      // Cập nhật state
       addQuestionToState(newQuestion);
       
       toast.success("Thêm câu hỏi thành công");

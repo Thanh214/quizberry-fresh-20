@@ -6,11 +6,6 @@ import { useAuth } from "@/context/AuthContext";
 import { Question } from "@/types/models";
 import { toast } from "sonner";
 
-// Validate if a string is a valid UUID
-const isValidUUID = (id: string) => {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-};
-
 export const useEditExam = (examId: string | undefined) => {
   const navigate = useNavigate();
   const { 
@@ -39,7 +34,7 @@ export const useEditExam = (examId: string | undefined) => {
     }
 
     // Load exam data
-    if (examId && isValidUUID(examId)) {
+    if (examId) {
       const examData = getExamById(examId);
       if (examData) {
         setExam(examData);
@@ -47,17 +42,12 @@ export const useEditExam = (examId: string | undefined) => {
         setDescription(examData.description || "");
         setDuration(examData.duration);
         
-        // Filter valid question IDs
-        const validQuestionIds = Array.isArray(examData.questionIds) 
-          ? examData.questionIds.filter(id => isValidUUID(id))
-          : [];
-        
         // Set selected questions based on the exam
-        setSelectedQuestions(validQuestionIds);
+        setSelectedQuestions(examData.questionIds || []);
         
         // Filter questions that are in this exam
         const filteredQuestions = questions.filter(q => 
-          validQuestionIds.includes(q.id)
+          examData.questionIds?.includes(q.id)
         );
         setExamQuestions(filteredQuestions);
       } else {
@@ -66,11 +56,6 @@ export const useEditExam = (examId: string | undefined) => {
         });
         navigate("/teacher/exams");
       }
-    } else if (examId) {
-      toast.error("ID bài thi không hợp lệ", {
-        id: "invalid-exam-id"
-      });
-      navigate("/teacher/exams");
     }
   }, [examId, user, navigate, getExamById, questions]);
 
@@ -97,15 +82,12 @@ export const useEditExam = (examId: string | undefined) => {
     setIsLoading(true);
     
     try {
-      // Filter valid question IDs
-      const validQuestionIds = selectedQuestions.filter(id => isValidUUID(id));
-      
       // Update exam data
       await updateExam(exam.id, {
         title,
         description,
         duration,
-        questionIds: validQuestionIds,
+        questionIds: selectedQuestions,
       });
       
       toast.success("Cập nhật bài thi thành công", {
