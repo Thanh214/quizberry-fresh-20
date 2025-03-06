@@ -7,16 +7,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { useExam } from "@/context/ExamContext";
 import { Button } from "@/components/ui/button";
-import { SearchX, PlusCircle, Sparkles, LogOut, BookMarked } from "lucide-react";
+import { SearchX, PlusCircle, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ExamList from "./components/ExamList";
 import NeonEffect from "@/components/NeonEffect";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
 
 const TeacherExams: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { exams, deleteExam, activateExam, startExam, updateExam } = useQuiz();
   const { participants } = useExam();
   
@@ -75,12 +74,6 @@ const TeacherExams: React.FC = () => {
       isActive: false
     });
   };
-  
-  const handleLogout = () => {
-    logout();
-    toast.success("Đã đăng xuất thành công");
-    navigate("/role-selection");
-  };
 
   // Button animation variants
   const buttonVariants = {
@@ -112,44 +105,39 @@ const TeacherExams: React.FC = () => {
                 Tạo và quản lý các bài thi của bạn
               </p>
             </div>
-            <div className="flex gap-3 flex-col sm:flex-row">
-              <motion.div
-                variants={buttonVariants}
-                initial="initial"
-                animate="animate"
-                whileHover="hover"
-                whileTap="tap"
-              >
+            <motion.div
+              variants={buttonVariants}
+              initial="initial"
+              animate="animate"
+              whileHover="hover"
+              whileTap="tap"
+            >
+              <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
                 <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  className="gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 w-full sm:w-auto"
+                  onClick={handleCreateExam}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none relative group overflow-hidden w-full sm:w-auto"
                 >
-                  <LogOut className="h-4 w-4" />
-                  Đăng xuất
-                </Button>
-              </motion.div>
-              <motion.div
-                variants={buttonVariants}
-                initial="initial"
-                animate="animate"
-                whileHover="hover"
-                whileTap="tap"
-              >
-                <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
-                  <Button
-                    onClick={handleCreateExam}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none relative group overflow-hidden w-full sm:w-auto"
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
+                  
+                  <motion.span 
+                    className="mr-2"
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.2, 1]
+                    }}
+                    transition={{ 
+                      duration: 5,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
                   >
-                    {/* Shine effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
-                    
-                    <BookMarked className="h-4 w-4 mr-2" />
-                    Tạo bài thi mới
-                  </Button>
-                </NeonEffect>
-              </motion.div>
-            </div>
+                    <Sparkles className="h-4 w-4" />
+                  </motion.span>
+                  Tạo bài thi mới
+                </Button>
+              </NeonEffect>
+            </motion.div>
           </div>
         </TransitionWrapper>
 
@@ -172,20 +160,6 @@ const TeacherExams: React.FC = () => {
               <p className="text-muted-foreground mt-2">
                 Không có bài thi nào phù hợp với từ khóa "{searchTerm}"
               </p>
-            </div>
-          ) : filteredExams.length === 0 ? (
-            <div className="text-center py-10 px-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-900/50">
-              <div className="flex flex-col items-center max-w-md mx-auto">
-                <div className="p-4 mb-4 bg-purple-100 dark:bg-purple-900/20 rounded-full">
-                  <BookMarked className="h-12 w-12 text-purple-500" />
-                </div>
-                
-                <h3 className="text-xl font-medium mb-2">Chưa có bài thi nào</h3>
-                
-                <p className="text-muted-foreground mb-6">
-                  Hãy tạo bài thi đầu tiên của bạn để bắt đầu. Bạn có thể thêm câu hỏi, thiết lập thời gian và chia sẻ bài thi với học viên.
-                </p>
-              </div>
             </div>
           ) : (
             <ExamList

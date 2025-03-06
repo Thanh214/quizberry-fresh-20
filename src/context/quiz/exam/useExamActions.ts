@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,9 +26,6 @@ export const useExamActions = (
       setIsLoading(true);
       
       const now = new Date().toISOString();
-      // Ensure questionIds is an array before sending to Supabase
-      const questionIds = Array.isArray(exam.questionIds) ? exam.questionIds : [];
-      
       // Include all required fields for Supabase
       const newExam = {
         code: exam.code,
@@ -39,7 +37,7 @@ export const useExamActions = (
         has_started: exam.hasStarted,
         created_at: now,
         updated_at: now,
-        question_ids: questionIds, // Ensure it's an array
+        question_ids: exam.questionIds || [], // Send as a JSONB array directly
         share_link: exam.shareLink || ""
       };
 
@@ -65,8 +63,7 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        // Ensure questionIds is always an array
-        questionIds: Array.isArray(supabaseExam.question_ids) ? supabaseExam.question_ids : [],
+        questionIds: supabaseExam.question_ids || [], // It's already parsed from JSONB
         shareLink: supabaseExam.share_link || ""
       };
       
@@ -112,8 +109,7 @@ export const useExamActions = (
       }
       
       if (examData.questionIds !== undefined) {
-        // Ensure questionIds is an array
-        dbData.question_ids = Array.isArray(examData.questionIds) ? examData.questionIds : [];
+        dbData.question_ids = examData.questionIds; // Send as JSONB directly, no need to stringify
         delete dbData.questionIds;
       }
       
@@ -121,9 +117,6 @@ export const useExamActions = (
         dbData.share_link = examData.shareLink;
         delete dbData.shareLink;
       }
-      
-      // Log the data being sent to Supabase for debugging
-      console.log("Updating exam with data:", dbData);
       
       // Update data in Supabase
       const { data, error } = await supabase
@@ -149,8 +142,7 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        // Ensure questionIds is always an array
-        questionIds: Array.isArray(supabaseExam.question_ids) ? supabaseExam.question_ids : [],
+        questionIds: supabaseExam.question_ids || [], // It's already parsed from JSONB
         shareLink: supabaseExam.share_link || ""
       };
       

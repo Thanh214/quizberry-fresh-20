@@ -30,75 +30,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (session) {
       // Lấy thông tin hồ sơ người dùng từ profiles
       const fetchUserProfile = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-          if (error) {
-            console.error("Lỗi khi lấy hồ sơ người dùng:", error);
-            
-            // Create profile if not exists
-            if (error.code === 'PGRST116') {
-              // Profile doesn't exist, create it
-              const { data: newProfile, error: createError } = await supabase
-                .from('profiles')
-                .insert({
-                  id: session.user.id,
-                  username: session.user.email || '',
-                  email: session.user.email,
-                  role: 'teacher',
-                  created_at: new Date().toISOString()
-                })
-                .select()
-                .single();
-                
-              if (createError) {
-                console.error("Lỗi khi tạo hồ sơ người dùng:", createError);
-                return;
-              }
-              
-              if (newProfile) {
-                // Use the newly created profile
-                const userData: User = {
-                  id: session.user.id,
-                  username: newProfile.username || session.user.email || '',
-                  email: session.user.email,
-                  role: 'teacher',
-                  name: newProfile.name,
-                  faculty: newProfile.faculty
-                };
+        if (error) {
+          console.error("Lỗi khi lấy hồ sơ người dùng:", error);
+          return;
+        }
 
-                setUser(userData);
-                localStorage.setItem("user", JSON.stringify(userData));
-              }
-            }
-            return;
-          }
+        if (data) {
+          // Ensure role is one of the valid values
+          const role = data.role as "admin" | "student" | "teacher";
+          
+          // Tạo đối tượng người dùng từ dữ liệu profile
+          const userData: User = {
+            id: session.user.id,
+            username: data.username || session.user.email || '',
+            email: session.user.email,
+            role: role,
+            name: data.name,
+            faculty: data.faculty,
+            className: data.class_name,
+            studentId: data.student_id
+          };
 
-          if (data) {
-            // Ensure role is one of the valid values
-            const role = data.role as "admin" | "student" | "teacher";
-            
-            // Tạo đối tượng người dùng từ dữ liệu profile
-            const userData: User = {
-              id: session.user.id,
-              username: data.username || session.user.email || '',
-              email: session.user.email,
-              role: role,
-              name: data.name,
-              faculty: data.faculty,
-              className: data.class_name,
-              studentId: data.student_id
-            };
-
-            setUser(userData);
-            localStorage.setItem("user", JSON.stringify(userData));
-          }
-        } catch (err) {
-          console.error("Error fetching user profile:", err);
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
         }
       };
 
@@ -232,10 +192,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name,
         className,
         studentId,
-        examCode
       };
       
       localStorage.setItem("user", JSON.stringify(studentUser));
+      localStorage.setItem("examCode", examCode); // Lưu mã bài thi
       setUser(studentUser);
     } catch (error: any) {
       toast.error(`Đăng nhập thất bại: ${error.message}`);
