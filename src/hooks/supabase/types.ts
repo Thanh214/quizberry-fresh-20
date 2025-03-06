@@ -25,7 +25,7 @@ export interface SupabaseExam {
   has_started: boolean;
   created_at: string;
   updated_at: string;
-  question_ids?: string; // JSON string of question IDs
+  question_ids?: string[] | any; // Can be JSON array 
   share_link?: string;
 }
 

@@ -37,7 +37,7 @@ export const useExamActions = (
         has_started: exam.hasStarted,
         created_at: now,
         updated_at: now,
-        question_ids: exam.questionIds || [], // Send as a JSONB array directly
+        question_ids: exam.questionIds || [],
         share_link: exam.shareLink || ""
       };
 
@@ -63,7 +63,9 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        questionIds: supabaseExam.question_ids || [], // It's already parsed from JSONB
+        questionIds: Array.isArray(supabaseExam.question_ids) 
+          ? supabaseExam.question_ids 
+          : [],
         shareLink: supabaseExam.share_link || ""
       };
       
@@ -88,34 +90,40 @@ export const useExamActions = (
       
       // Transform camelCase to snake_case for Supabase
       const dbData: any = {
-        ...examData,
         updated_at: new Date().toISOString()
       };
       
       // Handle specific field transformations
+      if (examData.title !== undefined) {
+        dbData.title = examData.title;
+      }
+      
+      if (examData.description !== undefined) {
+        dbData.description = examData.description;
+      }
+      
+      if (examData.duration !== undefined) {
+        dbData.duration = examData.duration;
+      }
+      
       if (examData.hasStarted !== undefined) {
         dbData.has_started = examData.hasStarted;
-        delete dbData.hasStarted;
       }
       
       if (examData.isActive !== undefined) {
         dbData.is_active = examData.isActive;
-        delete dbData.isActive;
       }
       
       if (examData.teacherId !== undefined) {
         dbData.teacher_id = examData.teacherId;
-        delete dbData.teacherId;
       }
       
       if (examData.questionIds !== undefined) {
-        dbData.question_ids = examData.questionIds; // Send as JSONB directly, no need to stringify
-        delete dbData.questionIds;
+        dbData.question_ids = examData.questionIds; 
       }
       
       if (examData.shareLink !== undefined) {
         dbData.share_link = examData.shareLink;
-        delete dbData.shareLink;
       }
       
       // Update data in Supabase
@@ -142,7 +150,9 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        questionIds: supabaseExam.question_ids || [], // It's already parsed from JSONB
+        questionIds: Array.isArray(supabaseExam.question_ids) 
+          ? supabaseExam.question_ids 
+          : [],
         shareLink: supabaseExam.share_link || ""
       };
       

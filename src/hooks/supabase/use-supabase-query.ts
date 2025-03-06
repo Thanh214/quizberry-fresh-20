@@ -43,8 +43,7 @@ export function useSupabaseQuery<T>(
 
         if (error) throw error;
         
-        // Use a type assertion to avoid deep recursion
-        setData((result || []) as T[]);
+        setData(result as T[] || []);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);
