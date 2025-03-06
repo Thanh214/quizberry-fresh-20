@@ -7,10 +7,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { useExam } from "@/context/ExamContext";
 import { Button } from "@/components/ui/button";
-import { SearchX, PlusCircle, Sparkles } from "lucide-react";
+import { SearchX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ExamList from "./components/ExamList";
-import NeonEffect from "@/components/NeonEffect";
 import { motion } from "framer-motion";
 
 const TeacherExams: React.FC = () => {
@@ -51,7 +50,6 @@ const TeacherExams: React.FC = () => {
   };
 
   const handleEditExam = (examId: string) => {
-    // Updated to use the dedicated edit page
     navigate(`/teacher/edit-exam/${examId}`);
   };
 
@@ -75,25 +73,6 @@ const TeacherExams: React.FC = () => {
     });
   };
 
-  // Button animation variants
-  const buttonVariants = {
-    initial: { scale: 0.95, opacity: 0 },
-    animate: { 
-      scale: 1, 
-      opacity: 1,
-      transition: { type: "spring", stiffness: 400, damping: 10 }
-    },
-    hover: { 
-      scale: 1.05,
-      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-      transition: { type: "spring", stiffness: 400, damping: 15 }
-    },
-    tap: { 
-      scale: 0.95, 
-      transition: { type: "spring", stiffness: 400, damping: 10 }
-    }
-  };
-
   return (
     <Layout>
       <div className="container mx-auto py-8">
@@ -105,44 +84,11 @@ const TeacherExams: React.FC = () => {
                 Tạo và quản lý các bài thi của bạn
               </p>
             </div>
-            <motion.div
-              variants={buttonVariants}
-              initial="initial"
-              animate="animate"
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
-                <Button
-                  onClick={handleCreateExam}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none relative group overflow-hidden w-full sm:w-auto"
-                >
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
-                  
-                  <motion.span 
-                    className="mr-2"
-                    animate={{ 
-                      rotate: [0, 10, -10, 0],
-                      scale: [1, 1.2, 1]
-                    }}
-                    transition={{ 
-                      duration: 5,
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  >
-                    <Sparkles className="h-4 w-4" />
-                  </motion.span>
-                  Tạo bài thi mới
-                </Button>
-              </NeonEffect>
-            </motion.div>
           </div>
         </TransitionWrapper>
 
         <TransitionWrapper delay={100}>
-          <div className="mb-6">
+          <div className="mb-6 relative">
             <Input
               placeholder="Tìm kiếm bài thi..."
               value={searchTerm}
@@ -154,7 +100,7 @@ const TeacherExams: React.FC = () => {
 
         <TransitionWrapper delay={200}>
           {filteredExams.length === 0 && searchTerm ? (
-            <div className="text-center py-20 border border-dashed rounded-md border-muted">
+            <div className="text-center py-16 border border-dashed rounded-md border-muted glass-effect dark:glass-effect-dark">
               <SearchX className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-medium">Không tìm thấy bài thi</h3>
               <p className="text-muted-foreground mt-2">
