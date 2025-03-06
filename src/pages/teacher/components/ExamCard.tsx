@@ -61,26 +61,24 @@ const ExamCard: React.FC<ExamCardProps> = ({
       <ExamCardBackground isActive={exam.isActive} hasStarted={exam.hasStarted} />
       
       {/* Content */}
-      <div className="relative z-10 space-y-4">
+      <div className="relative z-10">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-          <div className="flex-1 min-w-0">
+          <div>
             <ExamCardHeader exam={exam} />
-            <div className="text-sm text-muted-foreground mt-1 truncate">
+            <div className="text-sm text-muted-foreground mt-1">
               Mã bài thi: <span className="font-mono font-medium">{exam.code}</span>
             </div>
           </div>
           
           {isTeacher && (
-            <div className="flex-shrink-0">
-              <ExamCardActions 
-                examId={exam.id}
-                isActive={exam.isActive}
-                hasStarted={exam.hasStarted}
-                onEdit={onEdit}
-                setConfirmDelete={setConfirmDelete}
-                setConfirmToggle={setConfirmToggle}
-              />
-            </div>
+            <ExamCardActions 
+              examId={exam.id}
+              isActive={exam.isActive}
+              hasStarted={exam.hasStarted}
+              onEdit={onEdit}
+              setConfirmDelete={setConfirmDelete}
+              setConfirmToggle={setConfirmToggle}
+            />
           )}
         </div>
         
@@ -99,50 +97,40 @@ const ExamCard: React.FC<ExamCardProps> = ({
         )}
         
         {/* Statistics */}
-        <div className="mt-4">
-          <ExamStatistics 
-            exam={exam}
-            waitingCount={waitingCount}
-            inProgressCount={inProgressCount}
-            completedCount={completedCount}
-            totalParticipants={totalParticipants}
-          />
-        </div>
+        <ExamStatistics 
+          exam={exam}
+          waitingCount={waitingCount}
+          inProgressCount={inProgressCount}
+          completedCount={completedCount}
+          totalParticipants={totalParticipants}
+        />
         
         {/* Share link for active exams */}
-        <div className="mt-4">
-          <ExamShareLink 
-            exam={exam} 
-            isActive={exam.isActive} 
-            isTeacher={isTeacher} 
-          />
-        </div>
+        <ExamShareLink 
+          exam={exam} 
+          isActive={exam.isActive} 
+          isTeacher={isTeacher} 
+        />
         
         {/* Action buttons for controlling the exam */}
-        <div className="mt-4">
-          <StartExamButton 
-            examId={exam.id}
-            isActive={exam.isActive}
-            hasStarted={exam.hasStarted}
-            waitingCount={waitingCount}
-            onStart={onStart}
-            onEnd={onEnd}
-            setConfirmStart={setConfirmStart}
-            setConfirmEnd={setConfirmEnd}
-          />
-        </div>
+        <StartExamButton 
+          examId={exam.id}
+          isActive={exam.isActive}
+          hasStarted={exam.hasStarted}
+          waitingCount={waitingCount}
+          onStart={onStart}
+          onEnd={onEnd}
+        />
 
         {/* Student participants section - only shown for teachers */}
         {isTeacher && (
-          <div className="mt-4">
-            <ParticipantsList
-              examId={exam.id}
-              participants={participants}
-              showParticipants={showParticipants}
-              setShowParticipants={setShowParticipants}
-              totalParticipants={totalParticipants}
-            />
-          </div>
+          <ParticipantsList
+            examId={exam.id}
+            participants={participants}
+            showParticipants={showParticipants}
+            setShowParticipants={setShowParticipants}
+            totalParticipants={totalParticipants}
+          />
         )}
       </div>
     </ExamCardContainer>

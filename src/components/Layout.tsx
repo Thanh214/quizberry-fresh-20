@@ -39,6 +39,7 @@ const Layout: React.FC<LayoutProps> = ({
     document.documentElement.style.setProperty('--season-current', season);
     
     // Add a custom data attribute for season to the body element
+    // This allows for global CSS targeting with [data-season="spring"] etc.
     document.body.dataset.season = season;
     
     // Dispatch a custom event that components can listen for
@@ -61,17 +62,17 @@ const Layout: React.FC<LayoutProps> = ({
     }
   }, [season]);
   
-  // Get season-specific container classes with more distinct colors and more transparency
+  // Get season-specific container classes with more distinct colors
   const getSeasonClasses = (): string => {
     switch (season) {
       case "spring": 
-        return "bg-gradient-to-b from-pink-50/60 to-blue-50/60 dark:from-pink-950/30 dark:to-blue-950/30";
+        return "bg-gradient-to-b from-pink-50/80 to-blue-50/80 dark:from-pink-950/40 dark:to-blue-950/40";
       case "summer": 
-        return "bg-gradient-to-b from-amber-50/60 to-yellow-50/60 dark:from-amber-950/30 dark:to-yellow-950/30";
+        return "bg-gradient-to-b from-amber-50/80 to-yellow-50/80 dark:from-amber-950/40 dark:to-yellow-950/40";
       case "autumn": 
-        return "bg-gradient-to-b from-orange-50/60 to-amber-50/60 dark:from-orange-950/30 dark:to-amber-950/30";
+        return "bg-gradient-to-b from-orange-50/80 to-amber-50/80 dark:from-orange-950/40 dark:to-amber-950/40";
       case "winter": 
-        return "bg-gradient-to-b from-blue-50/60 to-indigo-50/60 dark:from-blue-950/30 dark:to-indigo-950/30";
+        return "bg-gradient-to-b from-blue-50/80 to-indigo-50/80 dark:from-blue-950/40 dark:to-indigo-950/40";
     }
   };
   
@@ -125,7 +126,7 @@ const Layout: React.FC<LayoutProps> = ({
           season={season} 
           intensity="medium" 
           onSeasonChange={handleSeasonChange}
-          className="pb-safe fixed inset-0 pointer-events-none z-0" 
+          className="pb-safe" 
         />
       )}
       
