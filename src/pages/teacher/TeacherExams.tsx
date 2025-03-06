@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { useExam } from "@/context/ExamContext";
 import { Button } from "@/components/ui/button";
-import { SearchX, PlusCircle, Sparkles, LogOut } from "lucide-react";
+import { SearchX, PlusCircle, Sparkles, LogOut, BookMarked } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ExamList from "./components/ExamList";
 import NeonEffect from "@/components/NeonEffect";
@@ -144,20 +144,7 @@ const TeacherExams: React.FC = () => {
                     {/* Shine effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
                     
-                    <motion.span 
-                      className="mr-2"
-                      animate={{ 
-                        rotate: [0, 10, -10, 0],
-                        scale: [1, 1.2, 1]
-                      }}
-                      transition={{ 
-                        duration: 5,
-                        repeat: Infinity,
-                        repeatType: "reverse"
-                      }}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                    </motion.span>
+                    <BookMarked className="h-4 w-4 mr-2" />
                     Tạo bài thi mới
                   </Button>
                 </NeonEffect>
@@ -185,6 +172,20 @@ const TeacherExams: React.FC = () => {
               <p className="text-muted-foreground mt-2">
                 Không có bài thi nào phù hợp với từ khóa "{searchTerm}"
               </p>
+            </div>
+          ) : filteredExams.length === 0 ? (
+            <div className="text-center py-10 px-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+              <div className="flex flex-col items-center max-w-md mx-auto">
+                <div className="p-4 mb-4 bg-purple-100 dark:bg-purple-900/20 rounded-full">
+                  <BookMarked className="h-12 w-12 text-purple-500" />
+                </div>
+                
+                <h3 className="text-xl font-medium mb-2">Chưa có bài thi nào</h3>
+                
+                <p className="text-muted-foreground mb-6">
+                  Hãy tạo bài thi đầu tiên của bạn để bắt đầu. Bạn có thể thêm câu hỏi, thiết lập thời gian và chia sẻ bài thi với học viên.
+                </p>
+              </div>
             </div>
           ) : (
             <ExamList

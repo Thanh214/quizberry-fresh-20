@@ -122,6 +122,9 @@ export const useExamActions = (
         delete dbData.shareLink;
       }
       
+      // Log the data being sent to Supabase for debugging
+      console.log("Updating exam with data:", dbData);
+      
       // Update data in Supabase
       const { data, error } = await supabase
         .from('exams')

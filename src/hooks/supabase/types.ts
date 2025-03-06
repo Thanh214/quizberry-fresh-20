@@ -25,7 +25,7 @@ export interface SupabaseExam {
   has_started: boolean;
   created_at: string;
   updated_at: string;
-  question_ids: string[]; // Ensures this is always a string array
+  question_ids: string[]; // Always a string array
   share_link?: string;
 }
 
