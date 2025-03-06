@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +25,9 @@ export const useExamActions = (
       setIsLoading(true);
       
       const now = new Date().toISOString();
+      // Ensure questionIds is an array before sending to Supabase
+      const questionIds = Array.isArray(exam.questionIds) ? exam.questionIds : [];
+      
       // Include all required fields for Supabase
       const newExam = {
         code: exam.code,
@@ -37,7 +39,7 @@ export const useExamActions = (
         has_started: exam.hasStarted,
         created_at: now,
         updated_at: now,
-        question_ids: exam.questionIds || [], // Send as a JSONB array directly
+        question_ids: questionIds, // Ensure it's an array
         share_link: exam.shareLink || ""
       };
 
@@ -63,7 +65,7 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        // Fix the type issue - ensure we have a string array
+        // Ensure questionIds is always an array
         questionIds: Array.isArray(supabaseExam.question_ids) ? supabaseExam.question_ids : [],
         shareLink: supabaseExam.share_link || ""
       };
@@ -110,7 +112,8 @@ export const useExamActions = (
       }
       
       if (examData.questionIds !== undefined) {
-        dbData.question_ids = examData.questionIds; // Send as JSONB directly, no need to stringify
+        // Ensure questionIds is an array
+        dbData.question_ids = Array.isArray(examData.questionIds) ? examData.questionIds : [];
         delete dbData.questionIds;
       }
       
@@ -143,7 +146,7 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        // Fix the type issue - ensure we have a string array
+        // Ensure questionIds is always an array
         questionIds: Array.isArray(supabaseExam.question_ids) ? supabaseExam.question_ids : [],
         shareLink: supabaseExam.share_link || ""
       };

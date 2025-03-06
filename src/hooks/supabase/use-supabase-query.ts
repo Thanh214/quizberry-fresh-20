@@ -43,8 +43,8 @@ export function useSupabaseQuery<T>(
 
         if (error) throw error;
         
-        // Fix the type instantiation depth issue with an explicit type assertion
-        setData(result ? result as T[] : []);
+        // Use an explicit type assertion to avoid the type instantiation depth issue
+        setData(result as unknown as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);
