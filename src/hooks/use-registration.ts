@@ -81,6 +81,7 @@ export function useRegistration() {
             student_id: studentId,
             class_name: className,
             username: email.split("@")[0],
+            email: email,
             role: "student"
           });
         }

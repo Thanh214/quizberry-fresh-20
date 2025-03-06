@@ -7,7 +7,7 @@ import { TableNames, QueryOptions } from "./types";
 /**
  * Custom hook to fetch data from Supabase
  */
-export function useSupabaseQuery<T extends Record<string, any>>(
+export function useSupabaseQuery<T>(
   tableName: TableNames,
   options?: QueryOptions
 ) {
@@ -43,9 +43,8 @@ export function useSupabaseQuery<T extends Record<string, any>>(
 
         if (error) throw error;
         
-        // Type safe assignment with explicit typing to avoid deep instantiation
-        const typedResult = (result || []) as any[];
-        setData(typedResult as T[]);
+        // Fix excessive type instantiation depth error with explicit casting
+        setData(result as T[]);
       } catch (err: any) {
         console.error("Lỗi khi truy vấn Supabase:", err);
         setError(err);

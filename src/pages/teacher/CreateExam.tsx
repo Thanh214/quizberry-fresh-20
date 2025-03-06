@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -6,7 +7,7 @@ import Logo from "@/components/Logo";
 import TransitionWrapper from "@/components/TransitionWrapper";
 import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
-import { toast } from "sonner"; // Add the missing import
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save } from "lucide-react";
@@ -39,7 +40,7 @@ const CreateExam: React.FC = () => {
     try {
       if (selectedQuestions.length === 0) {
         toast.error("Vui lòng chọn ít nhất một câu hỏi cho bài thi", {
-          id: "no-questions-selected" // Add ID to prevent duplicate toasts
+          id: "no-questions-selected"
         });
         return;
       }
@@ -49,15 +50,16 @@ const CreateExam: React.FC = () => {
         questionIds: selectedQuestions,
       };
       
+      // Create the exam with the selected questions
       await addExam(newExamData);
       
       toast.success("Tạo bài thi thành công", {
-        id: "create-exam-success" // Add ID to prevent duplicate toasts
+        id: "create-exam-success"
       });
       navigate("/teacher/exams");
-    } catch (error) {
-      toast.error("Không thể tạo bài thi", {
-        id: "create-exam-error" // Add ID to prevent duplicate toasts
+    } catch (error: any) {
+      toast.error(`Không thể tạo bài thi: ${error.message}`, {
+        id: "create-exam-error"
       });
       console.error(error);
     }

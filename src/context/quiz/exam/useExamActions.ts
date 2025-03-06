@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,12 +25,22 @@ export const useExamActions = (
       setIsLoading(true);
       
       const now = new Date().toISOString();
+      // Ensure questionIds is an array before sending to Supabase
+      const questionIds = Array.isArray(exam.questionIds) ? exam.questionIds : [];
+      
+      // Include all required fields for Supabase
       const newExam = {
-        ...exam,
+        code: exam.code,
+        title: exam.title,
+        description: exam.description || "",
+        duration: exam.duration,
+        teacher_id: exam.teacherId,
+        is_active: exam.isActive,
+        has_started: exam.hasStarted,
         created_at: now,
         updated_at: now,
-        // Convert from camelCase to snake_case for Supabase
-        question_ids: exam.questionIds || []
+        question_ids: questionIds, // Ensure it's an array
+        share_link: exam.shareLink || ""
       };
 
       // Add exam to Supabase
@@ -56,7 +65,8 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        questionIds: supabaseExam.question_ids || [],
+        // Ensure questionIds is always an array
+        questionIds: Array.isArray(supabaseExam.question_ids) ? supabaseExam.question_ids : [],
         shareLink: supabaseExam.share_link || ""
       };
       
@@ -102,7 +112,8 @@ export const useExamActions = (
       }
       
       if (examData.questionIds !== undefined) {
-        dbData.question_ids = examData.questionIds;
+        // Ensure questionIds is an array
+        dbData.question_ids = Array.isArray(examData.questionIds) ? examData.questionIds : [];
         delete dbData.questionIds;
       }
       
@@ -110,6 +121,9 @@ export const useExamActions = (
         dbData.share_link = examData.shareLink;
         delete dbData.shareLink;
       }
+      
+      // Log the data being sent to Supabase for debugging
+      console.log("Updating exam with data:", dbData);
       
       // Update data in Supabase
       const { data, error } = await supabase
@@ -135,7 +149,8 @@ export const useExamActions = (
         hasStarted: supabaseExam.has_started,
         createdAt: supabaseExam.created_at,
         updatedAt: supabaseExam.updated_at,
-        questionIds: supabaseExam.question_ids || [],
+        // Ensure questionIds is always an array
+        questionIds: Array.isArray(supabaseExam.question_ids) ? supabaseExam.question_ids : [],
         shareLink: supabaseExam.share_link || ""
       };
       
