@@ -7,21 +7,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuiz } from "@/context/QuizContext";
 import { useExam } from "@/context/ExamContext";
 import { Button } from "@/components/ui/button";
-import { SearchX, PlusCircle, Sparkles, LogOut } from "lucide-react";
+import { SearchX, PlusCircle, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ExamList from "./components/ExamList";
 import NeonEffect from "@/components/NeonEffect";
 import { motion } from "framer-motion";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 
 const TeacherExams: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { exams, deleteExam, activateExam, startExam, updateExam } = useQuiz();
   const { participants } = useExam();
   
@@ -80,11 +74,6 @@ const TeacherExams: React.FC = () => {
       isActive: false
     });
   };
-  
-  const handleLogout = () => {
-    logout();
-    navigate("/role-selection");
-  };
 
   // Button animation variants
   const buttonVariants = {
@@ -116,58 +105,39 @@ const TeacherExams: React.FC = () => {
                 Tạo và quản lý các bài thi của bạn
               </p>
             </div>
-            <div className="flex gap-3">
-              <motion.div
-                variants={buttonVariants}
-                initial="initial"
-                animate="animate"
-                whileHover="hover"
-                whileTap="tap"
-              >
+            <motion.div
+              variants={buttonVariants}
+              initial="initial"
+              animate="animate"
+              whileHover="hover"
+              whileTap="tap"
+            >
+              <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
                 <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  className="flex gap-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 transition-all"
+                  onClick={handleCreateExam}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none relative group overflow-hidden w-full sm:w-auto"
                 >
-                  <LogOut className="h-4 w-4" />
-                  Đăng xuất
-                </Button>
-              </motion.div>
-              
-              <motion.div
-                variants={buttonVariants}
-                initial="initial"
-                animate="animate"
-                whileHover="hover"
-                whileTap="tap"
-              >
-                <NeonEffect color="purple" padding="p-0" className="rounded-md overflow-hidden">
-                  <Button
-                    onClick={handleCreateExam}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-none relative group overflow-hidden w-full sm:w-auto"
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
+                  
+                  <motion.span 
+                    className="mr-2"
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.2, 1]
+                    }}
+                    transition={{ 
+                      duration: 5,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
                   >
-                    {/* Shine effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shine" />
-                    
-                    <motion.span 
-                      className="mr-2"
-                      animate={{ 
-                        rotate: [0, 10, -10, 0],
-                        scale: [1, 1.2, 1]
-                      }}
-                      transition={{ 
-                        duration: 5,
-                        repeat: Infinity,
-                        repeatType: "reverse"
-                      }}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                    </motion.span>
-                    Tạo bài thi mới
-                  </Button>
-                </NeonEffect>
-              </motion.div>
-            </div>
+                    <Sparkles className="h-4 w-4" />
+                  </motion.span>
+                  Tạo bài thi mới
+                </Button>
+              </NeonEffect>
+            </motion.div>
           </div>
         </TransitionWrapper>
 

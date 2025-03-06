@@ -11,14 +11,13 @@ import { toast } from "sonner";
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      await login(username, password);
       toast.success("Đăng nhập thành công");
       
       // Chuyển hướng dựa trên vai trò người dùng
@@ -28,17 +27,8 @@ const AdminLogin: React.FC = () => {
       } else if (user.role === "teacher") {
         navigate("/teacher/exams");
       }
-    } catch (error: any) {
-      console.error("Login error:", error);
-      if (error.message?.includes("Email not confirmed") || 
-          error.message?.includes("not confirmed") || 
-          error.message?.includes("email verification")) {
-        setShowVerificationMessage(true);
-        toast.error("Vui lòng xác thực email của bạn trước khi đăng nhập");
-      } else {
-        toast.error("Đăng nhập thất bại: Email hoặc mật khẩu không đúng");
-        setShowVerificationMessage(false);
-      }
+    } catch (error) {
+      toast.error("Đăng nhập thất bại: Tên đăng nhập hoặc mật khẩu không đúng");
     }
   };
 
@@ -59,27 +49,18 @@ const AdminLogin: React.FC = () => {
                 </p>
               </div>
 
-              {showVerificationMessage && (
-                <div className="bg-amber-50 border border-amber-200 p-3 rounded-md text-amber-800 text-sm">
-                  <p className="font-medium">Yêu cầu xác thực email</p>
-                  <p>Vui lòng kiểm tra hòm thư của bạn và nhấn vào liên kết xác thực email trước khi đăng nhập.</p>
-                  <p className="mt-2">Nếu bạn chưa nhận được email, vui lòng kiểm tra thư mục spam hoặc liên hệ quản trị viên.</p>
-                </div>
-              )}
-
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none" htmlFor="email">
-                    Email
+                  <label className="text-sm font-medium leading-none" htmlFor="username">
+                    Tên đăng nhập
                   </label>
                   <input
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    id="email"
-                    type="email"
-                    placeholder="Email của bạn"
+                    id="username"
+                    placeholder="admin hoặc tên đăng nhập của bạn"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">

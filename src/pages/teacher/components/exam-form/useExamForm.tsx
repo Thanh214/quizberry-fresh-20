@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { Exam } from "@/types/models";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface UseExamFormProps {
   initialData?: Partial<Exam>;
@@ -22,38 +21,25 @@ export const useExamForm = ({ initialData, onSubmit, teacherId }: UseExamFormPro
   useEffect(() => {
     if (!isEditMode && !code) {
       // Generate a random alphanumeric code of 6 characters
-      const generateUniqueCode = async () => {
+      const generateUniqueCode = () => {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         const codeLength = 6;
         let result = '';
         
-        do {
-          result = 'EPU';
-          for (let i = 0; i < codeLength; i++) {
-            result += characters.charAt(Math.floor(Math.random() * characters.length));
-          }
-          
-          // Kiểm tra xem mã đã tồn tại chưa
-          const { data } = await supabase
-            .from("exams")
-            .select('code')
-            .eq('code', result)
-            .single();
-            
-          if (!data) break; // Nếu không tìm thấy, mã là duy nhất
-          
-        } while (true);
+        for (let i = 0; i < codeLength; i++) {
+          result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
         
-        setCode(result);
+        return `EPU${result}`;
       };
       
-      generateUniqueCode();
+      setCode(generateUniqueCode());
     }
   }, [isEditMode, code]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation(); // Add this to prevent event bubbling
     
     // Validate form
     if (!title.trim()) {
@@ -71,29 +57,17 @@ export const useExamForm = ({ initialData, onSubmit, teacherId }: UseExamFormPro
       return;
     }
     
-    try {
-      // Tạo đường dẫn chia sẻ
-      const shareLink = `${window.location.origin}/student/register?code=${code.toUpperCase()}`;
-      
-      // Submit exam data with expected format for Supabase
-      const examData: any = {
-        title,
-        description,
-        code: code.toUpperCase(),
-        duration,
-        teacherId,
-        isActive: initialData?.isActive || false,
-        hasStarted: initialData?.hasStarted || false,
-        shareLink,
-        questionIds: initialData?.questionIds || [] // Will be stringified in addExam
-      };
-      
-      await onSubmit(examData);
-      
-    } catch (error: any) {
-      toast.error(`Lỗi: ${error.message}`);
-      console.error(error);
-    }
+    // Submit exam data
+    await onSubmit({
+      title,
+      description,
+      code: code.toUpperCase(),
+      duration,
+      teacherId,
+      isActive: initialData?.isActive || false,
+      questionIds: initialData?.questionIds || [],
+      hasStarted: initialData?.hasStarted || false,
+    });
   };
 
   return {
@@ -102,7 +76,6 @@ export const useExamForm = ({ initialData, onSubmit, teacherId }: UseExamFormPro
     description,
     setDescription,
     code,
-    setCode,
     duration,
     setDuration,
     isEditMode,
