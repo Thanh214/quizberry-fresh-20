@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
@@ -176,30 +177,37 @@ const RegisterScreen = ({ navigation }) => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
       <View style={styles.container}>
-        {/* Logo hình tròn nhỏ ở trên đầu */}
-        <View style={styles.logoWrapper}>
-          <View style={styles.logoCircle}>
+        {/* Enhanced logo section with animation */}
+        <Animatable.View 
+          animation="bounceIn" 
+          duration={1500} 
+          style={styles.logoWrapper}
+        >
+          <LinearGradient
+            colors={['#FF9966', '#FF5E62']}
+            style={styles.logoCircle}
+          >
             <Image
               source={require('../assets/icon.png')}
               style={styles.logoImage}
               resizeMode="contain"
             />
-          </View>
-        </View>
+          </LinearGradient>
+        </Animatable.View>
 
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <Animatable.View animation="fadeInDown" duration={600} style={styles.formWrapper}>
-            <Text style={styles.title}>Đăng ký ngay</Text>
-            <Text style={styles.subtitle}>Tạo tài khoản của bạn</Text>
+          <Animatable.View animation="fadeInUp" duration={800} style={styles.formWrapper}>
+            <Text style={styles.title}>SmartLock</Text>
+            <Text style={styles.subtitle}>Tạo tài khoản mới</Text>
 
-            <Animatable.View animation="fadeInUp" duration={800} delay={200} style={styles.formContainer}>
+            <Animatable.View animation="fadeInUp" duration={1000} delay={300} style={styles.formContainer}>
               {/* Email Input */}
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={20} style={styles.inputIcon} />
+              <View style={[styles.inputContainer, inputErrors.email && styles.inputContainerError]}>
+                <Ionicons name="mail-outline" size={22} style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, inputErrors.email && styles.inputError]}
+                  style={styles.input}
                   placeholder="Email"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#888"
                   onChangeText={(value) => {
                     setEmail(value);
                     validateEmail(value);
@@ -210,7 +218,7 @@ const RegisterScreen = ({ navigation }) => {
                 {emailCheckIcon && (
                   <Ionicons
                     name={emailCheckIcon}
-                    size={20}
+                    size={22}
                     style={[
                       styles.inputIconRight,
                       { color: emailValid ? '#4CAF50' : '#F44336' }
@@ -221,12 +229,12 @@ const RegisterScreen = ({ navigation }) => {
               {inputErrors.email && <Text style={styles.errorText}>{inputErrors.email}</Text>}
 
               {/* Name Input */}
-              <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={20} style={styles.inputIcon} />
+              <View style={[styles.inputContainer, inputErrors.name && styles.inputContainerError]}>
+                <Ionicons name="person-outline" size={22} style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, inputErrors.name && styles.inputError]}
+                  style={styles.input}
                   placeholder="Họ và tên"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#888"
                   onChangeText={setName}
                   value={name}
                 />
@@ -234,12 +242,12 @@ const RegisterScreen = ({ navigation }) => {
               {inputErrors.name && <Text style={styles.errorText}>{inputErrors.name}</Text>}
 
               {/* Phone Input */}
-              <View style={styles.inputContainer}>
-                <Ionicons name="call-outline" size={20} style={styles.inputIcon} />
+              <View style={[styles.inputContainer, inputErrors.phone && styles.inputContainerError]}>
+                <Ionicons name="call-outline" size={22} style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, inputErrors.phone && styles.inputError]}
+                  style={styles.input}
                   placeholder="Số điện thoại"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#888"
                   onChangeText={setPhone}
                   value={phone}
                   keyboardType="phone-pad"
@@ -248,17 +256,20 @@ const RegisterScreen = ({ navigation }) => {
               {inputErrors.phone && <Text style={styles.errorText}>{inputErrors.phone}</Text>}
 
               {/* Date of Birth Input */}
-              <View style={styles.inputContainer}>
-                <Ionicons name="calendar-outline" size={20} style={styles.inputIcon} />
+              <View style={[styles.inputContainer, inputErrors.dob && styles.inputContainerError]}>
+                <Ionicons name="calendar-outline" size={22} style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, { flex: 1 }, inputErrors.dob && styles.inputError]}
+                  style={[styles.input, { flex: 1 }]}
                   placeholder="Ngày sinh (YYYY-MM-DD)"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#888"
                   value={dob}
                   editable={false}
                 />
-                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                  <Ionicons name="chevron-down-outline" size={20} style={styles.inputIconRight} />
+                <TouchableOpacity 
+                  onPress={() => setShowDatePicker(true)}
+                  style={styles.calendarButton}
+                >
+                  <Ionicons name="calendar" size={20} color="#fff" />
                 </TouchableOpacity>
               </View>
               {showDatePicker && (
@@ -267,19 +278,19 @@ const RegisterScreen = ({ navigation }) => {
                   value={dob ? new Date(dob) : new Date()}
                   mode="date"
                   is24Hour={true}
-                  display={Platform.OS === 'ios' ? 'spinner' : 'spinner'}
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={onChangeDob}
                 />
               )}
               {inputErrors.dob && <Text style={styles.errorText}>{inputErrors.dob}</Text>}
 
               {/* Password Input */}
-              <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={20} style={styles.inputIcon} />
+              <View style={[styles.inputContainer, inputErrors.password && styles.inputContainerError]}>
+                <Ionicons name="lock-closed-outline" size={22} style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, inputErrors.password && styles.inputError]}
+                  style={styles.input}
                   placeholder="Mật khẩu"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#888"
                   secureTextEntry={!showPassword}
                   onChangeText={(value) => {
                     setPassword(value);
@@ -290,7 +301,7 @@ const RegisterScreen = ({ navigation }) => {
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Ionicons 
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
-                    size={20} 
+                    size={22} 
                     style={styles.inputIconRight} 
                   />
                 </TouchableOpacity>
@@ -317,13 +328,24 @@ const RegisterScreen = ({ navigation }) => {
               </View>
 
               {/* Register Button */}
-              <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-                <Text style={styles.registerButtonText}>Đăng ký</Text>
+              <TouchableOpacity 
+                style={styles.registerButton} 
+                onPress={handleRegister}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={['#FF9966', '#FF5E62']}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.registerButtonText}>Đăng ký</Text>
+                </LinearGradient>
               </TouchableOpacity>
 
-              {/* Link đến màn hình Đăng nhập */}
+              {/* Link to Login Screen */}
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.loginText}>Đã có tài khoản? Đăng nhập</Text>
+                <Text style={styles.loginText}>
+                  Đã có tài khoản? <Text style={styles.loginTextHighlight}>Đăng nhập</Text>
+                </Text>
               </TouchableOpacity>
             </Animatable.View>
           </Animatable.View>
@@ -333,17 +355,15 @@ const RegisterScreen = ({ navigation }) => {
   );
 };
 
-// ================== STYLES =====================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8EFE3FF',
+    backgroundColor: '#f8f9fa',
   },
   scrollContainer: {
     flexGrow: 1,
     padding: 20,
     paddingTop: 0,
-    justifyContent: 'center',
   },
   logoWrapper: {
     alignItems: 'center',
@@ -351,17 +371,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   logoImage: {
     width: 150,
@@ -373,44 +392,49 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   title: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
+    marginBottom: 5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
   },
   formContainer: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 3, height: 3 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowRadius: 10,
+    elevation: 5,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
+    backgroundColor: '#f7f7f7',
+    borderRadius: 12,
     marginBottom: 15,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  inputContainerError: {
+    borderWidth: 1,
+    borderColor: '#F44336',
   },
   inputIcon: {
-    color: '#888',
-    marginRight: 8,
+    color: '#FF8C66',
+    marginRight: 10,
   },
   inputIconRight: {
     color: '#888',
@@ -418,13 +442,14 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: '#333',
   },
-  inputError: {
-    borderColor: '#F44336',
-    borderWidth: 1,
+  calendarButton: {
+    backgroundColor: '#FF8C66',
+    padding: 8,
     borderRadius: 8,
+    marginLeft: 8,
   },
   errorText: {
     color: '#F44336',
@@ -433,40 +458,47 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   passwordChecklist: {
-    marginBottom: 20,
+    marginBottom: 25,
     paddingLeft: 5,
   },
   checkItem: {
     fontSize: 14,
     color: '#999',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   checkItemValid: {
     color: '#4CAF50',
     fontWeight: 'bold',
   },
   registerButton: {
-    backgroundColor: '#ff9966',
-    paddingVertical: 12,
     borderRadius: 12,
-    alignItems: 'center',
+    overflow: 'hidden',
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    elevation: 3,
+    shadowColor: '#FF8C66',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  buttonGradient: {
+    paddingVertical: 14,
+    alignItems: 'center',
   },
   registerButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   loginText: {
-    color: '#333',
+    color: '#666',
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 15,
+    marginTop: 8,
   },
+  loginTextHighlight: {
+    color: '#FF8C66',
+    fontWeight: 'bold',
+  }
 });
 
 export default RegisterScreen;

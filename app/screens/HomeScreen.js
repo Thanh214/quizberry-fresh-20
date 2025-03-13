@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
@@ -8,12 +9,14 @@ import {
   Image, 
   Alert,
   BackHandler,
-  ScrollView
+  ScrollView,
+  StatusBar
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { useNavigation } from '@react-navigation/native';
+import * as Animatable from 'react-native-animatable';
 
 const HomeScreen = () => {
   const [user, setUser] = useState(null);
@@ -56,13 +59,13 @@ const HomeScreen = () => {
 
   const renderTabItem = (tabName, iconName, label) => (
     <TouchableOpacity 
-      style={styles.tabItem} 
+      style={[styles.tabItem, activeTab === tabName && styles.activeTabItem]} 
       onPress={() => setActiveTab(tabName)}
     >
       <Ionicons 
-        name={iconName} 
-        size={28} 
-        color={activeTab === tabName ? "#1E90FF" : "gray"} 
+        name={activeTab === tabName ? iconName : `${iconName}-outline`}
+        size={24} 
+        color={activeTab === tabName ? "#FF8C66" : "#777"} 
       />
       <Text style={[styles.tabLabel, activeTab === tabName && styles.activeTabLabel]}>
         {label}
@@ -72,63 +75,126 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header với nền gradient */}
+      <StatusBar barStyle="light-content" backgroundColor="#FF8C66" />
+      
+      {/* Header with gradient background */}
       <LinearGradient 
-        colors={['#1E90FF', '#00BFFF']} 
+        colors={['#FF8C66', '#FF5E62']} 
         start={[0, 0]} 
         end={[1, 0]} 
         style={styles.header}
       >
-        <View style={styles.userInfo}>
+        <Animatable.View animation="fadeIn" duration={800} style={styles.userInfo}>
           {user ? (
             <>
+              <Text style={styles.greeting}>Chào mừng,</Text>
               <Text style={styles.userName}>
-                Chào, {user.email || user.phoneNumber || "Người dùng"}
+                {user.displayName || user.email || "Người dùng"}
               </Text>
-              {user.photoURL && (
-                <Image source={{ uri: user.photoURL }} style={styles.userPhoto} />
-              )}
             </>
           ) : (
-            <Text style={styles.loadingText}>Đang tải thông tin người dùng...</Text>
+            <Text style={styles.loadingText}>Đang tải thông tin...</Text>
           )}
-        </View>
-        {/* Nút đăng xuất nổi bật */}
-        <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout}>
+        </Animatable.View>
+        
+        {/* Logout button */}
+        <TouchableOpacity 
+          style={styles.logoutButton} 
+          onPress={confirmLogout}
+          activeOpacity={0.8}
+        >
           <Ionicons 
             name="log-out-outline" 
             size={20} 
-            color="#fff" 
-            style={{ marginRight: 8 }} 
+            color="#FF5E62" 
+            style={styles.logoutIcon} 
           />
           <Text style={styles.logoutButtonText}>Đăng xuất</Text>
         </TouchableOpacity>
       </LinearGradient>
 
-      {/* Nội dung chính */}
+      {/* Main content */}
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        <View style={styles.cameraContainer}>
-          <View style={styles.videoFrame}>
+        <Animatable.View animation="fadeInUp" duration={800} delay={100}>
+          <Text style={styles.sectionTitle}>Thiết bị đã kết nối</Text>
+        </Animatable.View>
+        
+        <Animatable.View animation="fadeInUp" duration={800} delay={200} style={styles.cameraContainer}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.5)']}
+            style={styles.videoFrame}
+          >
             <View style={styles.videoPlaceholder}>
-              <Text style={styles.videoText}>Video Placeholder</Text>
+              <Ionicons name="videocam" size={40} color="#fff" />
+              <Text style={styles.videoText}>Camera chính</Text>
             </View>
             <View style={styles.notification}>
-              <Text style={styles.notificationText}>• Dừng bật báo động</Text>
+              <Text style={styles.notificationText}>• Đang hoạt động</Text>
               <Text style={styles.notificationText}>Smartlock Camera</Text>
-              <Text style={styles.notificationText}>{new Date().toLocaleString()}</Text>
+              <Text style={styles.notificationText}>{new Date().toLocaleTimeString()}</Text>
             </View>
-          </View>
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Cài đặt camera</Text>
+            <TouchableOpacity style={styles.expandButton}>
+              <Ionicons name="expand-outline" size={22} color="#fff" />
+            </TouchableOpacity>
+          </LinearGradient>
+          
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#FF8C66', '#FF5E62']}
+              style={styles.settingsButtonGradient}
+            >
+              <Ionicons name="settings-outline" size={20} color="#fff" style={styles.settingsIcon} />
+              <Text style={styles.settingsButtonText}>Cài đặt camera</Text>
+            </LinearGradient>
           </TouchableOpacity>
-        </View>
+        </Animatable.View>
+        
+        <Animatable.View animation="fadeInUp" duration={800} delay={300}>
+          <Text style={styles.sectionTitle}>Hoạt động gần đây</Text>
+          
+          <View style={styles.activityCard}>
+            <View style={styles.activityIcon}>
+              <Ionicons name="lock-open-outline" size={24} color="#FF8C66" />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={styles.activityTitle}>Cửa chính đã mở</Text>
+              <Text style={styles.activityTime}>Hôm nay, 10:42 AM</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#888" />
+          </View>
+          
+          <View style={styles.activityCard}>
+            <View style={styles.activityIcon}>
+              <Ionicons name="finger-print-outline" size={24} color="#FF8C66" />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={styles.activityTitle}>Xác thực vân tay</Text>
+              <Text style={styles.activityTime}>Hôm nay, 08:30 AM</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#888" />
+          </View>
+          
+          <View style={styles.activityCard}>
+            <View style={styles.activityIcon}>
+              <Ionicons name="alert-circle-outline" size={24} color="#FF5E62" />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={styles.activityTitle}>Cảnh báo chuyển động</Text>
+              <Text style={styles.activityTime}>Hôm qua, 11:20 PM</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#888" />
+          </View>
+        </Animatable.View>
       </ScrollView>
 
-      {/* Tab Bar */}
+      {/* Bottom tab bar */}
       <View style={styles.tabBar}>
-        {renderTabItem('devices', 'home-outline', 'Thiết bị')}
-        {renderTabItem('gallery', 'images-outline', 'Thư viện')}
-        {renderTabItem('smart', 'wifi-outline', 'Kết nối')}
+        {renderTabItem('devices', 'home', 'Thiết bị')}
+        {renderTabItem('gallery', 'images', 'Thư viện')}
+        {renderTabItem('smart', 'wifi', 'Kết nối')}
       </View>
     </View>
   );
@@ -137,127 +203,204 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 40 : 20,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
   },
   userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 5,
+  },
+  greeting: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 5,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#fff',
-    marginRight: 10,
   },
   loadingText: {
     color: '#fff',
-  },
-  userPhoto: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    borderWidth: 2,
-    borderColor: '#fff',
+    fontSize: 16,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ED1C24', // Màu đỏ nổi bật
+    backgroundColor: '#fff',
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    borderRadius: 50,
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 30,
+    right: 20,
     elevation: 3,
     shadowColor: '#000',
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 2 },
   },
+  logoutIcon: {
+    marginRight: 5,
+  },
   logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FF5E62',
+    fontSize: 14,
     fontWeight: '600',
   },
   contentContainer: {
-    flexGrow: 1,
-    padding: 16,
+    padding: 20,
+    paddingBottom: 90,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#444',
+    marginBottom: 15,
+    marginTop: 10,
   },
   cameraContainer: {
-    marginBottom: 80,
+    marginBottom: 30,
   },
   videoFrame: {
-    borderRadius: 12,
+    borderRadius: 15,
     overflow: 'hidden',
-    marginBottom: 10,
-    height: 220,
-    backgroundColor: '#000',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    marginBottom: 12,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
   videoPlaceholder: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
   },
   videoText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
+    marginTop: 10,
+    fontWeight: '500',
   },
   notification: {
     position: 'absolute',
     bottom: 12,
     left: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: 8,
   },
   notificationText: {
     color: '#fff',
     fontSize: 12,
+    marginBottom: 2,
   },
-  editButton: {
-    backgroundColor: '#1E90FF',
-    paddingVertical: 12,
-    borderRadius: 8,
+  expandButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 8,
+    borderRadius: 20,
+  },
+  settingsButton: {
+    borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: '#FF8C66',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  settingsButtonGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
   },
-  editButtonText: {
+  settingsIcon: {
+    marginRight: 8,
+  },
+  settingsButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
+  activityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 10,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  activityIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 140, 102, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 4,
+  },
+  activityTime: {
+    fontSize: 13,
+    color: '#888',
+  },
   tabBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    borderTopColor: '#eee',
     backgroundColor: '#fff',
     position: 'absolute',
     bottom: 0,
     width: '100%',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   tabItem: {
     alignItems: 'center',
+    paddingHorizontal: 15,
+  },
+  activeTabItem: {
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 140, 102, 0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 15,
   },
   tabLabel: {
     fontSize: 12,
-    color: 'gray',
-    marginTop: 4,
+    color: '#777',
+    marginTop: 5,
   },
   activeTabLabel: {
-    color: '#1E90FF',
+    color: '#FF8C66',
     fontWeight: '600',
   },
 });

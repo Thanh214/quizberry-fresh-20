@@ -11,7 +11,8 @@ import {
   Platform,
   SafeAreaView,
   TextInput,
-  Image
+  Image,
+  StatusBar
 } from 'react-native';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
@@ -27,8 +28,9 @@ import { getDatabase, ref, remove, update } from 'firebase/database';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
 
-// Cấu hình Firebase
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDdjKUec0aGVzExn1dPk-LkIraK7VqUJxk",
   authDomain: "smartlock-ccd1d.firebaseapp.com",
@@ -38,7 +40,7 @@ const firebaseConfig = {
   appId: "1:360774980468:android:6d217dcfc513b0ae9bd221",
 };
 
-// Khởi tạo Firebase App một lần duy nhất
+// Initialize Firebase once
 let app;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
@@ -49,8 +51,8 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const rtdb = getDatabase(app);
 
-// Mảng màu nền cho các thẻ người dùng
-const userColors = ['#FFE4C4', '#FFD1B3', '#FFFAE1', '#FEE2E2', '#CDEAFE'];
+// User card background colors
+const userColors = ['#FFF3E0', '#E3F2FD', '#F1F8E9', '#E8EAF6', '#FFEBEE'];
 
 const AdminHomeScreen = () => {
   // State lưu danh sách người dùng
@@ -286,208 +288,325 @@ const AdminHomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#FF8C66" />
       <View style={styles.container}>
 
-        {/* Header với nền gradient */}
+        {/* Header with gradient background */}
         <LinearGradient
-          colors={['#FE8C00', '#F83600']}
+          colors={['#FF8C66', '#FF5E62']}
           style={styles.header}
         >
-          {/* Hiển thị text "Chào mừng Admin" với hiệu ứng nhấp nháy */}
-          <Text style={[styles.headerTitle, blinkingStyle]}>
-            Chào mừng Admin
-          </Text>
-          {/* Nút đăng xuất ở góc phải */}
+          <Animatable.Text 
+            animation="pulse" 
+            iterationCount="infinite" 
+            duration={1500} 
+            style={styles.headerTitle}
+          >
+            Trang quản trị
+          </Animatable.Text>
           <TouchableOpacity
             style={styles.logoutButton}
             onPress={confirmLogout}
+            activeOpacity={0.8}
           >
-            <Ionicons name="log-out-outline" size={24} color="#F83600" />
+            <Ionicons name="log-out-outline" size={22} color="#FF5E62" />
           </TouchableOpacity>
         </LinearGradient>
 
-        {/* Vùng "Địa điểm mặc định" */}
-        <View style={styles.locationContainer}>
+        {/* Location selector */}
+        <Animatable.View 
+          animation="fadeInDown" 
+          duration={800} 
+          delay={200}
+          style={styles.locationContainer}
+        >
           <Text style={styles.locationText}>
-            Địa điểm mặc định: Nhấn để chuyển nhanh đến địa điểm khác
+            Địa điểm mặc định
           </Text>
-          <Ionicons name="chevron-forward-outline" size={20} color="#F83600" />
-        </View>
+          <View style={styles.locationSelector}>
+            <Text style={styles.selectedLocation}>SmartLock Home</Text>
+            <Ionicons name="chevron-down" size={20} color="#FF8C66" />
+          </View>
+        </Animatable.View>
 
-        {/* Danh sách camera */}
+        {/* Camera list */}
         <ScrollView contentContainerStyle={styles.cameraList}>
-          {/* Camera 1 */}
-          <TouchableOpacity style={styles.cameraCard} onPress={handleViewCamera}>
-            <Image
-              source={{ uri: 'https://via.placeholder.com/350x200?text=Phòng+khách' }}
-              style={styles.cameraImage}
-              resizeMode="cover"
-            />
-            <Text style={styles.cameraLabel}>#Phòng khách</Text>
-          </TouchableOpacity>
-          {/* Camera 2 */}
-          <TouchableOpacity style={styles.cameraCard} onPress={handleViewCamera}>
-            <Image
-              source={{ uri: 'https://via.placeholder.com/350x200?text=Cam+nhà+cậu' }}
-              style={styles.cameraImage}
-              resizeMode="cover"
-            />
-            <Text style={styles.cameraLabel}>#Cam nhà cậu</Text>
-          </TouchableOpacity>
+          <Animatable.View animation="fadeInUp" duration={800} delay={300}>
+            <Text style={styles.sectionTitle}>Camera hoạt động</Text>
+            
+            {/* Camera 1 */}
+            <TouchableOpacity 
+              style={styles.cameraCard} 
+              onPress={handleViewCamera}
+              activeOpacity={0.9}
+            >
+              <Image
+                source={{ uri: 'https://via.placeholder.com/350x200?text=Phòng+khách' }}
+                style={styles.cameraImage}
+                resizeMode="cover"
+              />
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.7)']}
+                style={styles.cameraGradient}
+              >
+                <View style={styles.cameraDetails}>
+                  <View style={styles.cameraNameContainer}>
+                    <Ionicons name="videocam" size={16} color="#FF8C66" />
+                    <Text style={styles.cameraName}>Phòng khách</Text>
+                  </View>
+                  <View style={styles.cameraStatus}>
+                    <View style={styles.statusDot} />
+                    <Text style={styles.statusText}>Đang trực tuyến</Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            {/* Camera 2 */}
+            <TouchableOpacity 
+              style={styles.cameraCard} 
+              onPress={handleViewCamera}
+              activeOpacity={0.9}
+            >
+              <Image
+                source={{ uri: 'https://via.placeholder.com/350x200?text=Cam+nhà+cậu' }}
+                style={styles.cameraImage}
+                resizeMode="cover"
+              />
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.7)']}
+                style={styles.cameraGradient}
+              >
+                <View style={styles.cameraDetails}>
+                  <View style={styles.cameraNameContainer}>
+                    <Ionicons name="videocam" size={16} color="#FF8C66" />
+                    <Text style={styles.cameraName}>Cam nhà cậu</Text>
+                  </View>
+                  <View style={styles.cameraStatus}>
+                    <View style={styles.statusDot} />
+                    <Text style={styles.statusText}>Đang trực tuyến</Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animatable.View>
+          
+          <Animatable.View animation="fadeInUp" duration={800} delay={400}>
+            <Text style={styles.sectionTitle}>Thống kê hệ thống</Text>
+            <View style={styles.statsContainer}>
+              <View style={styles.statCard}>
+                <Ionicons name="people" size={24} color="#FF8C66" />
+                <Text style={styles.statCount}>{users.length}</Text>
+                <Text style={styles.statLabel}>Người dùng</Text>
+              </View>
+              
+              <View style={styles.statCard}>
+                <Ionicons name="finger-print" size={24} color="#FF8C66" />
+                <Text style={styles.statCount}>
+                  {users.reduce((count, user) => {
+                    const ids = Array.isArray(user.ID) ? user.ID.length : (user.ID ? 1 : 0);
+                    return count + ids;
+                  }, 0)}
+                </Text>
+                <Text style={styles.statLabel}>Vân tay</Text>
+              </View>
+              
+              <View style={styles.statCard}>
+                <Ionicons name="videocam" size={24} color="#FF8C66" />
+                <Text style={styles.statCount}>2</Text>
+                <Text style={styles.statLabel}>Camera</Text>
+              </View>
+            </View>
+          </Animatable.View>
         </ScrollView>
 
-        {/* Thanh bottom tab */}
+        {/* Bottom tab navigation */}
         <View style={styles.bottomTabContainer}>
-          <TouchableOpacity style={styles.tabItem}>
-            <Ionicons name="home-outline" size={22} color="#F83600" />
-            <Text style={styles.tabText}>Trang chủ</Text>
+          <TouchableOpacity style={[styles.tabItem, styles.activeTab]}>
+            <Ionicons name="home" size={22} color="#FF8C66" />
+            <Text style={styles.activeTabText}>Trang chủ</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.tabItem} onPress={handleAddFingerprint}>
-            <Ionicons name="finger-print-outline" size={22} color="#F83600" />
+            <Ionicons name="finger-print-outline" size={22} color="#777" />
             <Text style={styles.tabText}>Vân tay</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.tabItem} onPress={openUserManagement}>
-            <Ionicons name="people-outline" size={22} color="#F83600" />
+            <Ionicons name="people-outline" size={22} color="#777" />
             <Text style={styles.tabText}>Khách hàng</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.tabItem}>
-            <Ionicons name="notifications-outline" size={22} color="#F83600" />
+            <Ionicons name="notifications-outline" size={22} color="#777" />
             <Text style={styles.tabText}>Thông báo</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.tabItem}>
-            <Ionicons name="settings-outline" size={22} color="#F83600" />
+            <Ionicons name="settings-outline" size={22} color="#777" />
             <Text style={styles.tabText}>Cài đặt</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Modal Quản lý người dùng */}
+        {/* User Management Modal */}
         <Modal
           visible={userManagementVisible}
           animationType="slide"
           transparent={false}
           onRequestClose={() => setUserManagementVisible(false)}
         >
-          <SafeAreaView style={styles.userManagementContainer}>
+          <SafeAreaView style={styles.modalSafeArea}>
             <LinearGradient
-              colors={['#FE8C00', '#F83600']}
-              style={styles.umHeader}
+              colors={['#FF8C66', '#FF5E62']}
+              style={styles.modalHeader}
             >
-              <Text style={styles.umHeaderTitle}>Quản lý khách hàng</Text>
+              <Text style={styles.modalHeaderTitle}>Quản lý người dùng</Text>
               <TouchableOpacity
-                style={styles.umCloseButton}
+                style={styles.modalCloseButton}
                 onPress={() => setUserManagementVisible(false)}
               >
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
             </LinearGradient>
-            <ScrollView contentContainerStyle={styles.umContent}>
+            <ScrollView contentContainerStyle={styles.modalContent}>
               {users.length === 0 ? (
-                <Text style={styles.noUserText}>Chưa có người dùng nào.</Text>
+                <Animatable.View animation="fadeIn" duration={800} style={styles.emptyStateContainer}>
+                  <Ionicons name="people" size={60} color="#ccc" />
+                  <Text style={styles.emptyStateText}>Chưa có người dùng nào</Text>
+                </Animatable.View>
               ) : (
                 users.map((user, index) => (
-                  <View
+                  <Animatable.View
                     key={user.id}
-                    style={[
-                      styles.userItem,
-                      { backgroundColor: userColors[index % userColors.length] }
-                    ]}
+                    animation="fadeInUp"
+                    duration={500}
+                    delay={index * 100}
                   >
-                    <View style={styles.userInfoContainer}>
-                      <Text style={styles.userName}>
-                        {user.displayName || "Chưa có tên"}
-                      </Text>
-                      <Text style={styles.userInfo}>
-                        Email: {user.email || "N/A"}
-                      </Text>
-                      <Text style={styles.userInfo}>
-                        Phone: {user.phone || "N/A"}
-                      </Text>
-                      <Text style={styles.userInfo}>
-                        DOB: {user.dob || "N/A"}
-                      </Text>
-                      <Text style={styles.userInfo}>
-                        Password: {user.password || "N/A"}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteUser(user.id, user.displayName)}
+                    <View
+                      style={[
+                        styles.userItem,
+                        { backgroundColor: userColors[index % userColors.length] }
+                      ]}
                     >
-                      <Ionicons name="trash-outline" size={20} color="#fff" />
-                    </TouchableOpacity>
-                  </View>
+                      <View style={styles.userAvatarContainer}>
+                        <View style={styles.userAvatar}>
+                          <Text style={styles.userInitial}>
+                            {(user.displayName || "U")[0].toUpperCase()}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.userInfoContainer}>
+                        <Text style={styles.userName}>
+                          {user.displayName || "Chưa có tên"}
+                        </Text>
+                        <Text style={styles.userInfo}>
+                          <Ionicons name="mail-outline" size={14} color="#777" /> {user.email || "N/A"}
+                        </Text>
+                        <Text style={styles.userInfo}>
+                          <Ionicons name="call-outline" size={14} color="#777" /> {user.phone || "N/A"}
+                        </Text>
+                        <Text style={styles.userInfo}>
+                          <Ionicons name="calendar-outline" size={14} color="#777" /> {user.dob || "N/A"}
+                        </Text>
+                        <View style={styles.userActions}>
+                          <TouchableOpacity style={styles.userActionButton}>
+                            <Ionicons name="create-outline" size={18} color="#FF8C66" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.userActionButton, styles.deleteButton]}
+                            onPress={() => handleDeleteUser(user.id, user.displayName)}
+                          >
+                            <Ionicons name="trash-outline" size={18} color="#fff" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  </Animatable.View>
                 ))
               )}
             </ScrollView>
           </SafeAreaView>
         </Modal>
 
-        {/* Modal Quản lý vân tay */}
+        {/* Fingerprint Management Modal */}
         <Modal
           visible={fingerprintManagementVisible}
           animationType="slide"
           transparent={false}
           onRequestClose={() => setFingerprintManagementVisible(false)}
         >
-          <SafeAreaView style={styles.fingerprintContainer}>
+          <SafeAreaView style={styles.modalSafeArea}>
             <LinearGradient
-              colors={['#FE8C00', '#F83600']}
-              style={styles.fpHeader}
+              colors={['#FF8C66', '#FF5E62']}
+              style={styles.modalHeader}
             >
-              <Text style={styles.fpHeaderTitle}>Quản lý vân tay</Text>
+              <Text style={styles.modalHeaderTitle}>Quản lý vân tay</Text>
               <TouchableOpacity
-                style={styles.fpCloseButton}
+                style={styles.modalCloseButton}
                 onPress={() => setFingerprintManagementVisible(false)}
               >
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
             </LinearGradient>
-            <ScrollView contentContainerStyle={styles.fpContent}>
+            <ScrollView contentContainerStyle={styles.modalContent}>
               {users.length === 0 ? (
-                <Text style={styles.noUserText}>Chưa có người dùng nào.</Text>
+                <Animatable.View animation="fadeIn" duration={800} style={styles.emptyStateContainer}>
+                  <Ionicons name="finger-print" size={60} color="#ccc" />
+                  <Text style={styles.emptyStateText}>Chưa có dữ liệu vân tay</Text>
+                </Animatable.View>
               ) : (
                 users.map((user, index) => {
                   const ids = Array.isArray(user.ID)
                     ? user.ID
                     : (typeof user.ID === 'string' ? [user.ID] : []);
                   return (
-                    <View
+                    <Animatable.View
                       key={user.id}
-                      style={[
-                        styles.fpUserItem,
-                        { backgroundColor: userColors[index % userColors.length] }
-                      ]}
+                      animation="fadeInUp"
+                      duration={500}
+                      delay={index * 100}
                     >
-                      <Text style={styles.fpUserName}>
-                        {user.displayName || "Chưa có tên"}
-                      </Text>
-                      {ids.length > 0 && (
-                        <View style={styles.fingerprintList}>
-                          {ids.map((id, idx) => (
-                            <View key={idx} style={styles.fingerprintItem}>
-                              <Text style={styles.fingerprintText}>ID: {id}</Text>
-                              {/*
-                                Khi bấm nút xóa vân tay, gọi hàm confirmRemoveFingerprint
-                              */}
-                              <TouchableOpacity
-                                onPress={() => confirmRemoveFingerprint(user.id, id)}
-                                style={styles.fpRemoveButton}
-                              >
-                                <Ionicons name="trash-outline" size={20} color="#fff" />
-                              </TouchableOpacity>
-                            </View>
-                          ))}
+                      <View
+                        style={[
+                          styles.fpUserItem,
+                          { backgroundColor: userColors[index % userColors.length] }
+                        ]}
+                      >
+                        <View style={styles.fpUserHeader}>
+                          <View style={styles.fpUserAvatar}>
+                            <Text style={styles.fpUserInitial}>
+                              {(user.displayName || "U")[0].toUpperCase()}
+                            </Text>
+                          </View>
+                          <Text style={styles.fpUserName}>
+                            {user.displayName || "Chưa có tên"}
+                          </Text>
                         </View>
-                      )}
-                      <View style={styles.fpActionButtons}>
+                        
+                        {ids.length > 0 ? (
+                          <View style={styles.fingerprintList}>
+                            {ids.map((id, idx) => (
+                              <View key={idx} style={styles.fingerprintItem}>
+                                <Ionicons name="finger-print" size={20} color="#FF8C66" />
+                                <Text style={styles.fingerprintText}>ID: {id}</Text>
+                                <TouchableOpacity
+                                  onPress={() => confirmRemoveFingerprint(user.id, id)}
+                                  style={styles.fpRemoveButton}
+                                >
+                                  <Ionicons name="trash-outline" size={18} color="#fff" />
+                                </TouchableOpacity>
+                              </View>
+                            ))}
+                          </View>
+                        ) : (
+                          <Text style={styles.noFingerprintText}>Chưa có vân tay</Text>
+                        )}
+                        
                         <TouchableOpacity
                           style={styles.fpAddButton}
                           onPress={() => doAddFingerprint(user.id)}
                         >
-                          <Ionicons name="add" size={24} color="#fff" />
+                          <Ionicons name="add" size={20} color="#fff" />
+                          <Text style={styles.fpAddButtonText}>Thêm vân tay</Text>
                         </TouchableOpacity>
                       </View>
-                    </View>
+                    </Animatable.View>
                   );
                 })
               )}
@@ -495,38 +614,51 @@ const AdminHomeScreen = () => {
           </SafeAreaView>
         </Modal>
 
-        {/* Modal nhập ID vân tay */}
+        {/* Fingerprint Input Modal */}
         <Modal
           visible={isFingerprintInputVisible}
-          animationType="slide"
+          animationType="fade"
           transparent={true}
           onRequestClose={() => setFingerprintInputVisible(false)}
         >
           <View style={styles.fingerprintInputModalContainer}>
-            <View style={styles.fingerprintInputModal}>
-              <Text style={styles.modalTitle}>Nhập Fingerprint ID</Text>
+            <Animatable.View 
+              animation="zoomIn" 
+              duration={300} 
+              style={styles.fingerprintInputModal}
+            >
+              <View style={styles.fingerprintInputHeader}>
+                <Ionicons name="finger-print" size={30} color="#FF8C66" />
+                <Text style={styles.modalTitle}>Thêm vân tay mới</Text>
+              </View>
+              
+              <Text style={styles.fingerprintInputLabel}>
+                Nhập ID vân tay (số nguyên)
+              </Text>
               <TextInput
-                style={styles.input}
+                style={styles.fingerprintInput}
                 value={fingerprintInput}
                 onChangeText={setFingerprintInput}
-                placeholder="Nhập ID (số nguyên)"
+                placeholder="Ví dụ: 1234"
                 keyboardType="number-pad"
+                placeholderTextColor="#999"
               />
+              
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   onPress={() => setFingerprintInputVisible(false)}
-                  style={styles.modalButton}
+                  style={[styles.modalButton, styles.cancelButton]}
                 >
-                  <Text style={{ color: '#fff' }}>Hủy</Text>
+                  <Text style={styles.cancelButtonText}>Hủy</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleFingerprintInputConfirm}
-                  style={styles.modalButton}
+                  style={[styles.modalButton, styles.confirmButton]}
                 >
-                  <Text style={{ color: '#fff' }}>Xác nhận</Text>
+                  <Text style={styles.confirmButtonText}>Xác nhận</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animatable.View>
           </View>
         </Modal>
 
@@ -536,212 +668,234 @@ const AdminHomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFF7EC' },
-  container: { flex: 1, backgroundColor: '#FFF7EC' },
+  safeArea: { 
+    flex: 1, 
+    backgroundColor: '#f8f9fa' 
+  },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#f8f9fa' 
+  },
   header: {
-    flexDirection: 'row',             // Sắp xếp ngang
-    alignItems: 'center',             // Canh giữa theo trục dọc
-    justifyContent: 'center',         // Canh giữa theo trục ngang
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: Platform.OS === 'ios' ? 20 : 15,
-    paddingHorizontal: 10,
-    borderBottomLeftRadius: 20,       // Bo góc dưới trái
-    borderBottomRightRadius: 20,      // Bo góc dưới phải
-    position: 'relative',
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
   },
   headerTitle: {
     color: '#fff',
-    fontSize: Platform.OS === 'ios' ? 22 : 20,
+    fontSize: 22,
     fontWeight: 'bold',
   },
   logoutButton: {
-    position: 'absolute', // Đặt ở vị trí tuyệt đối
-    right: 15,
-    top: 15,
-    width: 40,
-    height: 40,
+    position: 'absolute',
+    right: 20,
+    width: 44,
+    height: 44,
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000', // Hiệu ứng bóng
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 3,
-    elevation: 5,
-    zIndex: 2,
+    elevation: 4,
   },
   locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#FFF',
-    marginHorizontal: 10,
-    marginTop: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 1, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    margin: 20,
+    marginTop: 25,
+    marginBottom: 15,
   },
   locationText: {
-    flex: 1,
-    color: '#F83600',
     fontSize: 14,
-    marginRight: 8,
+    color: '#777',
+    marginBottom: 8,
+  },
+  locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  selectedLocation: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#333',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#444',
+    marginBottom: 15,
+    marginTop: 10,
+    marginHorizontal: 20,
   },
   cameraList: {
-    paddingHorizontal: 10,
-    paddingTop: 10,
-    paddingBottom: 80, // Để chừa chỗ cho bottom tab
+    paddingBottom: 80,
   },
   cameraCard: {
-    backgroundColor: '#ccc',
-    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    marginHorizontal: 20,
     marginBottom: 15,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 1, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
     elevation: 3,
   },
-  cameraImage: { width: '100%', height: 200 },
-  cameraLabel: {
+  cameraImage: { 
+    width: '100%', 
+    height: 180 
+  },
+  cameraGradient: {
     position: 'absolute',
-    bottom: 10,
-    left: 10,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    padding: 15,
+    justifyContent: 'flex-end',
+  },
+  cameraDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  cameraNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cameraName: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+    marginLeft: 6,
+  },
+  cameraStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.4)',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 10,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4CAF50',
+    marginRight: 5,
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 15,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  statCount: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 8,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#777',
   },
   bottomTabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    height: 60,
+    height: 65,
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -1 },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 5,
+    elevation: 8,
     position: 'absolute',
     bottom: 0,
     width: '100%',
   },
-  tabItem: { alignItems: 'center', justifyContent: 'center' },
-  tabText: { fontSize: 12, marginTop: 2, color: '#F83600' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center' },
-  userManagementContainer: { flex: 1, backgroundColor: '#FFF7EC' },
-  umHeader: {
+  tabItem: { 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    height: 45,
+    paddingHorizontal: 12,
+  },
+  activeTab: {
+    backgroundColor: 'rgba(255, 140, 102, 0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+  },
+  tabText: { 
+    fontSize: 12, 
+    marginTop: 4, 
+    color: '#777' 
+  },
+  activeTabText: {
+    fontSize: 12,
+    marginTop: 4,
+    color: '#FF8C66',
+    fontWeight: '600',
+  },
+  modalSafeArea: { 
+    flex: 1, 
+    backgroundColor: '#f8f9fa' 
+  },
+  modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Platform.OS === 'ios' ? 20 : 15,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    position: 'relative',
   },
-  umHeaderTitle: { color: '#fff', fontSize: Platform.OS === 'ios' ? 22 : 20, fontWeight: 'bold' },
-  umCloseButton: { position: 'absolute', right: 15, top: 15, padding: 10 },
-  umContent: { padding: 16, paddingTop: 20 },
-  noUserText: { fontSize: 16, color: '#555', textAlign: 'center', marginTop: 20 },
-  userItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+  modalHeaderTitle: { 
+    color: '#fff', 
+    fontSize: 20, 
+    fontWeight: 'bold' 
   },
-  userInfoContainer: { flex: 1 },
-  userName: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 4 },
-  userInfo: { fontSize: 14, color: '#333' },
-  deleteButton: {
-    backgroundColor: '#EB5757',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 10,
+  modalCloseButton: { 
+    position: 'absolute', 
+    right: 15, 
+    padding: 8 
   },
-  fingerprintContainer: { flex: 1, backgroundColor: '#FFF7EC' },
-  fpHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Platform.OS === 'ios' ? 20 : 15,
-    paddingHorizontal: 10,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    position: 'relative',
+  modalContent: { 
+    padding: 20,
+    paddingTop: 25,
   },
-  fpHeaderTitle: { color: '#fff', fontSize: Platform.OS === 'ios' ? 22 : 20, fontWeight: 'bold' },
-  fpCloseButton: { position: 'absolute', right: 15, top: 15, padding: 10 },
-  fpContent: { padding: 16, paddingTop: 20 },
-  fpUserItem: {
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  fpUserName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  fingerprintList: { marginTop: 8 },
-  fingerprintItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#555',
-    padding: 4,
-    borderRadius: 4,
-    marginBottom: 4,
-  },
-  fingerprintText: { color: '#fff', marginRight: 8 },
-  fpActionButtons: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  fpAddButton: {
-    backgroundColor: '#4CAF50',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fpRemoveButton: {
-    backgroundColor: '#EB5757',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  fingerprintInputModalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fingerprintInputModal: { width: '80%', backgroundColor: '#fff', borderRadius: 12, padding: 16 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
-  modalButtons: { flexDirection: 'row', justifyContent: 'space-around' },
-  modalButton: { paddingVertical: 8, paddingHorizontal: 16, backgroundColor: '#F83600', borderRadius: 8 },
-});
-
-export default AdminHomeScreen;
+  emptyState
